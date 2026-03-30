@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>音演三莊—學習管理系統</title>
+    <style>
+        /* 視覺規格：黑底金邊與毛玻璃 */
+        body {
+            background: radial-gradient(circle, #1a1a1a, #000000);
+            color: #d4af37; /* 金色文字 */
+            font-family: "Microsoft JhengHei", sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            background-attachment: fixed;
+        }
+
+        /* 背景音樂符號裝飾 (𝄞, 𝄢) */
+        body::before {
+            content: '𝄞 𝄢 🎹';
+            position: fixed;
+            top: 10%;
+            left: 5%;
+            font-size: 100px;
+            opacity: 0.05;
+            pointer-events: none;
+        }
+
+        /* 毛玻璃質感容器 */
+        .glass-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+        }
+
+        /* 手機字體極大化 */
+        h1 { font-size: 2.5rem; text-align: center; text-shadow: 0 0 10px #d4af37; }
+        .student-name { font-size: 1.8rem; font-weight: bold; }
+        .btn { font-size: 1.5rem; padding: 15px 30px; border-radius: 12px; border: none; cursor: pointer; }
+
+        /* 出缺勤小格子循環顏色 */
+        .status-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-right: 15px;
+            border: 2px solid #fff;
+        }
+        .bg-present { background-color: #2ecc71; } /* 綠 */
+        .bg-late { background-color: #f1c40f; }    /* 黃 */
+        .bg-late-1 { background-color: #e67e22; }  /* 橘 */
+        .bg-absent { background-color: #e74c3c; }  /* 紅 */
+        .bg-leave { background-color: #3498db; }   /* 藍 */
+
+        /* 罰抄系統槓線核銷 */
+        .completed {
+            text-decoration: line-through;
+            color: #888 !important;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <h1>𝄞 音演三莊 𝄢</h1>
+        
+        <div class="glass-card" style="display: flex; justify-content: space-around;">
+            <button class="btn" onclick="switchClass('音三')">音三</button>
+            <button class="btn" onclick="switchClass('演三')">演三</button>
+            <button class="btn" onclick="showAdmin()">管理員</button>
+        </div>
+
+        <div id="studentList">
+            </div>
+    </div>
+
+    <script>
+        // 初始化 55 位學生名單資料庫 (範例)
+        const students = [
+            { id: 1, name: "毛語程", class: "音三" },
+            // ... (請將上方 55 位名單貼入此處)
+            { id: 41, name: "蕭旭成", class: "老師" }
+        ];
+
+        // 點名狀態循環邏輯
+        function toggleAttendance(element) {
+            const states = ['bg-present', 'bg-late', 'bg-late-1', 'bg-absent', 'bg-leave'];
+            let currentClass = element.classList[1];
+            let nextIndex = (states.indexOf(currentClass) + 1) % states.length;
+            element.classList.remove(currentClass);
+            element.classList.add(states[nextIndex]);
+            
+            // 此處連動 Firebase 存檔
+            saveToFirebase(element.dataset.id, states[nextIndex]);
+        }
+
+        // 渲染學生列表
+        function renderStudents(className) {
+            const list = document.getElementById('studentList');
+            list.innerHTML = "";
+            const filtered = students.filter(s => s.class === className);
+            
+            filtered.forEach(s => {
+                const div = document.createElement('div');
+                div.className = "glass-card";
+                div.innerHTML = `
+                    <div style="display: flex; align-items: center;">
+                        <div class="status-box bg-present" data-id="${s.id}" onclick="toggleAttendance(this)"></div>
+                        <span class="student-name">${s.id}. ${s.name}</span>
+                    </div>
+                    <div class="task-area" id="tasks-${s.id}" style="margin-top: 15px; font-size: 1.2rem;">
+                        待辦：課文一遍 (3/25)
+                    </div>
+                `;
+                list.appendChild(div);
+            });
+        }
+    </script>
+</body>
+</html>
