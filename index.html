@@ -3,147 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>音演三莊—學習管理系統 (音樂亮黃版)</title>
+    <title>莊敬音樂科—學習管理系統</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <style>
         :root {
-            --primary-yellow: #FFD700;
-            --bg-yellow: #FFF9C4;
-            --dark-gray: #333;
-            --glass: rgba(255, 255, 255, 0.85);
+            --primary: #FFD700; --bg: #FFF9C4; --text: #333;
+            --present: #2ecc71; --late: #f1c40f; --late1: #e67e22; --absent: #e74c3c; --leave: #3498db;
         }
 
         body {
-            background-color: var(--bg-yellow);
-            /* 加入音符浮水印 */
-            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='10' y='40' font-family='Arial' font-size='25' opacity='0.08'%3E𝄞%3C/text%3E%3Ctext x='40' y='20' font-family='Arial' font-size='15' opacity='0.08'%3E♪%3C/text%3E%3C/svg%3E");
-            color: var(--dark-gray);
-            font-family: "Microsoft JhengHei", sans-serif;
-            margin: 0;
-            padding: 15px;
-            min-height: 100vh;
+            background-color: var(--bg);
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ctext x='10' y='40' font-family='Arial' font-size='20' opacity='0.05'%3E𝄞%3C/text%3E%3C/svg%3E");
+            color: var(--text); font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 10px;
         }
 
-        header {
-            text-align: center;
-            padding: 25px 0;
-            background: var(--primary-yellow);
-            border-radius: 0 0 30px 30px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            margin: -15px -15px 20px -15px;
-        }
+        header { text-align: center; background: var(--primary); padding: 20px; border-radius: 0 0 30px 30px; margin: -10px -10px 15px -10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h1 { margin: 0; font-size: 1.8rem; letter-spacing: 2px; }
 
-        h1 { margin: 0; font-size: 2.2rem; color: #000; text-shadow: 1px 1px 2px #fff; }
-        .music-icons { font-size: 1.5rem; margin-top: 10px; }
+        /* 教學指南 */
+        .guide-box { background: rgba(255,255,255,0.9); padding: 12px; border-radius: 15px; border: 2px dashed var(--primary); margin-bottom: 15px; font-size: 0.9rem; line-height: 1.5; }
 
-        /* 導覽列：班級切換 */
-        .nav-container {
-            display: flex;
-            overflow-x: auto;
+        .action-bar { display: flex; gap: 8px; margin-bottom: 15px; }
+        .action-btn { flex: 1; padding: 12px; border-radius: 12px; border: none; background: #fff; font-weight: bold; cursor: pointer; box-shadow: 0 3px 6px rgba(0,0,0,0.1); font-size: 1rem; }
+
+        /* 學生格狀排列 (一排三個) */
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
             gap: 10px;
-            padding-bottom: 15px;
-            margin-bottom: 10px;
-            scrollbar-width: none;
-        }
-        .nav-container::-webkit-scrollbar { display: none; }
-
-        .nav-btn {
-            white-space: nowrap;
-            padding: 12px 25px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            background: #fff;
-            border: 2px solid var(--primary-yellow);
-            border-radius: 50px;
-            cursor: pointer;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-        }
-        .nav-btn.active { background: var(--primary-yellow); color: #000; border-color: #000; }
-
-        /* 功能按鈕 */
-        .action-bar {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        .action-btn {
-            flex: 1;
-            padding: 15px;
-            font-size: 1.2rem;
-            border-radius: 15px;
-            border: none;
-            background: #fff;
-            font-weight: bold;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-            cursor: pointer;
+            margin-top: 10px;
         }
 
-        /* 學生卡片 */
-        .student-card {
-            background: var(--glass);
-            border-radius: 20px;
-            padding: 18px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
-            border: 1px solid rgba(255,255,255,0.5);
+        .student-box {
+            background: #fff; border-radius: 15px; padding: 15px 5px; text-align: center;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
         }
 
-        .status-box {
-            width: 65px;
-            height: 65px;
-            border-radius: 15px;
-            border: 3px solid #fff;
-            cursor: pointer;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        .status-dot {
+            width: 50px; height: 50px; border-radius: 12px; margin-bottom: 8px; border: 3px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .student-info { font-size: 1.6rem; font-weight: bold; flex-grow: 1; }
+        .student-name { font-size: 1.1rem; font-weight: bold; width: 90%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-        /* 顏色狀態 */
-        .bg-present { background-color: #2ecc71; } /* 綠 */
-        .bg-late { background-color: #f1c40f; }    /* 黃 */
-        .bg-late-1 { background-color: #e67e22; }  /* 橘 */
-        .bg-absent { background-color: #e74c3c; }  /* 紅 */
-        .bg-leave { background-color: #3498db; }   /* 藍 */
+        /* 顏色定義 */
+        .bg-present { background-color: var(--present); } .bg-late { background-color: var(--late); }
+        .bg-late-1 { background-color: var(--late1); } .bg-absent { background-color: var(--absent); }
+        .bg-leave { background-color: var(--leave); }
 
-        /* 罰抄區域 */
-        .task-list { margin-top: 10px; border-top: 1px dashed #ccc; padding-top: 10px; }
-        .task-item { font-size: 1.3rem; padding: 5px 0; display: flex; align-items: center; gap: 8px; }
-        .completed { text-decoration: line-through; color: #aaa; }
-
-        /* 管理輸入框 */
-        .admin-controls { display: none; margin-top: 10px; }
-        input[type="text"] {
-            width: 70%; padding: 12px; border-radius: 10px; border: 1px solid #ccc; font-size: 1.1rem;
+        /* 浮動面板 */
+        #student-panel { 
+            display: none; background: #fff; padding: 25px; border-radius: 25px; 
+            box-shadow: 0 10px 50px rgba(0,0,0,0.3); position: fixed; 
+            top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 85%; max-width: 400px; z-index: 1000; 
         }
+        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:999; }
+        .close-btn { position: absolute; right: 20px; top: 15px; font-size: 2rem; cursor: pointer; color: #999; }
+
+        /* 管理員介面 */
+        .admin-tools { display: none; margin-top: 20px; padding: 15px; background: #f9f9f9; border-radius: 15px; border: 1px solid #ddd; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 8px; border: 1px solid #ccc; box-sizing: border-box; font-size: 1rem; }
+        .save-btn { background: var(--primary); color: #000; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 5px; }
+
+        .nav-tabs { display: flex; overflow-x: auto; gap: 8px; padding-bottom: 10px; margin-bottom: 10px; -webkit-overflow-scrolling: touch; }
+        .tab-btn { white-space: nowrap; padding: 10px 20px; border-radius: 25px; border: 2px solid var(--primary); background: #fff; font-weight: bold; font-size: 1rem; }
+        .tab-btn.active { background: var(--primary); box-shadow: 0 4px 10px rgba(255,215,0,0.4); }
+
+        .task-tag { display: inline-block; background: #eee; padding: 5px 10px; border-radius: 5px; margin: 5px 3px; font-size: 0.9rem; }
+        .task-tag.done { text-decoration: line-through; color: #bbb; }
     </style>
 </head>
 <body>
 
     <header>
-        <h1>🎹 音演三莊 管理系統 🎻</h1>
-        <div class="music-icons">🎸 🎷 🎺 🎶 𝄞 𝄢</div>
+        <h1>🎹 莊敬音樂科 🎻</h1>
+        <div style="font-size: 0.9rem; margin-top: 5px; font-weight: bold;">師生即時連動管理系統</div>
     </header>
 
-    <div class="action-bar">
-        <button class="action-btn" style="background: #E3F2FD;" onclick="toggleAdmin()">⚙️ 管理模式</button>
-        <button class="action-btn" style="background: #E8F5E9;" onclick="exportExcel()">📊 匯出報表</button>
+    <div class="guide-box">
+        <strong>📖 第一次使用指南：</strong><br>
+        • <strong>老師：</strong>點【老師管理】輸入 0902。點擊顏色方塊可快速切換狀態。<br>
+        • <strong>學生：</strong>點【學生查詢】輸入姓名，首次使用請設定您的專屬密碼。<br>
+        • <strong>顏色：</strong>綠(出席) / 黃(遲到) / 橘(一節遲) / 紅(缺席) / 藍(請假)。
     </div>
 
-    <div class="nav-container" id="nav-tabs"></div>
+    <div class="action-bar">
+        <button class="action-btn" style="background:#E3F2FD" onclick="toggleAdmin()">⚙️ 老師管理</button>
+        <button class="action-btn" style="background:#FFF3E0" onclick="studentLogin()">👤 學生查詢</button>
+        <button class="action-btn" style="background:#E8F5E9" onclick="exportExcel()">📊 匯出報表</button>
+    </div>
 
-    <div id="student-list"></div>
+    <div class="nav-tabs" id="nav-tabs"></div>
+    <div class="grid-container" id="student-list">
+        <div style="grid-column: span 3; text-align:center; padding:50px;">雲端同步中...</div>
+    </div>
+
+    <div class="overlay" id="overlay" onclick="closePanel()"></div>
+    <div id="student-panel">
+        <span class="close-btn" onclick="closePanel()">×</span>
+        <h2 id="p-name" style="margin-top:0">學生姓名</h2>
+        <div id="p-status-text" style="font-size:1.2rem; margin-bottom:15px;"></div>
+        <div id="p-tasks-area" style="margin-bottom:15px;">
+            <strong>📋 罰抄/待辦：</strong><div id="p-tasks">無</div>
+        </div>
+        <div id="p-message-area" style="background:#FFFDE7; padding:15px; border-radius:12px; border:1px solid #FFE082;">
+            <strong>💬 老師小語：</strong><br><span id="p-message">目前無訊息</span>
+        </div>
+        
+        <div id="admin-editor" class="admin-tools">
+            <strong>🛠️ 老師專屬編輯：</strong>
+            <input type="text" id="new-task" placeholder="新增罰抄內容 (例:課文三遍)">
+            <button class="save-btn" onclick="saveTask()">確認新增任務</button>
+            <input type="text" id="new-msg" placeholder="輸入個人私訊或評語">
+            <button class="save-btn" onclick="saveMsg()">更新個人訊息</button>
+        </div>
+    </div>
 
     <script>
-        // 1. Firebase 配置 (沿用蕭老師提供的資訊)
+        // 1. Firebase 配置
         const firebaseConfig = {
             apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
             authDomain: "jjvs-att.firebaseapp.com",
@@ -156,7 +138,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 2. 班級與 133 位學生完整名單
+        // 2. 133 位學生完整名單
         const classNames = ["音三莊", "演三莊", "音二莊", "演二樸", "音一莊", "老師專區"];
         const students = [
             // 音三莊
@@ -164,122 +146,165 @@
             // 演三莊
             {id: "3D02", name: "02王玟茜", group: "演三莊"},{id: "3D03", name: "03王語舒", group: "演三莊"},{id: "3D04", name: "04姚宥湘", group: "演三莊"},{id: "3D05", name: "05陳思妤", group: "演三莊"},{id: "3D06", name: "06楊鎔慈", group: "演三莊"},{id: "3D09", name: "09王偉家", group: "演三莊"},{id: "3D10", name: "10何建伸", group: "演三莊"},{id: "3D12", name: "12姜榮紳", group: "演三莊"},{id: "3D13", name: "13郭庭傑", group: "演三莊"},{id: "3D14", name: "14陳泊源", group: "演三莊"},{id: "3D15", name: "15陳軍任", group: "演三莊"},{id: "3D16", name: "16黃治容", group: "演三莊"},{id: "3D17", name: "17盧宥辰", group: "演三莊"},{id: "3D18", name: "18謝行知", group: "演三莊"},
             // 音二莊
-            {id: "2A01", name: "01程冠中", group: "音二莊"},{id: "2A02", name: "02李安恬", group: "音二莊"},{id: "2A03", name: "03吳芊逸", group: "音二莊"},{id: "2A04", name: "04林辰欣", group: "音二莊"},{id: "2A05", name: "05林孟蓁", group: "音二莊"},{id: "2A06", name: "06林采妮", group: "音二莊"},{id: "2A07", name: "07林恩熙", group: "音二莊"},{id: "2A08", name: "08翁閩彗", group: "音二莊"},{id: "2A09", name: "09陳維妮", group: "音二莊"},{id: "2A10", name: "10連妤婷", group: "音二莊"},{id: "2A11", name: "11莊珈維", group: "音二莊"},{id: "2A12", name: "12黎育彤", group: "音二莊"},{id: "2A13", name: "13樊千菲", group: "音二莊"},{id: "2A14", name: "14蔡佳穎", group: "音二莊"},{id: "2A15", name: "15謝季秉", group: "音二莊"},{id: "2A16", name: "16陳妍欣", group: "音二莊"},{id: "2A17", name: "17羅筱涵", group: "音二莊"},{id: "2A18", name: "18蘇奕婷", group: "音二莊"},{id: "2A19", name: "19王璿凱", group: "音二莊"},{id: "2A20", name: "20吳承昊", group: "音二莊"},{id: "2A21", name: "21張治齊", group: "音二莊"},{id: "2A22", name: "22李秉軒", group: "音二莊"},{id: "2A23", name: "23林笠", group: "音二莊"},{id: "2A24", name: "24林允鋐", group: "音二莊"},{id: "2A25", name: "25徐國洲", group: "音二莊"},{id: "2A26", name: "26張定濂", group: "音二莊"},{id: "2A27", name: "27陳柏睿", group: "音二莊"},{id: "2A28", name: "28陳翌鈞", group: "音二莊"},{id: "2A29", name: "29黃偉宸", group: "音二莊"},{id: "2A30", name: "30黃宸約", group: "音二莊"},{id: "2A31", name: "31傅振瑜", group: "音二莊"},{id: "2A32", name: "32葉恒辰", group: "音二莊"},{id: "2A33", name: "33楊仁杉", group: "音二莊"},{id: "2A34", name: "34鄭元滿", group: "音二莊"},{id: "2A35", name: "35羅楷勳", group: "音二莊"},{id: "2A36", name: "36吳昕達", group: "音二莊"},{id: "2A37", name: "37沈榆恩", group: "音二莊"},{id: "2A38", name: "38紀柔帆", group: "音二莊"},{id: "2A39", name: "39盧宇杰", group: "音二莊"},{id: "2A40", name: "40江德凱", group: "音二莊"},{id: "2A41", name: "41李奕德", group: "音二莊"},{id: "2A42", name: "42林品傑", group: "音二莊"},{id: "2A43", name: "43陳元熙", group: "音二莊"},{id: "2A44", name: "44丁婷婷", group: "音二莊"},
+            {id: "2A01", name: "01程冠中", group: "音二莊"},{id: "2A02", name: "02李安恬", group: "音二莊"},{id: "2A03", name: "03吳芊逸", group: "音二莊"},{id: "2A04", name: "04林辰欣", group: "音二莊"},{id: "2A05", name: "05林孟蓁", group: "音二莊"},{id: "2A06", name: "06林采妮", group: "音二莊"},{id: "2A07", name: "07林開心熙", group: "音二莊"},{id: "2A08", name: "08翁閩彗", group: "音二莊"},{id: "2A09", name: "09陳維妮", group: "音二莊"},{id: "2A10", name: "10連妤婷", group: "音二莊"},{id: "2A11", name: "11莊珈維", group: "音二莊"},{id: "2A12", name: "12黎育彤", group: "音二莊"},{id: "2A13", name: "13樊千菲", group: "音二莊"},{id: "2A14", name: "14蔡佳穎", group: "音二莊"},{id: "2A15", name: "15謝季秉", group: "音二莊"},{id: "2A16", name: "16陳妍欣", group: "音二莊"},{id: "2A17", name: "17羅筱涵", group: "音二莊"},{id: "2A18", name: "18蘇奕婷", group: "音二莊"},{id: "2A19", name: "19王璿凱", group: "音二莊"},{id: "2A20", name: "20吳承昊", group: "音二莊"},{id: "2A21", name: "21張治齊", group: "音二莊"},{id: "2A22", name: "22李秉軒", group: "音二莊"},{id: "2A23", name: "23林笠", group: "音二莊"},{id: "2A24", name: "24林允鋐", group: "音二莊"},{id: "2A25", name: "25徐國洲", group: "音二莊"},{id: "2A26", name: "26張定濂", group: "音二莊"},{id: "2A27", name: "27陳柏睿", group: "音二莊"},{id: "2A28", name: "28陳翌鈞", group: "音二莊"},{id: "2A29", name: "29黃偉宸", group: "音二莊"},{id: "2A30", name: "30黃宸約", group: "音二莊"},{id: "2A31", name: "31傅振瑜", group: "音二莊"},{id: "2A32", name: "32葉恒辰", group: "音二莊"},{id: "2A33", name: "33楊仁杉", group: "音二莊"},{id: "2A34", name: "34鄭元滿", group: "音二莊"},{id: "2A35", name: "35羅楷勳", group: "音二莊"},{id: "2A36", name: "36吳昕達", group: "音二莊"},{id: "2A37", name: "37沈榆恩", group: "音二莊"},{id: "2A38", name: "38紀柔帆", group: "音二莊"},{id: "2A39", name: "39盧宇杰", group: "音二莊"},{id: "2A40", name: "40江德凱", group: "音二莊"},{id: "2A41", name: "41李奕德", group: "音二莊"},{id: "2A42", name: "42林品傑", group: "音二莊"},{id: "2A43", name: "43陳元熙", group: "音二莊"},{id: "2A44", name: "44丁婷婷", group: "音二莊"},
             // 演二樸
             {id: "2P02", name: "02簡佳嫻", group: "演二樸"},{id: "2P03", name: "03黃品妤", group: "演二樸"},
             // 音一莊
             {id: "1A01", name: "01任恩予", group: "音一莊"},{id: "1A02", name: "02李孟臻", group: "音一莊"},{id: "1A03", name: "03潘縈汐", group: "音一莊"},{id: "1A04", name: "04謝幸芙", group: "音一莊"},{id: "1A05", name: "05李昕柔", group: "音一莊"},{id: "1A06", name: "06盧丞菲", group: "音一莊"},{id: "1A07", name: "07林欣霈", group: "音一莊"},{id: "1A08", name: "08林耘瑄", group: "音一莊"},{id: "1A09", name: "09林詩翡", group: "音一莊"},{id: "1A10", name: "10姜妤捷", group: "音一莊"},{id: "1A11", name: "11張筑笹", group: "音一莊"},{id: "1A12", name: "12廖聿淓", group: "音一莊"},{id: "1A13", name: "13曾彥瑄", group: "音一莊"},{id: "1A14", name: "14盧瑗", group: "音一莊"},{id: "1A15", name: "15鍾欣庭", group: "音一莊"},{id: "1A16", name: "16黃郁晴", group: "音一莊"},{id: "1A17", name: "17詹中愷", group: "音一莊"},{id: "1A18", name: "18鄭誌浩", group: "音一莊"},{id: "1A19", name: "19謝松煇", group: "音一莊"},{id: "1A20", name: "20羅子超", group: "音一莊"},{id: "1A21", name: "21羅笠準", group: "音一莊"},{id: "1A22", name: "22蘇冠綸", group: "音一莊"},{id: "1A23", name: "23蘇祺翔", group: "音一莊"},{id: "1A24", name: "24劉軒豪", group: "音一莊"},{id: "1A25", name: "25吳泓毅", group: "音一莊"},{id: "1A26", name: "26李維璟", group: "音一莊"},{id: "1A27", name: "27林孝廷", group: "音一莊"},{id: "1A28", name: "28林紹謙", group: "音一莊"},{id: "1A29", name: "29胡宇哲", group: "音一莊"},{id: "1A30", name: "30楊順發", group: "音一莊"},{id: "1A31", name: "31張又禾", group: "音一莊"},{id: "1A32", name: "32張允磊", group: "音一莊"},{id: "1A33", name: "33黃靖勛", group: "音一莊"},
             // 老師
-            {id: "TEA", name: "蕭旭成", group: "老師專區"}
+            {id: "TEA_Xiao", name: "蕭旭成老師", group: "老師專區"}
         ];
 
         let currentGroup = "音三莊";
         let isAdmin = false;
+        let selectedId = null;
         const states = ['bg-present', 'bg-late', 'bg-late-1', 'bg-absent', 'bg-leave'];
+        const stateNames = { 'bg-present': '✅ 出席', 'bg-late': '⚠️ 遲到', 'bg-late-1': '🕒 第一節遲', 'bg-absent': '❌ 缺席', 'bg-leave': 'ℹ️ 請假' };
 
-        // 3. 初始化導覽列
+        // 3. 初始導覽
         const nav = document.getElementById('nav-tabs');
         classNames.forEach(name => {
             const btn = document.createElement('button');
-            btn.className = `nav-btn ${name === currentGroup ? 'active' : ''}`;
+            btn.className = `tab-btn ${name === currentGroup ? 'active' : ''}`;
             btn.innerText = name;
             btn.onclick = () => {
-                document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 currentGroup = name;
-                refreshList();
+                refresh();
             };
             nav.appendChild(btn);
         });
 
-        // 4. 資料庫監聽與刷新
-        db.ref('class_system_data').on('value', (snapshot) => {
-            window.allData = snapshot.val() || {};
-            refreshList();
+        // 4. 監聽雲端資料
+        db.ref('jjvs_v4_data').on('value', snap => {
+            window.cloudData = snap.val() || {};
+            refresh();
         });
 
-        function refreshList() {
-            const listDiv = document.getElementById('student-list');
-            listDiv.innerHTML = "";
+        function refresh() {
+            const list = document.getElementById('student-list');
+            list.innerHTML = "";
             const filtered = students.filter(s => s.group === currentGroup);
 
             filtered.forEach(s => {
-                const sData = window.allData[s.id] || { status: 'bg-present', tasks: [] };
-                const card = document.createElement('div');
-                card.className = "student-card";
-                
-                let taskHtml = "";
-                if (sData.tasks) {
-                    sData.tasks.forEach((t, i) => {
-                        taskHtml += `<div class="task-item ${t.done ? 'completed' : ''}" onclick="toggleTask('${s.id}', ${i})">✎ ${t.content}</div>`;
-                    });
-                }
-
-                card.innerHTML = `
-                    <div class="status-box ${sData.status}" onclick="cycleStatus('${s.id}', '${sData.status}')"></div>
-                    <div class="student-info">${s.name}</div>
-                    <div id="tasks-container-${s.id}">${taskHtml}</div>
-                    <div class="admin-controls" id="admin-${s.id}">
-                        <input type="text" id="input-${s.id}" placeholder="新罰抄任務...">
-                        <button onclick="addTask('${s.id}')" style="padding:10px; background:#FFD700; border:none; border-radius:5px;">新增</button>
-                    </div>
+                const sData = window.cloudData[s.id] || { status: 'bg-present' };
+                const div = document.createElement('div');
+                div.className = "student-box";
+                div.innerHTML = `
+                    <div class="status-dot ${sData.status}" onclick="cycleStatus('${s.id}', '${sData.status}')"></div>
+                    <div class="student-name" onclick="openDetail('${s.id}')">${s.name}</div>
                 `;
-                listDiv.appendChild(card);
-                if(isAdmin) document.getElementById(`admin-${s.id}`).style.display = "block";
+                list.appendChild(div);
             });
         }
 
-        // 5. 功能控制
+        // 5. 點名循環
         function cycleStatus(id, current) {
             if (!isAdmin) return;
             let next = states[(states.indexOf(current) + 1) % states.length];
-            db.ref(`class_system_data/${id}/status`).set(next);
+            db.ref(`jjvs_v4_data/${id}/status`).set(next);
         }
 
+        // 6. 個人詳細頁面
+        function openDetail(id) {
+            selectedId = id;
+            const s = students.find(x => x.id === id);
+            const sData = window.cloudData[id] || { status: 'bg-present', tasks: [], msg: "" };
+            
+            document.getElementById('p-name').innerText = s.name;
+            document.getElementById('p-status-text').innerText = "今日狀態：" + stateNames[sData.status];
+            
+            let taskHtml = "";
+            if(sData.tasks) {
+                sData.tasks.forEach((t, i) => {
+                    taskHtml += `<span class="task-tag ${t.done ? 'done' : ''}" onclick="toggleTask('${id}', ${i})">${t.content}</span>`;
+                });
+            }
+            document.getElementById('p-tasks').innerHTML = taskHtml || "目前沒有任務";
+            document.getElementById('p-message').innerText = sData.msg || "老師還沒有留言喔！";
+            
+            document.getElementById('admin-editor').style.display = isAdmin ? "block" : "none";
+            document.getElementById('overlay').style.display = "block";
+            document.getElementById('student-panel').style.display = "block";
+        }
+
+        // 7. 老師管理登入
         function toggleAdmin() {
-            if (!isAdmin) {
-                if (prompt("請輸入管理密碼") === "0902") {
-                    isAdmin = true;
-                    refreshList();
-                }
-            } else {
-                isAdmin = false;
-                refreshList();
+            if (prompt("請輸入管理密碼：") === "0902") {
+                isAdmin = true;
+                alert("已啟動【老師管理模式】");
+                refresh();
             }
         }
 
-        function addTask(id) {
-            const val = document.getElementById(`input-${id}`).value;
-            if (!val) return;
-            const tasks = (window.allData[id] && window.allData[id].tasks) || [];
+        // 8. 學生查詢與改密碼
+        function studentLogin() {
+            const nameInput = prompt("請輸入您的【座號+姓名】(例如: 01毛語程)：");
+            const s = students.find(x => x.name === nameInput);
+            if(!s) return alert("名單中找不到此人，請確認輸入格式。");
+
+            db.ref(`jjvs_v4_users/${s.id}`).once('value', snap => {
+                const userData = snap.val();
+                if(!userData) {
+                    const newPass = prompt("【首次登入】請設定您的 4 位數密碼：");
+                    if(newPass && newPass.length >= 4) {
+                        db.ref(`jjvs_v4_users/${s.id}`).set({ pass: newPass });
+                        alert("密碼設定成功！");
+                        openDetail(s.id);
+                    }
+                } else {
+                    const pass = prompt("請輸入您的密碼：");
+                    if(pass === userData.pass) openDetail(s.id);
+                    else alert("密碼錯誤！");
+                }
+            });
+        }
+
+        // 9. 老師編輯功能
+        function saveTask() {
+            const val = document.getElementById('new-task').value;
+            if(!val) return;
+            const tasks = (window.cloudData[selectedId] && window.cloudData[selectedId].tasks) || [];
             tasks.push({ content: val, done: false });
-            db.ref(`class_system_data/${id}/tasks`).set(tasks);
+            db.ref(`jjvs_v4_data/${selectedId}/tasks`).set(tasks);
+            document.getElementById('new-task').value = "";
+        }
+
+        function saveMsg() {
+            const val = document.getElementById('new-msg').value;
+            db.ref(`jjvs_v4_data/${selectedId}/msg`).set(val);
+            document.getElementById('new-msg').value = "";
         }
 
         function toggleTask(id, idx) {
-            if (!isAdmin) return;
-            const tasks = window.allData[id].tasks;
+            if(!isAdmin) return;
+            const tasks = window.cloudData[id].tasks;
             tasks[idx].done = !tasks[idx].done;
-            db.ref(`class_system_data/${id}/tasks`).set(tasks);
+            db.ref(`jjvs_v4_data/${id}/tasks`).set(tasks);
         }
 
-        // 6. Excel 匯出
+        function closePanel() {
+            document.getElementById('overlay').style.display = "none";
+            document.getElementById('student-panel').style.display = "none";
+        }
+
+        // 10. Excel 匯出
         function exportExcel() {
-            const statusMap = { 'bg-present': '出席', 'bg-late': '遲到', 'bg-late-1': '一節遲', 'bg-absent': '缺席', 'bg-leave': '請假' };
             const exportData = students.map(s => {
-                const sData = window.allData[s.id] || { status: 'bg-present', tasks: [] };
+                const sData = window.cloudData[s.id] || { status: 'bg-present' };
                 return {
                     "班級": s.group,
                     "座號姓名": s.name,
-                    "今日出缺勤": statusMap[sData.status],
-                    "罰抄紀錄": sData.tasks ? sData.tasks.map(t => `${t.content}${t.done?'(已交)':'(未交)'}`).join('; ') : "無"
+                    "出缺勤狀態": stateNames[sData.status],
+                    "罰抄/待辦": sData.tasks ? sData.tasks.map(t => t.content + (t.done?'(已交)':'(未交)')).join(', ') : "",
+                    "老師評語": sData.msg || ""
                 };
             });
-
             const ws = XLSX.utils.json_to_sheet(exportData);
             const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "學生表現總表");
-            XLSX.writeFile(wb, `音演三莊學習紀錄_${new Date().toLocaleDateString()}.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "莊敬音樂科日報表");
+            XLSX.writeFile(wb, `莊敬音樂科紀錄_${new Date().toLocaleDateString()}.xlsx`);
         }
     </script>
 </body>
