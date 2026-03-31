@@ -5,14 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>莊敬音樂科教務管理系統</title>
 
-<!-- Firebase Compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 
-<!-- SheetJS for Excel export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-<!-- jsPDF for PDF export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
 
@@ -49,7 +46,7 @@ html, body { width: 100%; min-height: 100vh; background: var(--bg-deep); color: 
 
 /* ===== WATERMARK ===== */
 body::before {
-  content: '𝄞  🎹  𝄞  🎻  𝄞  🎹  𝄞  🎻  𝄞  🎹  𝄞  🎻';
+  content: '𝄞  🎹  𝄞  琴  𝄞  🎹  𝄞  琴  𝄞  🎹  步  琴';
   position: fixed; top: 0; left: 0; width: 100%; height: 100%;
   font-size: 80px; color: rgba(212,175,55,0.03);
   display: flex; align-items: center; justify-content: center;
@@ -663,7 +660,6 @@ textarea:focus { border-color: var(--gold); }
 </head>
 <body>
 
-<!-- ===== LOGIN SCREEN ===== -->
 <div id="loginScreen" class="screen active">
   <div class="login-box">
     <div class="login-logo">🎼</div>
@@ -701,7 +697,6 @@ textarea:focus { border-color: var(--gold); }
   </div>
 </div>
 
-<!-- ===== TEACHER APP SCREEN ===== -->
 <div id="appScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
@@ -718,7 +713,6 @@ textarea:focus { border-color: var(--gold); }
   </div>
 
   <div class="content-area">
-    <!-- ====== ATTENDANCE TAB ====== -->
     <div id="tabAttendance" class="tab-content">
       <div class="class-selector" id="classSelectorTeacher"></div>
       <div class="roll-toolbar">
@@ -734,13 +728,11 @@ textarea:focus { border-color: var(--gold); }
       <div class="student-grid" id="studentGrid"></div>
     </div>
 
-    <!-- ====== APPLY TAB ====== -->
     <div id="tabApply" class="tab-content" style="display:none">
       <h3 class="text-gold" style="margin-bottom:16px;">第八節外出申請審核</h3>
       <div id="applyList"><div class="empty-state">目前無待審核申請</div></div>
     </div>
 
-    <!-- ====== REPORT TAB ====== -->
     <div id="tabReport" class="tab-content" style="display:none">
       <div class="stats-grid" id="statsGrid"></div>
       <div class="flex-row" style="gap:10px;margin-bottom:20px;flex-wrap:wrap;">
@@ -751,7 +743,6 @@ textarea:focus { border-color: var(--gold); }
       <div class="student-grid" id="reportGrid"></div>
     </div>
 
-    <!-- ====== TEACHERS TAB ====== -->
     <div id="tabTeachers" class="tab-content" style="display:none">
       <div class="flex-row" style="margin-bottom:16px;">
         <h3 class="text-gold">教師帳號管理</h3>
@@ -762,7 +753,6 @@ textarea:focus { border-color: var(--gold); }
   </div>
 </div>
 
-<!-- ===== STUDENT SCREEN ===== -->
 <div id="studentScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
@@ -777,12 +767,10 @@ textarea:focus { border-color: var(--gold); }
     <div style="max-width:600px;margin:0 auto 20px;">
       <button class="btn-sm gold" onclick="openApplyExit()" style="width:100%;padding:14px;font-size:16px;">🚪 申請第八節外出</button>
     </div>
-    <!-- Exit pass trigger -->
     <div style="max-width:600px;margin:0 auto 20px;" id="myExitPassArea" style="display:none"></div>
   </div>
 </div>
 
-<!-- ===== DETAIL PANEL ===== -->
 <div id="detailPanel">
   <div class="detail-header">
     <div>
@@ -792,13 +780,11 @@ textarea:focus { border-color: var(--gold); }
     <button class="detail-close" onclick="closeDetail()">✕</button>
   </div>
 
-  <!-- Password -->
   <div class="detail-section">
     <div class="detail-section-title">🔑 密碼（明文）</div>
     <div class="password-display" id="detailPassword">—</div>
   </div>
 
-  <!-- Attendance today + history -->
   <div class="detail-section">
     <div class="detail-section-title">📋 今日出勤狀態</div>
     <div id="detailStatus" style="font-size:18px;font-weight:bold;margin-bottom:12px;"></div>
@@ -806,7 +792,6 @@ textarea:focus { border-color: var(--gold); }
     <div id="detailAttHistory"></div>
   </div>
 
-  <!-- Points -->
   <div class="detail-section">
     <div class="detail-section-title">⭐ 點數集點卡</div>
     <div class="points-card-wrap">
@@ -823,7 +808,6 @@ textarea:focus { border-color: var(--gold); }
     </div>
   </div>
 
-  <!-- Medals -->
   <div class="detail-section">
     <div class="detail-section-title">🎖️ 金牌庫存</div>
     <div class="medals-display" id="detailMedals"></div>
@@ -836,21 +820,18 @@ textarea:focus { border-color: var(--gold); }
     </div>
   </div>
 
-  <!-- Tasks -->
   <div class="detail-section">
     <div class="detail-section-title">📝 處罰任務</div>
     <div id="detailTasks"></div>
     <button class="btn-sm" style="margin-top:8px;width:100%;" onclick="openAddTask()">＋ 新增任務</button>
   </div>
 
-  <!-- Log -->
   <div class="detail-section">
     <div class="detail-section-title">📜 異動日誌</div>
     <div id="detailLog" style="max-height:300px;overflow-y:auto;"></div>
   </div>
 </div>
 
-<!-- ===== EXIT PASS ===== -->
 <div id="exitPass">
   <div class="exit-pass-title">✅ 准予外出</div>
   <div class="exit-pass-name" id="exitPassName">—</div>
@@ -859,7 +840,6 @@ textarea:focus { border-color: var(--gold); }
   <button class="exit-pass-close" onclick="document.getElementById('exitPass').classList.remove('active')">關閉</button>
 </div>
 
-<!-- ===== DIALOG ===== -->
 <div id="dialogOverlay">
   <div class="dialog-box">
     <div class="dialog-title" id="dialogTitle">提示</div>
@@ -868,10 +848,8 @@ textarea:focus { border-color: var(--gold); }
   </div>
 </div>
 
-<!-- ===== TOAST ===== -->
 <div class="toast" id="toast"></div>
 
-<!-- ===== JAVASCRIPT ===== -->
 <script>
 // ==============================
 // FIREBASE CONFIG (填入您的設定)
@@ -1287,44 +1265,51 @@ async function cycleAttendance(student, card) {
   const badge = card.querySelector('.status-badge');
   badge.className = `status-badge ${next}`;
   badge.textContent = next;
-
-  // Auto deduct 1 point on 遲
-  if (next === '遲') {
-    const data = await dbGet(`students/${student.id}`);
-    const pts = Math.max(0, (data?.points||0) - 1);
-    const logEntry = {
-      time: now(),
-      action: '遲到自動扣點',
-      reason: '遲到自動扣除 1 點',
-      teacher: currentUser.name,
-      delta: -1
-    };
-    const logKey = Date.now().toString();
-    await dbUpdate(`students/${student.id}`, {
-      points: pts,
-      [`log/${logKey}`]: logEntry
-    });
-    showToast(`${student.name} 遲到，已自動扣 1 點`);
-  }
 }
 
 async function saveAttendance() {
   if (!currentClass) return;
   const today = new Date().toLocaleDateString('zh-TW');
   const updates = {};
+  const studentsToDeduct = [];
 
   for (const [id, status] of Object.entries(pendingAttendance)) {
     const stu = getStudent(id);
     if (!stu || stu.cls !== currentClass) continue;
     updates[`${DB_ROOT}/students/${id}/attendance/${today}`] = status;
+    
+    // 如果最終狀態為「遲」，列入扣點清單
+    if (status === '遲') studentsToDeduct.push(id);
   }
 
   if (Object.keys(updates).length === 0) { showToast('無變更需儲存'); return; }
 
   try {
+    // 處理扣點邏輯
+    if (studentsToDeduct.length > 0) {
+      const dataPromises = studentsToDeduct.map(id => dbGet(`students/${id}`));
+      const dataResults = await Promise.all(dataPromises);
+      
+      studentsToDeduct.forEach((id, index) => {
+        const d = dataResults[index] || {};
+        const pts = Math.max(0, (d.points || 0) - 1);
+        const logKey = Date.now().toString() + index; 
+        
+        updates[`${DB_ROOT}/students/${id}/points`] = pts;
+        updates[`${DB_ROOT}/students/${id}/log/${logKey}`] = {
+          time: now(),
+          action: '遲到自動扣點',
+          reason: '遲到自動扣除 1 點',
+          teacher: currentUser.name,
+          delta: -1
+        };
+      });
+    }
+
     await db.ref('/').update(updates);
     pendingAttendance = {};
-    showToast('點名已儲存 ✓','success');
+    showToast('點名與獎懲已儲存 ✓','success');
+    renderStudentGrid(); // 重新渲染以更新星星顯示
   } catch(e) {
     showToast('儲存失敗','error');
   }
