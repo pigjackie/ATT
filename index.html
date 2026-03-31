@@ -759,13 +759,13 @@ textarea:focus { border-color: var(--gold); }
 // FIREBASE CONFIG (填入您的設定)
 // ==============================
 const FIREBASE_CONFIG = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  databaseURL: "YOUR_DATABASE_URL",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
+  authDomain: "jjvs-att.firebaseapp.com",
+  databaseURL: "https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "jjvs-att",
+  storageBucket: "jjvs-att.firebasestorage.app",
+  messagingSenderId: "199163483355",
+  appId: "1:199163483355:web:ac66bbb7407acede4ce8fe"
 };
 const DB_ROOT = "jjvs_v_final_cloud";
 
@@ -931,7 +931,7 @@ async function doLogin() {
   const pass = document.getElementById('loginPass').value.trim();
   if (!name||!pass) { showToast('請填寫帳號和密碼','error'); return; }
 
-  // Master check
+  // Master check（最高權限，不需連線 Firebase）
   if (name === MASTER.name && pass === MASTER.pass) {
     currentUser = { name, role:'master', classes: CLASSES };
     enterApp();
@@ -939,8 +939,12 @@ async function doLogin() {
   }
 
   // Teacher check via Firebase
+  showToast('驗證中…');
   try {
-    const teachers = await dbGet('teachers');
+    const teachers = await Promise.race([
+      dbGet('teachers'),
+      new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 8000))
+    ]);
     if (teachers) {
       for (const key of Object.keys(teachers)) {
         const t = teachers[key];
@@ -953,7 +957,12 @@ async function doLogin() {
     }
     showToast('帳號或密碼錯誤','error');
   } catch(e) {
-    showToast('連線失敗，請檢查 Firebase 設定','error');
+    if (e.message === 'timeout') {
+      showToast('⚠️ Firebase 連線逾時，請確認資料庫規則已設為公開讀取','error');
+    } else {
+      showToast('連線失敗：' + e.message, 'error');
+    }
+    console.error('Login error:', e);
   }
 }
 
@@ -1818,13 +1827,14 @@ document.getElementById('dialogOverlay').addEventListener('click', e => {
 // INIT
 // ==============================
 window.addEventListener('load', () => {
-  // Verify Firebase config
-  if (FIREBASE_CONFIG.apiKey === 'YOUR_API_KEY') {
-    const warning = document.createElement('div');
-    warning.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);background:#c0392b;color:white;padding:10px 24px;border-radius:20px;z-index:9999;font-size:14px;';
-    warning.textContent = '⚠️ 請先填入 Firebase 設定碼（搜尋 YOUR_API_KEY）';
-    document.body.appendChild(warning);
-  }
+  // Firebase 連線測試
+  db.ref('.info/connected').on('value', snap => {
+    if (snap.val() === true) {
+      console.log('✅ Firebase 已連線');
+    } else {
+      console.warn('⚠️ Firebase 未連線');
+    }
+  });
 });
 </script>
 </body>
