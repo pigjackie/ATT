@@ -1,247 +1,316 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>音樂科管理 V42</title>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-    <style>
-        :root { --gold: #D4AF37; --black: #080808; --safe: #27AE60; --danger: #E74C3C; }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--black); color: #fff; margin: 0; font-family: "PingFang TC", sans-serif; }
-        header { background: #000; color: var(--gold); padding: 15px; text-align: center; border-bottom: 2px solid var(--gold); position: sticky; top: 0; z-index: 1000; }
-        
-        #loginScreen { position: fixed; inset: 0; background: #000; display: flex; align-items: center; justify-content: center; z-index: 10000; }
-        .login-box { background: #fff; padding: 30px; border-radius: 25px; width: 85%; max-width: 350px; text-align: center; color: #333; }
-        
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; }
-        .s-box { background: #fff; border-radius: 20px; padding: 15px 5px; text-align: center; position: relative; color: #333; }
-        .s-dot { aspect-ratio: 1/1; width: 55px; margin: 0 auto 10px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 900; color: #fff; cursor: pointer; }
-        .s-name { font-weight: 900; font-size: 1rem; color: #000; }
-        .s-points { position: absolute; top: -5px; right: -5px; background: #FF4500; color: #fff; font-size: 0.7rem; padding: 3px 8px; border-radius: 12px; font-weight: bold; border: 1.5px solid #fff; }
-        
-        .batch-check { position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; z-index: 10; display: none; }
-        #batchBar { position: fixed; bottom: 0; left: 0; right: 0; background: #1a1a1a; padding: 20px; border-top: 2px solid var(--gold); display: none; z-index: 5000; text-align: center; }
-        
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 90%; max-width: 400px; background: #fff; border-radius: 30px; padding: 20px; z-index: 10005; color: #333; max-height: 80vh; overflow-y: auto; }
-        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 10001; }
-        
-        .btn { width: 100%; padding: 12px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
-        .btn-gold { background: var(--gold); color: #000; }
-        .btn-red { background: var(--danger); color: #fff; }
-        .btn-sm { padding: 5px 10px; font-size: 12px; border-radius: 8px; border: 1px solid var(--gold); background: transparent; color: var(--gold); }
-        input { width: 100%; padding: 12px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ccc; }
-        .tab-btn { padding: 8px 15px; border-radius: 15px; border: none; background: #eee; margin-right: 5px; font-weight: bold; }
-        .tab-btn.active { background: var(--gold); color: #fff; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>莊敬音樂科教務管理系統</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+
+<style>
+:root {
+  --gold: #D4AF37; --gold-light: #F0D060; --gold-dark: #A8891C;
+  --bg-deep: #0A0A0C; --bg-card: #111115; --bg-panel: #161619;
+  --text-primary: #F0E8D0; --text-secondary: #A09070;
+  --green: #2ECC71; --yellow: #F1C40F; --red: #E74C3C; --blue: #3498DB;
+  --radius: 15px; --shadow-gold: 0 0 15px rgba(212,175,55,0.1);
+}
+
+/* 移除 body::before 以解決手機卡頓問題 */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg-deep); color: var(--text-primary); font-family: "PingFang TC", "Noto Serif TC", serif; overflow-x: hidden; }
+
+/* 頂部金線 */
+body::after { content: ''; position: fixed; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); z-index: 1001; }
+
+.screen { display: none; position: relative; z-index: 1; }
+.screen.active { display: block; }
+
+/* 登入介面 */
+#loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 30%, #1a1a1e 0%, #000 70%); }
+.login-box { background: var(--bg-card); border: 1px solid rgba(212,175,55,0.2); border-radius: 25px; padding: 40px; width: 380px; max-width: 90vw; text-align: center; box-shadow: var(--shadow-gold); }
+.login-tab { flex: 1; padding: 12px; background: transparent; border: 1px solid rgba(212,175,55,0.2); color: var(--text-secondary); cursor: pointer; transition: 0.3s; }
+.login-tab.active { background: var(--gold); color: #000; font-weight: bold; }
+
+/* 主介面元件 */
+.topbar { position: sticky; top: 0; z-index: 100; background: rgba(10,10,12,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(212,175,55,0.2); padding: 10px 20px; display: flex; align-items: center; gap: 15px; height: 65px; }
+.nav-tabs { display: flex; background: var(--bg-card); border-bottom: 1px solid rgba(212,175,55,0.2); overflow-x: auto; padding: 0 10px; }
+.nav-tab { padding: 15px 20px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; }
+.nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+/* 學生網格 */
+.student-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 15px; }
+@media (max-width: 600px) { .student-grid { grid-template-columns: repeat(2, 1fr); } }
+
+.student-card { background: var(--bg-card); border: 1.5px solid rgba(212,175,55,0.1); border-radius: var(--radius); padding: 15px; position: relative; transition: 0.2s; }
+.student-card.batch-selected { border-color: var(--gold); background: rgba(212,175,55,0.05); }
+.card-check { position: absolute; top: 5px; left: 5px; width: 20px; height: 20px; display: none; accent-color: var(--gold); }
+body.batch-mode .card-check { display: block; }
+
+.status-dot { width: 100%; aspect-ratio: 1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 900; color: #fff; cursor: pointer; margin-bottom: 8px; }
+.name-label { font-size: 1rem; font-weight: bold; text-align: center; color: var(--text-primary); cursor: pointer; }
+
+/* 顏色定義 */
+.bg-出 { background: var(--green); } .bg-遲 { background: var(--yellow); } .bg-缺 { background: var(--red); } .bg-假 { background: var(--blue); } .bg-未 { background: #444; }
+
+/* 批次操作列 */
+#batchToolbar { position: fixed; bottom: 0; left: 0; right: 0; background: #000; border-top: 2px solid var(--gold); padding: 20px; display: none; z-index: 1000; text-align: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+/* 詳細面板 */
+#detailPanel { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 2000; display: none; overflow-y: auto; padding: 20px; }
+.detail-box { background: var(--bg-panel); border-radius: 25px; max-width: 500px; margin: 20px auto; padding: 25px; border: 1px solid var(--gold); }
+
+/* 按鈕樣式 */
+.btn-gold { background: var(--gold); color: #000; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; }
+.btn-sm { padding: 5px 12px; font-size: 12px; border: 1px solid var(--gold); background: transparent; color: var(--gold); border-radius: 8px; cursor: pointer; }
+
+/* 集點卡 */
+.points-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; margin: 15px 0; }
+.point-cell { aspect-ratio: 1; border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.point-cell.active { background: var(--gold); }
+</style>
 </head>
 <body>
 
-<div id="loginScreen">
-    <div class="login-box">
-        <h2 style="margin:0;">莊敬音樂科</h2>
-        <p style="color:var(--gold); font-weight:bold;">雲端行政系統 V42</p>
-        <input type="text" id="lAcc" placeholder="姓名 或 帳號">
-        <input type="password" id="lPw" placeholder="密碼">
-        <button class="btn btn-gold" onclick="doAuth()">登入管理</button>
+<div id="loginScreen" class="screen active">
+  <div class="login-box">
+    <div style="font-size: 40px; margin-bottom: 10px;">🎼</div>
+    <h2 style="color:var(--gold); margin-bottom: 5px;">莊敬音樂科</h2>
+    <p style="color:var(--text-secondary); font-size: 12px; margin-bottom: 25px;">ROYAL ADMIN V45</p>
+    
+    <div style="display:flex; margin-bottom: 20px;">
+      <button class="login-tab active" id="tabT" onclick="switchLogin('T')">教師</button>
+      <button class="login-tab" id="tabS" onclick="switchLogin('S')">學生</button>
     </div>
+
+    <input type="text" id="acc" placeholder="姓名或帳號" style="width:100%; padding:12px; margin-bottom:15px; border-radius:10px; border:none; background:#222; color:#fff;">
+    <input type="password" id="pw" placeholder="密碼" style="width:100%; padding:12px; margin-bottom:20px; border-radius:10px; border:none; background:#222; color:#fff;">
+    <button class="btn-gold" style="width:100%;" onclick="doAuth()">登入系統</button>
+  </div>
 </div>
 
-<div id="appScreen" style="display:none;">
-    <header>
-        <h3 id="lUser">載入中...</h3>
-        <div style="display:flex; justify-content:center; gap:8px; margin-top:10px;">
-            <button class="btn-sm" onclick="toggleBatch()">批次模式</button>
-            <button id="resetAllBtn" class="btn-sm" style="display:none; color:red; border-color:red;" onclick="resetAll()">🚨 全校重置</button>
-            <button class="btn-sm" onclick="location.reload()">登出</button>
-        </div>
-    </header>
-    <div id="tabs" style="display:flex; overflow-x:auto; padding: 15px 10px 5px;"></div>
-    <div id="sGrid" class="grid"></div>
-    <div id="batchBar">
-        <span style="color:var(--gold); font-weight:bold; margin-bottom:10px; display:block;">已選中學生</span>
-        <button class="btn btn-gold" onclick="batchAdd(1)">✨ 全員加 1 星</button>
-        <button class="btn" style="background:#444; color:#fff;" onclick="toggleBatch()">取消</button>
+<div id="appScreen" class="screen">
+  <div class="topbar">
+    <div style="font-size: 20px;">🏛️</div>
+    <div style="flex:1; font-weight:bold; color:var(--gold);">行政總部 - <span id="uName">---</span></div>
+    <button class="btn-sm" onclick="toggleBatch()">批次模式</button>
+    <button class="btn-sm" onclick="location.reload()">登出</button>
+  </div>
+
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showTab('att')">📋 點名管理</button>
+    <button class="nav-tab" onclick="showTab('report')">📊 數據報表</button>
+  </div>
+
+  <div id="tab_att" class="tab-content" style="padding:15px;">
+    <div id="clsTabs" style="display:flex; overflow-x:auto; gap:10px; margin-bottom:15px;"></div>
+    <div id="sGrid" class="student-grid"></div>
+    <button class="btn-gold" style="width:100%; margin-top:20px; background:#000; color:var(--gold); border:1px solid var(--gold);" onclick="saveAtt()">💾 儲存今日點名</button>
+  </div>
+
+  <div id="tab_report" class="tab-content" style="display:none; padding:20px; text-align:center;">
+    <div style="background:var(--bg-card); padding:20px; border-radius:20px; margin-bottom:20px;">
+      <h3 style="color:var(--gold);">全校行政權限</h3>
+      <p style="font-size:12px; color:var(--text-secondary); margin-bottom:15px;">此操作將影響所有雲端數據</p>
+      <button class="btn-gold" style="background:var(--red); color:#fff;" onclick="resetGlobal()">🚨 全校點數歸零</button>
     </div>
+    <button class="btn-gold" onclick="exportExcel()">📥 匯出 Excel 報表</button>
+  </div>
 </div>
 
-<div id="studentScreen" style="display:none; padding: 40px 20px; text-align:center;">
-    <div style="font-size:4rem;">🎼</div>
-    <div id="sCard" style="background:#fff; border-radius:25px; padding:30px; color:#333; margin: 20px 0;">載入中...</div>
-    <button class="btn btn-gold" onclick="location.reload()">重新整理</button>
+<div id="batchToolbar">
+  <div style="color:var(--gold); font-weight:bold; margin-bottom:10px;">已選取 <span id="bCount">0</span> 位學生</div>
+  <button class="btn-sm" style="background:var(--gold); color:#000;" onclick="batchPoints(1)">⭐ 一鍵加 1 星</button>
+  <button class="btn-sm" style="border-color:var(--red); color:var(--red);" onclick="batchPoints(-1)">－ 扣 1 星</button>
+  <button class="btn-sm" onclick="toggleBatch()">取消</button>
 </div>
 
-<div class="overlay" id="overlay" onclick="closeModal()"></div>
-<div class="modal" id="modal">
-    <h2 id="mName" style="text-align:center;">姓名</h2>
-    <div id="mStats" style="text-align:center; font-size:1.2rem; margin-bottom:20px;"></div>
-    <div id="adminTools" style="display:none; border-top:1px solid #eee; padding-top:15px;">
-        <button class="btn btn-gold" onclick="adj(1)">＋1 點</button>
-        <button class="btn" style="background:#eee;" onclick="adj(-1)">－1 點</button>
-        <button class="btn btn-red" onclick="resetOne()">🚨 重置此生</button>
+<div id="detailPanel" onclick="if(event.target==this)closeDetail()">
+  <div class="detail-box">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+      <h2 id="dName" style="color:var(--gold);">學生姓名</h2>
+      <button class="btn-sm" onclick="closeDetail()">✕</button>
     </div>
-    <button class="btn" style="background:#000; color:#fff;" onclick="closeModal()">關閉</button>
+    
+    <div class="points-grid" id="dPoints"></div>
+    <div style="text-align:center; margin-bottom:20px;">
+      目前星等：<span id="dPointNum" style="font-size:24px; font-weight:bold; color:var(--gold);">0</span> ⭐
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+      <button class="btn-gold" onclick="adj(1)">＋ 獎勵加點</button>
+      <button class="btn-gold" style="background:#444; color:#fff;" onclick="adj(-1)">－ 處罰扣點</button>
+    </div>
+    
+    <button class="btn-gold" style="width:100%; margin-top:30px; background:var(--red); color:#fff;" onclick="resetOne()">🚨 重置此生點數</button>
+  </div>
 </div>
 
 <script>
-    const M_N = "蕭旭成", M_P = "0902", DB = "jjvs_v_final_cloud";
-    const config = { 
-        apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw", 
-        databaseURL: "https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app" 
-    };
-    firebase.initializeApp(config);
-    const db = firebase.database();
+const M_N = "蕭旭成", M_P = "0902", DB = "jjvs_v_final_cloud";
+const firebaseConfig = { 
+  apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw", 
+  databaseURL: "https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app" 
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    let students = [], role = '', adm = {n:'', cls:'ALL'}, curSid = null, curGrp = '音三莊', isBatch = false;
+let students = [], role = '', curSid = null, curGrp = '音三莊', isBatch = false;
+let localProfiles = {}, pendingAtt = {};
 
-    function doAuth() {
-        const acc = document.getElementById('lAcc').value.trim();
-        const pw = document.getElementById('lPw').value.trim();
+function switchLogin(type) {
+  document.querySelectorAll('.login-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab' + type).classList.add('active');
+}
 
-        if(acc === M_N && pw === M_P) {
-            role = 'admin'; adm = {n:M_N, cls:'ALL'}; startApp(); return;
-        }
+function doAuth() {
+  const a = document.getElementById('acc').value.trim();
+  const p = document.getElementById('pw').value.trim();
+  if(a === M_N && p === M_P) { role = 'admin'; startApp(M_N); return; }
+  
+  db.ref(`${DB}/students`).once('value', sn => {
+    students = sn.val() || [];
+    const s = students.find(x => x.name === a);
+    if(s) {
+      db.ref(`${DB}/auth/${s.id}`).once('value', aSn => {
+        const auth = aSn.val() || {p:'0000'};
+        if(p === auth.p) { role = 'student'; curSid = s.id; startApp(s.name); }
+        else alert("密碼錯誤");
+      });
+    } else alert("查無此帳號");
+  });
+}
 
-        // 學生或其它老師登入邏輯
-        db.ref(`${DB}/students`).once('value', sn => {
-            students = sn.val() || [];
-            const f = students.find(s => s.name === acc);
-            if(f) {
-                db.ref(`${DB}/auth/${f.id}`).once('value', aSn => {
-                    const auth = aSn.val() || {p:'0000'};
-                    if(pw === auth.p) { role='student'; curSid = f.id; startApp(); }
-                    else alert("密碼錯誤");
-                });
-            } else alert("查無此人");
-        });
+function startApp(name) {
+  document.getElementById('loginScreen').remove(); // 物理銷毀，釋放記憶體
+  document.getElementById('uName').innerText = name;
+  if(role === 'admin') {
+    document.getElementById('appScreen').classList.add('active');
+    loadCloud();
+  } else {
+    // 學生介面簡化處理
+    alert("學生端個人看板載入中...");
+  }
+}
+
+function loadCloud() {
+  db.ref(`${DB}/students`).once('value', sn => { students = sn.val() || []; renderClsTabs(); });
+  db.ref(`${DB}/profiles`).on('value', sn => { localProfiles = sn.val() || {}; renderGrid(); });
+}
+
+function renderClsTabs() {
+  const grps = ["音三莊", "演三莊", "音二莊", "演二樸", "音一莊"];
+  const container = document.getElementById('clsTabs');
+  container.innerHTML = '';
+  grps.forEach(g => {
+    const btn = document.createElement('button');
+    btn.className = `btn-sm ${g === curGrp ? 'btn-gold' : ''}`;
+    btn.innerText = g;
+    btn.style.color = g === curGrp ? '#000' : 'var(--gold)';
+    btn.onclick = () => { curGrp = g; renderClsTabs(); renderGrid(); };
+    container.appendChild(btn);
+  });
+}
+
+function renderGrid() {
+  const grid = document.getElementById('sGrid');
+  grid.innerHTML = '';
+  const today = new Date().toLocaleDateString('zh-TW');
+  
+  students.filter(s => s.cls === curGrp).forEach(s => {
+    const p = localProfiles[s.id] || {points:0};
+    const att = pendingAtt[s.id] || '未';
+    const div = document.createElement('div');
+    div.className = `student-card ${isBatch && pendingAtt[s.id] ? 'batch-selected' : ''}`;
+    div.innerHTML = `
+      <input type="checkbox" class="card-check" id="chk-${s.id}" onchange="updateBatchCount()">
+      <div class="status-dot bg-${att}" onclick="cycleAtt('${s.id}')">${att}</div>
+      <div class="name-label" onclick="openDetail('${s.id}')">${s.name}</div>
+      <div style="text-align:center; font-size:10px; color:var(--gold); margin-top:5px;">${p.points} ⭐</div>
+    `;
+    grid.appendChild(div);
+  });
+}
+
+function cycleAtt(id) {
+  if(isBatch) return;
+  const seq = ['出','遲','缺','假'];
+  let cur = pendingAtt[id] || '出';
+  pendingAtt[id] = seq[(seq.indexOf(cur)+1)%4];
+  renderGrid();
+}
+
+function toggleBatch() {
+  isBatch = !isBatch;
+  document.body.classList.toggle('batch-mode', isBatch);
+  document.getElementById('batchToolbar').style.display = isBatch ? 'flex' : 'none';
+  renderGrid();
+}
+
+function updateBatchCount() {
+  const count = document.querySelectorAll('.card-check:checked').length;
+  document.getElementById('bCount').innerText = count;
+}
+
+function batchPoints(val) {
+  const selected = document.querySelectorAll('.card-check:checked');
+  if(selected.length === 0) return alert("請先勾選學生");
+  const updates = {};
+  selected.forEach(chk => {
+    const sid = chk.id.split('-')[1];
+    const curP = localProfiles[sid]?.points || 0;
+    updates[`${DB}/profiles/${sid}/points`] = Math.max(0, curP + val);
+  });
+  db.ref().update(updates).then(() => { alert("批次加點成功"); toggleBatch(); });
+}
+
+function openDetail(id) {
+  curSid = id;
+  const s = students.find(x => x.id === id);
+  const p = localProfiles[id] || {points:0};
+  document.getElementById('dName').innerText = s.name;
+  document.getElementById('dPointNum').innerText = p.points;
+  
+  const pg = document.getElementById('dPoints');
+  pg.innerHTML = '';
+  for(let i=0; i<10; i++) {
+    const cell = document.createElement('div');
+    cell.className = `point-cell ${i < p.points ? 'active' : ''}`;
+    cell.innerText = i < p.points ? '⭐' : '';
+    pg.appendChild(cell);
+  }
+  document.getElementById('detailPanel').style.display = 'block';
+}
+
+function adj(v) {
+  const curP = localProfiles[curSid]?.points || 0;
+  db.ref(`${DB}/profiles/${curSid}/points`).set(Math.max(0, curP + v));
+}
+
+function resetOne() {
+  if(confirm("確定要將此學生的點數清空嗎？")) {
+    db.ref(`${DB}/profiles/${curSid}/points`).set(0);
+  }
+}
+
+function resetGlobal() {
+  const pw = prompt("請輸入管理密碼以執行全校重置：");
+  if(pw === M_P) {
+    if(confirm("🚨 警告：全校點數將歸零，此操作不可復原！")) {
+      db.ref(`${DB}/profiles`).remove();
     }
+  }
+}
 
-    function startApp() {
-        document.getElementById('loginScreen').remove(); // 物理移除登入框
-        if(role === 'admin') {
-            document.getElementById('appScreen').style.display = 'block';
-            document.getElementById('lUser').innerText = `🏛️ 行政中心 - ${adm.n}`;
-            if(adm.n === M_N) document.getElementById('resetAllBtn').style.display = 'inline-block';
-            loadData();
-        } else {
-            document.getElementById('studentScreen').style.display = 'block';
-            loadStudentView();
-        }
-    }
-
-    function loadData() {
-        db.ref(`${DB}/students`).once('value', sn => {
-            students = sn.val() || [];
-            renderTabs();
-            syncUpdates();
-        });
-    }
-
-    function syncUpdates() {
-        db.ref(`${DB}/profiles`).on('value', sn => {
-            window.profiles = sn.val() || {};
-            renderGrid();
-        });
-    }
-
-    function renderTabs() {
-        const grps = ["音三莊", "演三莊", "音二莊", "演二樸", "音一莊"];
-        const t = document.getElementById('tabs');
-        t.innerHTML = '';
-        grps.forEach(g => {
-            const btn = document.createElement('button');
-            btn.className = `tab-btn ${g === curGrp ? 'active' : ''}`;
-            btn.innerText = g;
-            btn.onclick = () => { curGrp = g; renderTabs(); renderGrid(); };
-            t.appendChild(btn);
-        });
-    }
-
-    function renderGrid() {
-        const g = document.getElementById('sGrid');
-        g.innerHTML = '';
-        students.filter(s => s.cls === curGrp).forEach(s => {
-            const p = window.profiles[s.id] || {points:0};
-            g.innerHTML += `
-                <div class="s-box">
-                    <input type="checkbox" class="batch-check" value="${s.id}" style="display:${isBatch?'block':'none'}">
-                    <div class="s-points">${p.points}P</div>
-                    <div class="s-dot" style="background:var(--gold)" onclick="openD('${s.id}')">${s.name[0]}</div>
-                    <div class="s-name">${s.name}</div>
-                </div>`;
-        });
-    }
-
-    function toggleBatch() {
-        isBatch = !isBatch;
-        document.getElementById('batchBar').style.display = isBatch ? 'block' : 'none';
-        renderGrid();
-    }
-
-    function batchAdd(val) {
-        const checks = document.querySelectorAll('.batch-check:checked');
-        if(checks.length === 0) return alert("請先勾選學生");
-        const updates = {};
-        checks.forEach(c => {
-            const sid = c.value;
-            const curP = (window.profiles[sid] ? window.profiles[sid].points : 0);
-            updates[`${DB}/profiles/${sid}/points`] = curP + val;
-        });
-        db.ref().update(updates).then(() => {
-            alert(`成功為 ${checks.length} 位學生加點`);
-            toggleBatch();
-        });
-    }
-
-    function openD(id) {
-        curSid = id;
-        const s = students.find(x => x.id === id);
-        const p = window.profiles[id] || {points:0};
-        document.getElementById('mName').innerText = s.name;
-        document.getElementById('mStats').innerText = `目前星等：${p.points} ⭐`;
-        document.getElementById('overlay').style.display = 'block';
-        document.getElementById('modal').style.display = 'block';
-        if(role === 'admin') document.getElementById('adminTools').style.display = 'block';
-    }
-
-    function adj(v) {
-        const cur = (window.profiles[curSid] ? window.profiles[curSid].points : 0);
-        db.ref(`${DB}/profiles/${curSid}/points`).set(Math.max(0, cur + v));
-    }
-
-    function resetOne() {
-        if(confirm("確定要重置這位學生的所有點數嗎？")) {
-            db.ref(`${DB}/profiles/${curSid}`).remove().then(() => closeModal());
-        }
-    }
-
-    function resetAll() {
-        if(confirm("🚨 警告：這將會清空全校學生的獎懲點數與紀錄！確定執行？")) {
-            db.ref(`${DB}/profiles`).remove().then(() => alert("全校數據已歸零"));
-        }
-    }
-
-    function loadStudentView() {
-        db.ref(`${DB}/profiles/${curSid}`).on('value', sn => {
-            const p = sn.val() || {points:0};
-            const s = students.find(x => x.id === curSid);
-            document.getElementById('sCard').innerHTML = `
-                <h2 style="margin:0; color:var(--gold);">${s.name}</h2>
-                <p>${s.cls}</p>
-                <hr>
-                <div style="font-size:2.5rem; font-weight:bold;">${p.points} <small style="font-size:1rem;">⭐</small></div>
-                <p>個人榮譽點數</p>
-            `;
-        });
-    }
-
-    function closeModal() {
-        document.getElementById('overlay').style.display = 'none';
-        document.getElementById('modal').style.display = 'none';
-    }
+function closeDetail() { document.getElementById('detailPanel').style.display = 'none'; }
+function showTab(id) {
+  document.querySelectorAll('.tab-content').forEach(t => t.style.display='none');
+  document.getElementById('tab_'+id).style.display='block';
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+}
 </script>
-
 </body>
 </html>
