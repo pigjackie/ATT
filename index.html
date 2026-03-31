@@ -3,153 +3,209 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>莊敬音樂科—行政核心系統</title>
+    <title>莊敬音樂科—行政管理旗艦版</title>
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 
     <style>
-        :root { --primary: #FFD700; --bg: #FFF9C4; --text: #333; --accent: #FF4500; --safe: #2ecc71; --danger: #ff4d4f; }
-        body { background: var(--bg); color: var(--text); font-family: "Microsoft JhengHei", sans-serif; margin: 0; padding: 0; }
-        
-        #gate-screen { height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle, var(--primary), #FFB300); }
-        .gate-card { background: #fff; padding: 30px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); width: 85%; max-width: 380px; text-align: center; }
+        :root {
+            --primary-gold: #D4AF37;
+            --dark-steel: #2C3E50;
+            --bg-glass: #F8F9FA;
+            --present: #27AE60;
+            --late: #F39C12;
+            --absent: #C0392B;
+            --leave: #2980B9;
+            --accent: #E67E22;
+        }
 
-        #app-screen { display: none; padding: 10px; min-height: 100vh; }
-        header { text-align: center; background: var(--primary); padding: 20px; border-radius: 0 0 40px 40px; margin: -10px -10px 10px -10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 100; }
-        
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-        .s-box { background: #fff; border-radius: 18px; padding: 15px 5px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1.5px solid #eee; position: relative; }
-        .s-dot { width: 55px; height: 55px; border-radius: 15px; margin: 0 auto 10px; border: 3px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.1); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: bold; color: #fff; }
-        .s-points { position: absolute; top: -5px; right: -5px; background: var(--accent); color: #fff; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
+        body { 
+            background: #E0E0E0; 
+            color: #333; 
+            font-family: -apple-system, "Noto Sans TC", sans-serif; 
+            margin: 0; padding: 0; overflow-x: hidden; 
+        }
 
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 94%; max-width: 480px; background: #fff; border-radius: 30px; padding: 20px; z-index: 1001; box-shadow: 0 25px 70px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto; }
-        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; }
-        
-        /* 外出核可畫面 (警衛專用) */
-        #pass-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--safe); z-index: 5000; color: #fff; text-align: center; padding-top: 60px; }
-        .pass-card { background: #fff; color: #000; margin: 20px; padding: 30px; border-radius: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        /* 磨砂玻璃質感門禁 */
+        #gate-screen { 
+            height: 100vh; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1a1a1a 0%, #333 100%);
+        }
+        .gate-card { 
+            background: rgba(255, 255, 255, 0.95); padding: 40px 30px; border-radius: 35px;
+            width: 85%; max-width: 380px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
 
-        .btn { width: 100%; padding: 14px; margin-top: 10px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; }
-        .btn-gold { background: var(--primary); color: #000; }
-        .btn-dark { background: #000; color: #fff; }
+        /* 質感頂部 */
+        header { 
+            background: var(--dark-steel); color: var(--primary-gold); 
+            padding: 25px 15px; text-align: center; border-radius: 0 0 40px 40px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15); position: sticky; top: 0; z-index: 100;
+        }
+
+        /* 絕對對齊 1x3 網格 */
+        .grid { 
+            display: grid; grid-template-columns: repeat(3, 1fr); 
+            gap: 12px; padding: 15px; margin-top: 10px;
+        }
+        .s-box { 
+            background: #fff; border-radius: 22px; padding: 15px 5px; 
+            text-align: center; box-shadow: 0 8px 15px rgba(0,0,0,0.05); 
+            border: 1px solid rgba(0,0,0,0.03); position: relative;
+            transition: 0.3s;
+        }
+        .s-dot { 
+            aspect-ratio: 1/1; width: 80%; max-width: 60px; margin: 0 auto 10px;
+            border-radius: 18px; border: 4px solid #fff; box-shadow: 0 5px 10px rgba(0,0,0,0.1);
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            font-size: 1.4rem; font-weight: 900; color: #fff;
+        }
+        .s-name { font-weight: bold; font-size: 0.95rem; color: var(--dark-steel); }
+        .s-points { position: absolute; top: -5px; right: -5px; background: var(--accent); color: #fff; font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; font-weight: bold; }
+
+        /* 質感彈窗 */
+        .modal { 
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+            width: 92%; max-width: 480px; background: #fff; border-radius: 35px; padding: 25px; 
+            z-index: 1001; box-shadow: 0 30px 100px rgba(0,0,0,0.5); max-height: 90vh; overflow-y: auto;
+        }
+        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; backdrop-filter: blur(5px); }
+
+        /* 外出核可證 (絕美全屏) */
+        #pass-screen { 
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+            background: var(--present); z-index: 5000; text-align: center; color: #fff;
+        }
+
+        .btn { 
+            width: 100%; padding: 16px; margin-top: 12px; border-radius: 18px; 
+            border: none; font-weight: bold; cursor: pointer; font-size: 1rem; transition: 0.2s;
+        }
+        .btn-gold { background: var(--primary-gold); color: #fff; box-shadow: 0 5px 15px rgba(212,175,55,0.3); }
+        .btn-dark { background: var(--dark-steel); color: #fff; }
         
-        .section-title { font-size: 1.1rem; font-weight: bold; border-left: 5px solid var(--primary); padding-left: 10px; margin: 18px 0 8px 0; text-align: left; }
-        .log-row { background: #f8f8f8; border-radius: 12px; padding: 10px; margin-bottom: 6px; font-size: 0.8rem; border-left: 4px solid #ddd; position: relative; }
-        .slot { width: 32px; height: 32px; border-radius: 50%; background: rgba(0,0,0,0.1); border: 1px dashed #ccc; display: inline-flex; align-items: center; justify-content: center; margin: 2px; }
-        .slot-active { background: #fff; border: 2px solid var(--primary); }
+        .section-title { font-size: 1.1rem; font-weight: bold; color: var(--dark-steel); border-left: 6px solid var(--primary-gold); padding-left: 12px; margin: 20px 0 10px 0; text-align: left; }
+        .log-row { background: #f1f3f5; border-radius: 15px; padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 4px solid var(--primary-gold); position: relative; }
+        
+        input, select, textarea { width: 100%; padding: 12px; border-radius: 12px; border: 1.5px solid #ddd; margin-bottom: 10px; font-size: 1rem; box-sizing: border-box; }
+        .tab-btn { white-space: nowrap; padding: 12px 20px; border-radius: 20px; border: none; background: #fff; font-weight: bold; color: var(--dark-steel); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .tab-btn.active { background: var(--primary-gold); color: #fff; }
     </style>
 </head>
 <body>
 
     <div id="pass-screen" onclick="this.style.display='none'">
-        <div style="font-size: 5rem;">✅</div>
-        <h1 style="font-size: 2.5rem;">准予外出</h1>
-        <div class="pass-card">
-            <h2 id="pass-name">學生姓名</h2>
-            <p style="font-size: 1.2rem;">第八節課後請假核可</p>
-            <hr>
-            <h1 id="pass-date" style="font-size: 2rem; color: var(--accent);">2026-03-31</h1>
-            <p>核可教師：<span id="pass-admin">蕭老師</span></p>
+        <div style="margin-top: 20vh; font-size: 6rem;">🎫</div>
+        <h1 style="font-size: 3rem; letter-spacing: 5px;">准予外出</h1>
+        <div style="background:#fff; color:#000; margin: 30px; padding: 40px; border-radius: 40px;">
+            <h1 id="pass-name" style="font-size: 2.5rem; margin:0;">學生姓名</h1>
+            <p style="font-size: 1.2rem; color:#666;">第八節請假審核通過</p>
+            <hr style="border: 0.5px solid #eee;">
+            <h2 id="pass-date" style="color:var(--accent); font-size: 2rem;">2026-03-31</h2>
+            <p>核可教師：<span id="pass-admin" style="font-weight:bold;">校方管理部</span></p>
         </div>
-        <p>點擊畫面關閉</p>
+        <p>點擊螢幕關閉通行證</p>
     </div>
 
     <div id="gate-screen">
-        <h1>🎹 莊敬音樂科 🎻</h1>
         <div class="gate-card">
-            <input type="text" id="login-acc" placeholder="帳號" style="width:100%; padding:12px; border-radius:12px; border:1px solid #ccc; margin-bottom:10px;">
-            <input type="password" id="login-pw" placeholder="密碼" style="width:100%; padding:12px; border-radius:12px; border:1px solid #ccc; margin-bottom:15px;">
+            <h1 style="margin:0; font-size:2rem; color:var(--dark-steel);">莊敬音樂科</h1>
+            <p style="color:#888; font-weight:bold; margin: 10px 0 25px 0;">數位教務管理中心</p>
+            <input type="text" id="login-acc" placeholder="帳號 / 姓名">
+            <input type="password" id="login-pw" placeholder="密碼 (初始 0000)">
             <button class="btn btn-gold" onclick="doAuth()">進入系統</button>
-            <button class="btn" style="background:none; color:#888;" onclick="alert('請輸入姓名查詢')">學生入口請直接輸入帳密</button>
+            <p style="font-size:0.7rem; color:#aaa; margin-top:20px;">僅限授權人員與本系學生登入</p>
         </div>
     </div>
 
     <div id="app-screen">
         <header>
-            <h2 style="margin:0; font-size:1.2rem;">莊敬音樂科管理</h2>
-            <div id="login-info" style="font-size:0.85rem; margin-top:5px; font-weight:bold;">同步中...</div>
-            <div style="display:flex; justify-content:center; gap:10px; margin-top:10px;">
-                <button id="admin-setup-btn" class="btn" style="display:none; width:auto; padding:5px 12px; background:#000; color:#fff; font-size:0.75rem;" onclick="openSetup()">⚙️ 教師管理</button>
-                <button onclick="logout()" style="background:#fff; border:1px solid #000; padding:5px 12px; border-radius:15px; font-size:0.75rem;">安全登出</button>
+            <h2 style="margin:0;">🎹 莊敬音樂科管理中心</h2>
+            <div id="login-info" style="font-size:0.85rem; margin-top:8px; background:rgba(255,255,255,0.2); display:inline-block; padding:3px 15px; border-radius:20px;">資料載入中...</div>
+            <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
+                <button id="admin-setup-btn" class="btn" style="display:none; width:auto; padding:6px 15px; background:var(--primary-gold); color:#000; font-size:0.8rem;" onclick="openSetup()">⚙️ 管理教師</button>
+                <button onclick="logout()" style="background:rgba(255,255,255,0.1); border:1px solid #fff; color:#fff; width:auto; padding:6px 15px; border-radius:15px; font-size:0.8rem;">登出</button>
             </div>
         </header>
 
-        <div id="admin-view" style="display:none; padding-bottom: 80px;">
-            <div style="background:#fff; padding:10px; border-radius:15px; margin-bottom:10px; text-align:center;">
-                📅 <input type="date" id="target-date" onchange="loadCloud()" style="padding:5px; font-size:1rem; border-radius:8px;">
+        <div id="admin-view" style="display:none; padding-bottom: 100px;">
+            <div style="background:#fff; padding:15px; border-radius:25px; margin-bottom:15px; text-align:center;">
+                📅 點名日期：<input type="date" id="target-date" onchange="loadCloud()" style="width: auto; margin-left: 10px;">
             </div>
-            <div id="tabs" style="display:flex; overflow-x:auto; gap:8px; margin-bottom:10px;"></div>
+            <div id="tabs" style="display:flex; overflow-x:auto; gap:10px; margin-bottom:15px; padding-bottom:5px;"></div>
             <div id="student-grid" class="grid"></div>
-            <button class="btn btn-dark" style="border:2px solid var(--primary)" onclick="syncCloud()">💾 儲存今日紀錄</button>
             
-            <div class="section-title">🔔 外出請假審核</div>
-            <div id="leave-list" style="background:#fff; padding:10px; border-radius:15px; font-size:0.9rem;">尚無申請</div>
+            <button class="btn btn-dark" style="border:2px solid var(--primary-gold); box-shadow: 0 10px 20px rgba(0,0,0,0.2);" onclick="syncCloud()">💾 儲存今日點名</button>
+            
+            <div class="section-title">🚶 外出核可申請單</div>
+            <div id="leave-list" style="background:#fff; padding:15px; border-radius:25px; font-size:0.9rem;">目前無申請</div>
         </div>
 
-        <div id="student-view" style="display:none; text-align:center; padding-top:30px;">
+        <div id="student-view" style="display:none; text-align:center; padding-top:40px;">
+            <div style="font-size:3rem;">🎓</div>
             <button class="btn btn-gold" onclick="openDetail(curStudent.id)">開啟我的個人看板</button>
-            <button class="btn" style="background:#fff; border:2px solid var(--accent); color:var(--accent);" onclick="applyLeave()">📝 申請第八節外出</button>
+            <button class="btn btn-dark" onclick="applyLeave()">📝 申請第八節外出</button>
             <div id="student-leave-status" style="margin-top:20px; font-weight:bold;"></div>
         </div>
     </div>
 
     <div class="overlay" id="overlay" onclick="closeModal()"></div>
     <div class="modal" id="modal">
-        <h2 id="m-name" style="margin-top:0; color:#d48806; text-align:center;">姓名</h2>
+        <h2 id="m-name" style="margin-top:0; color:var(--dark-steel); text-align:center; font-size:1.8rem;">學生姓名</h2>
         
-        <div id="admin-only-info" style="display:none; text-align:center; margin-bottom:10px;">
-            🔑 學生密碼：<span id="m-pw" style="background:#000; color:#FFD700; padding:2px 8px; border-radius:5px;">----</span>
+        <div id="admin-only-info" style="display:none; text-align:center; background:#FFFDE7; padding:12px; border-radius:20px; margin-bottom:15px;">
+            🔐 學生即時密碼：<span id="m-pw" style="font-weight:bold; letter-spacing:2px; font-size:1.2rem;">----</span>
         </div>
 
-        <div class="section-title">⭐ 好寶寶集點 (10格)</div>
+        <div class="section-title">⭐ 好寶寶集點 (5星換1金)</div>
         <div class="icon-box" id="stamp-card"></div>
-        <div id="admin-pts-tool" style="display:none; text-align:center; margin-top:5px;">
-            <button class="btn btn-gold btn-adj" style="width:45px; height:45px;" onclick="adj('p', 1)">➕</button>
-            <button class="btn btn-adj" style="width:45px; height:45px; background:#eee" onclick="adj('p', -1)">➖</button>
+        <div id="admin-pts-tool" style="display:none; text-align:center;">
+            <button class="btn btn-gold" style="width:60px; height:50px;" onclick="adj('p', 1)">➕</button>
+            <button class="btn" style="width:60px; height:50px; background:#eee" onclick="adj('p', -1)">➖</button>
         </div>
 
-        <div class="section-title">🏅 金牌庫存 (5星換1金)</div>
+        <div class="section-title">🏅 榮譽金牌庫存</div>
         <div class="icon-box" id="medal-card"></div>
-        <div id="admin-med-tool" style="display:none; text-align:center; margin-top:5px;">
-            <button class="btn btn-gold btn-adj" style="width:45px; height:45px;" onclick="adj('m', 1)">➕</button>
-            <button class="btn btn-adj" style="width:45px; height:45px; background:var(--accent); color:#fff;" onclick="adj('m', -1)">➖</button>
+        <div id="admin-med-tool" style="display:none; text-align:center;">
+            <button class="btn btn-gold" style="width:60px; height:50px;" onclick="adj('m', 1)">➕</button>
+            <button class="btn" style="width:60px; height:50px; background:var(--absent); color:#fff;" onclick="adj('m', -1)">➖</button>
         </div>
-        <button id="redeem-btn" class="btn btn-gold" onclick="redeem()">🎟️ 點擊集點換金牌</button>
+        <button id="redeem-btn" class="btn btn-gold" onclick="redeem()">🎟️ 兌換金牌 (扣5星)</button>
 
-        <div class="section-title">💬 老師私訊</div>
-        <div id="m-msg" style="padding:15px; background:#FFF9C4; border-radius:15px; font-weight:bold;">無</div>
+        <div class="section-title">📜 完整獎懲異動日誌</div>
+        <div id="m-history" style="max-height:250px; overflow-y:auto; background:#f8f9fa; padding:15px; border-radius:20px;"></div>
 
-        <div class="section-title">📅 完整獎懲與缺曠歷史</div>
-        <div id="m-history" style="max-height:200px; overflow-y:auto; background:#f5f5f5; padding:10px; border-radius:15px;"></div>
-
-        <div id="admin-input-zone" style="display:none; margin-top:20px; border-top:1px solid #ddd; padding-top:15px;">
-            <textarea id="t-msg" placeholder="輸入訊息..." style="width:100%; height:50px; padding:10px; border-radius:10px;"></textarea>
-            <button class="btn btn-gold" onclick="updateMsg()">發送私訊</button>
+        <div id="admin-msg-zone" style="display:none; margin-top:20px; border-top:1px solid #eee; padding-top:20px;">
+            <textarea id="t-msg" placeholder="輸入給學生的話..."></textarea>
+            <button class="btn btn-dark" onclick="updateMsg()">發送訊息</button>
         </div>
-        <button id="close-btn" class="btn" style="background:#000; color:#fff; margin-top:20px;" onclick="closeModal()">返回</button>
+        <button class="btn btn-dark" style="margin-top:20px;" onclick="closeModal()">返回列表</button>
     </div>
 
     <div id="setup-modal" class="modal">
-        <h2 style="text-align:center;">教師權限設定</h2>
-        <div style="background:#f9f9f9; padding:15px; border-radius:15px;">
-            <input type="text" id="new-t-name" placeholder="老師姓名" style="width:100%; padding:10px; margin-bottom:5px;">
-            <input type="text" id="new-t-acc" placeholder="帳號" style="width:100%; padding:10px; margin-bottom:5px;">
-            <input type="text" id="new-t-pw" placeholder="密碼" style="width:100%; padding:10px; margin-bottom:5px;">
-            <select id="new-t-class" style="width:100%; padding:10px;">
-                <option value="ALL">管理全班 (蕭旭成專用)</option>
+        <h2>教師權限管理</h2>
+        <div style="background:#f9f9f9; padding:20px; border-radius:25px;">
+            <input type="text" id="new-t-name" placeholder="老師姓名">
+            <input type="text" id="new-t-acc" placeholder="老師帳號">
+            <input type="text" id="new-t-pw" placeholder="老師密碼">
+            <select id="new-t-class">
+                <option value="ALL">管理全系學員 (Master)</option>
                 <option value="音三莊">音三莊</option><option value="演三莊">演三莊</option>
                 <option value="音二莊">音二莊</option><option value="演二樸">演二樸</option><option value="音一莊">音一莊</option>
             </select>
-            <button class="btn btn-gold" onclick="addTeacher()">➕ 加入教師帳號</button>
+            <button class="btn btn-gold" onclick="addTeacher()">建立帳號</button>
         </div>
-        <div id="teacher-list" style="margin-top:15px; font-size:0.8rem;"></div>
-        <button class="btn btn-dark" onclick="this.parentElement.style.display='none'; document.getElementById('overlay').style.display='none'">關閉</button>
+        <div id="teacher-list" style="margin-top:20px;"></div>
+        <button class="btn btn-dark" onclick="document.getElementById('setup-modal').style.display='none'; document.getElementById('overlay').style.display='none'">關閉視窗</button>
     </div>
 
     <script>
-        const MASTER_ACC = "蕭旭成"; const MASTER_PW_HASH = "81944e803d987d609804e71df1155986925829672658826723223015b6d5f7c3"; // 0902
+        // 🔐 固定金鑰與配置
+        const MASTER_ACC = "蕭旭成"; 
+        const MASTER_PW_HASH = "81944e803d987d609804e71df1155986925829672658826723223015b6d5f7c3"; // 0902
         
         const firebaseConfig = {
             apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
@@ -163,49 +219,58 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // 🟢 133位完整名單
         const students = [
             {id:"3A01",name:"01毛語程",group:"音三莊"},{id:"3A02",name:"02林叡成",group:"音三莊"},{id:"3A03",name:"03田宇紘",group:"音三莊"},{id:"3A04",name:"04吳昆達",group:"音三莊"},{id:"3A05",name:"05吳宥良",group:"音三莊"},{id:"3A06",name:"06黃崇恩",group:"音三莊"},{id:"3A07",name:"07林宏澤",group:"音三莊"},{id:"3A08",name:"08金品澔",group:"音三莊"},{id:"3A09",name:"09劉宸昀",group:"音三莊"},{id:"3A10",name:"10蔡呈樂",group:"音三莊"},{id:"3A11",name:"11蘇瑞吾",group:"音三莊"},{id:"3A12",name:"12梁之凡",group:"音三莊"},{id:"3A13",name:"13蔡宗佑",group:"音三莊"},{id:"3A14",name:"14黃穩達",group:"音三莊"},{id:"3A15",name:"15馮康維",group:"音三莊"},{id:"3A16",name:"16倪秉澤",group:"音三莊"},{id:"3A17",name:"17廖敏君",group:"音三莊"},{id:"3A18",name:"18劉慶霈",group:"音三莊"},{id:"3A19",name:"19蔡慧琳",group:"音三莊"},{id:"3A20",name:"20鄭淳融",group:"音三莊"},{id:"3A21",name:"21魏宜宸",group:"音三莊"},{id:"3A22",name:"22徐婉瑜",group:"音三莊"},{id:"3A23",name:"23安𠸍臻",group:"音三莊"},{id:"3A24",name:"24江岑君",group:"音三莊"},{id:"3A25",name:"25池宛昕",group:"音三莊"},{id:"3A26",name:"李曉萍",group:"音三莊"},{id:"3A27",name:"周玄禮",group:"音三莊"},{id:"3A28",name:"王以昕",group:"音三莊"},{id:"3A29",name:"林祐立",group:"音三莊"},{id:"3A30",name:"邱詩涵",group:"音三莊"},{id:"3A31",name:"胡云珊",group:"音三莊"},{id:"3A32",name:"蔡逸宣",group:"音三莊"},{id:"3A33",name:"高慧君",group:"音三莊"},{id:"3A34",name:"張路淇",group:"音三莊"},{id:"3A35",name:"陳芃瑾",group:"音三莊"},{id:"3A36",name:"陳雨彤",group:"音三莊"},{id:"3A37",name:"陳宥安",group:"音三莊"},{id:"3A38",name:"陳圓卿",group:"音三莊"},{id:"3A39",name:"傅克諳",group:"音三莊"},{id:"3A40",name:"曾妘湘",group:"音三莊"},
             {id:"3D02",name:"02王玟茜",group:"演三莊"},{id:"3D03",name:"03王語舒",group:"演三莊"},{id:"3D04",name:"04姚宥湘",group:"演三莊"},{id:"3D05",name:"05陳思妤",group:"演三莊"},{id:"3D06",name:"06楊鎔慈",group:"演三莊"},{id:"3D09",name:"09王偉家",group:"演三莊"},{id:"3D10",name:"10何建伸",group:"演三莊"},{id:"3D12",name:"12姜榮紳",group:"演三莊"},{id:"3D13",name:"13郭庭傑",group:"演三莊"},{id:"3D14",name:"14陳泊源",group:"演三莊"},{id:"3D15",name:"15陳軍任",group:"演三莊"},{id:"3D16",name:"16黃治容",group:"演三莊"},{id:"3D17",name:"17盧宥辰",group:"演三莊"},{id:"3D18",name:"18謝行知",group:"演三莊"},
             {id:"2A01",name:"01程冠中",group:"音二莊"},{id:"2A02",name:"02李安恬",group:"音二莊"},{id:"2A03",name:"03吳芊逸",group:"音二莊"},{id:"2A04",name:"04林辰欣",group:"音二莊"},{id:"2A05",name:"05林孟蓁",group:"音二莊"},{id:"2A06",name:"06林采妮",group:"音二莊"},{id:"2A07",name:"07林恩熙",group:"音二莊"},{id:"2A08",name:"08翁閩彗",group:"音二莊"},{id:"2A09",name:"09陳維妮",group:"音二莊"},{id:"2A10",name:"10連妤婷",group:"音二莊"},{id:"2A11",name:"11莊珈維",group:"音二莊"},{id:"2A12",name:"12黎育彤",group:"音二莊"},{id:"2A13",name:"13樊千菲",group:"音二莊"},{id:"2A14",name:"14蔡佳穎",group:"音二莊"},{id:"2A15",name:"15謝季秉",group:"音二莊"},{id:"2A16",name:"16陳妍欣",group:"音二莊"},{id:"2A17",name:"17羅筱涵",group:"音二莊"},{id:"2A18",name:"蘇奕婷",group:"音二莊"},{id:"2A19",name:"王璿凱",group:"音二莊"},{id:"2A20",name:"吳承昊",group:"音二莊"},{id:"2A21",name:"張治齊",group:"音二莊"},{id:"2A22",name:"李秉軒",group:"音二莊"},{id:"2A23",name:"林笠",group:"音二莊"},{id:"2A24",name:"林允鋐",group:"音二莊"},{id:"2A25",name:"徐國洲",group:"音二莊"},{id:"2A26",name:"張定濂",group:"音二莊"},{id:"2A27",name:"陳柏睿",group:"音二莊"},{id:"2A28",name:"陳翌鈞",group:"音二莊"},{id:"2A29",name:"黃偉宸",group:"音二莊"},{id:"2A30",name:"黃宸約",group:"音二莊"},{id:"2A31",name:"傅振瑜",group:"音二莊"},{id:"2A32",name:"葉恒辰",group:"音二莊"},{id:"2A33",name:"楊仁杉",group:"音二莊"},{id:"2A34",name:"鄭元滿",group:"音二莊"},{id:"2A35",name:"羅楷勳",group:"音二莊"},{id:"2A36",name:"吳昕達",group:"音二莊"},{id:"2A37",name:"沈榆恩",group:"音二莊"},{id:"2A38",name:"紀柔帆",group:"音二莊"},{id:"2A39",name:"盧宇杰",group:"音二莊"},{id:"2A40",name:"江德凱",group:"音二莊"},{id:"2A41",name:"李奕德",group:"音二莊"},{id:"2A42",name:"林品傑",group:"音二莊"},{id:"2A43",name:"陳元熙",group:"音二莊"},{id:"2A44",name:"丁婷婷",group:"音二莊"},
             {id:"2P02",name:"02簡佳嫻",group:"演二樸"},{id:"2P03",name:"03黃品妤",group:"演二樸"},
-            {id:"1A01",name:"01任恩予",group:"音一莊"},{id:"1A02",name:"02李孟臻",group:"音一莊"},{id:"1A03",name:"03潘縈汐",group:"音一莊"},{id:"1A04",name:"04謝幸芙",group:"音一莊"},{id:"1A05",name:"05李昕柔",group:"音一莊"},{id:"1A06",name:"06盧丞菲",group:"音一莊"},{id:"1A07",name:"07林欣霈",group:"音一莊"},{id:"1A08",name:"08林耘瑄",group:"音一莊"},{id:"1A09",name:"09林詩翡",group:"音一莊"},{id:"1A10",name:"10姜妤捷",group:"音一莊"},{id:"1A11",name:"11張筑笹",group:"音一莊"},{id:"1A12",name:"12廖聿淓",group:"音一莊"},{id:"1A13",name:"13曾彥瑄",group:"音一莊"},{id:"1A14",name:"14盧瑗",group:"音一莊"},{id:"1A15",name:"15鍾欣庭",group:"音一莊"},{id:"1A16",name:"16黃郁晴",group:"音一莊"},{id:"1A17",name:"17詹中愷",group:"音一莊"},{id:"1A18",name:"18鄭誌浩",group:"音一莊"},{id:"1A19",name:"19謝松煇",group:"音一莊"},{id:"1A20",name:"20羅子超",group:"音一莊"},{id:"1A21",name:"21羅笠準",group:"音一莊"},{id:"1A22",name:"22蘇冠綸",group:"音一莊"},{id:"1A23",name:"23蘇祺翔",group:"音一莊"},{id:"1A24",name:"24劉軒豪",group:"音一莊"},{id:"1A25",name:"25吳泓毅",group:"音一莊"},{id:"1A26",name:"李維璟",group:"音一莊"},{id:"1A27",name:"林孝廷",group:"音一莊"},{id:"1A28",name:"林紹謙",group:"音一莊"},{id:"1A29",name:"胡宇哲",group:"音一莊"},{id:"1A30",name:"楊順發",group:"音一莊"},{id:"1A31",name:"張又禾",group:"音一莊"},{id:"1A32",name:"張允磊",group:"音一莊"},{id:"1A33",name:"黃靖勛",group:"音一莊"}
+            {id:"1A01",name:"01任恩予",group:"音一莊"},{id:"1A02",name:"02李孟臻",group:"音一莊"},{id:"1A03",name:"03潘縈汐",group:"音一莊"},{id:"1A04",name:"04謝幸芙",group:"音一莊"},{id:"1A05",name:"05李昕柔",group:"音一莊"},{id:"1A06",name:"06盧丞菲",group:"音一莊"},{id:"1A07",name:"07林欣霈",group:"音一莊"},{id:"1A08",name:"08林耘瑄",group:"音一莊"},{id:"1A09",name:"09林詩翡",group:"音一莊"},{id:"1A10",name:"10姜妤捷",group:"音一莊"},{id:"1A11",name:"11張筑笹",group:"音一莊"},{id:"1A12",name:"12廖聿淓",group:"音一莊"},{id:"1A13",name:"13曾彥瑄",group:"音一莊"},{id:"1A14",name:"14盧瑗",group:"音一莊"},{id:"1A15",name:"15鍾欣庭",group:"音一莊"},{id:"1A16",name:"16黃郁晴",group:"音一莊"},{id:"1A17",name:"17詹中愷",group:"音一莊"},{id:"1A18",name:"18鄭誌浩",group:"音一莊"},{id:"1A19",name:"19謝松煇",group:"音一莊"},{id:"1A20",name:"20羅子超",group:"音一莊"},{id:"1A21",name:"21羅笠準",group:"音一莊"},{id:"1A22",name:"22蘇冠綸",group:"音一莊"},{id:"1A23",name:"23蘇祺翔",group:"音一莊"},{id:"1A24",name:"24劉軒豪",group:"音一莊"},{id:"1A25",name:"25吳泓毅",group:"音一莊"},{id:"1A26",name:"26李維璟",group:"音一莊"},{id:"1A27",name:"27林孝廷",group:"音一莊"},{id:"1A28",name:"28林紹謙",group:"音一莊"},{id:"1A29",name:"29胡宇哲",group:"音一莊"},{id:"1A30",name:"30楊順發",group:"音一莊"},{id:"1A31",name:"31張又禾",group:"音一莊"},{id:"1A32",name:"32張允磊",group:"音一莊"},{id:"1A33",name:"33黃靖勛",group:"音一莊"}
         ];
 
         let role = ''; let currentGrp = "音三莊"; let curStudent = null; let curDetailSid = null;
         let adminInfo = { n: '', cls: 'ALL' }; let localAtt = {};
+        const statusColors = ['bg-present', 'bg-late', 'bg-absent', 'bg-leave'];
+        const statusNames = { 'bg-present':'出', 'bg-late':'遲', 'bg-absent':'缺', 'bg-leave':'假' };
 
+        // 🟢 執行登入判定
         function doAuth() {
             const acc = document.getElementById('login-acc').value;
             const pw = document.getElementById('login-pw').value;
             const pwHash = CryptoJS.SHA256(pw).toString();
 
-            if(acc === MASTER_ACC && pwHash === MASTER_PW_HASH) { // 蕭旭成登入
+            if(acc === MASTER_ACC && pwHash === MASTER_PW_HASH) {
                 role = 'admin'; adminInfo = { n: '蕭旭成', cls: 'ALL' };
-                saveLogin('admin', null, '蕭旭成', 'ALL'); start();
+                setStorage('admin', null, '蕭旭成', 'ALL'); start();
             } else {
-                db.ref(`jjvs_v20_admins/${acc}`).once('value', sn => {
+                db.ref(`jjvs_v22_admins/${acc}`).once('value', sn => {
                     const data = sn.val();
-                    if(data && pwHash === data.p) { // 普通老師登入
+                    if(data && pwHash === data.p) {
                         role = 'admin'; adminInfo = { n: data.n, cls: data.cls };
-                        saveLogin('admin', null, data.n, data.cls); start();
-                    } else { // 學生登入判斷
+                        setStorage('admin', null, data.n, data.cls); start();
+                    } else {
                         const f = students.find(s => s.name.includes(acc));
                         if(f) {
-                            db.ref(`jjvs_v20_auth/${f.id}`).once('value', sn2 => {
-                                const d = sn2.val();
-                                if(!d) { 
-                                    const np = prompt("首入設定查詢密碼："); 
-                                    if(np) { db.ref(`jjvs_v20_auth/${f.id}`).set({p: np}); curStudent = f; role = 'student'; saveLogin('student', f.id); start(); }
-                                } else if(pw === d.p) { curStudent = f; role = 'student'; saveLogin('student', f.id); start(); }
-                                else alert("學生密碼錯誤");
+                            db.ref(`jjvs_v22_auth/${f.id}`).once('value', sn2 => {
+                                const d = sn2.val() || {p: '0000'};
+                                if(pw === d.p) {
+                                    if(pw === '0000') {
+                                        const np = prompt("安全考量：請將預設密碼 0000 修改為自訂密碼");
+                                        if(!np || np === '0000') return alert("修改失敗");
+                                        db.ref(`jjvs_v22_auth/${f.id}`).set({p: np});
+                                        alert("密碼已修改，請用新密碼重新登入");
+                                    } else {
+                                        curStudent = f; role = 'student'; setStorage('student', f.id); start();
+                                    }
+                                } else alert("密碼錯誤");
                             });
-                        } else alert("帳號不存在");
+                        } else alert("查無此帳號或姓名");
                     }
                 });
             }
         }
 
-        function saveLogin(r, sid, n, cls) {
+        function setStorage(r, sid, n, cls) {
             localStorage.setItem('jjvs_role', r); localStorage.setItem('jjvs_sid', sid);
             localStorage.setItem('jjvs_admin_name', n); localStorage.setItem('jjvs_admin_cls', cls);
         }
@@ -244,21 +309,20 @@
             currentGrp = grps[0];
             grps.forEach(g => {
                 const b = document.createElement('button'); b.innerText = g;
-                b.style.cssText = "white-space:nowrap; padding:10px 15px; border-radius:15px; border:2.5px solid #FFD700; background:#fff; font-weight:bold;";
-                if(g === currentGrp) b.style.background = "#FFD700";
-                b.onclick = () => { currentGrp = g; initTabs(); renderGrid(); };
+                b.className = `tab-btn ${g === currentGrp ? 'active' : ''}`;
+                b.onclick = () => { currentGrp = g; Array.from(tb.children).forEach(c=>c.classList.remove('active')); b.classList.add('active'); renderGrid(); };
                 tb.appendChild(b);
             });
         }
 
         function loadCloud() {
-            db.ref('jjvs_v20_cloud').on('value', snap => {
+            db.ref('jjvs_v22_cloud').on('value', snap => {
                 window.master = snap.val() || {};
                 const sd = document.getElementById('target-date').value;
                 localAtt = {...(window.master.attendance && window.master.attendance[sd])};
                 renderGrid(); renderLeaves();
                 if(curDetailSid) refreshModalUI(curDetailSid);
-                document.getElementById('login-info').innerText = role === 'admin' ? `${adminInfo.n} 老師 (連線中)` : "學生："+curStudent.name;
+                document.getElementById('login-info').innerText = role === 'admin' ? `${adminInfo.n} 老師 (加密同步中)` : "學員："+curStudent.name;
             });
         }
 
@@ -269,7 +333,7 @@
                 const st = localAtt[s.id] || 'bg-present';
                 const pts = (window.master.profiles?.[s.id]?.points) || 0;
                 const div = document.createElement('div'); div.className = "s-box";
-                div.innerHTML = `<div class="s-points">${pts}P</div><div class="s-dot ${st}" id="dot-${s.id}" onclick="localToggle('${s.id}')">${statusNames[st]}</div><div style="font-weight:bold; font-size:0.95rem;" onclick="openDetail('${s.id}')">${s.name}</div>`;
+                div.innerHTML = `<div class="s-points">${pts}P</div><div class="s-dot ${st}" id="dot-${s.id}" onclick="localToggle('${s.id}')">${statusNames[st]}</div><div class="s-name" onclick="openDetail('${s.id}')">${s.name}</div>`;
                 grid.appendChild(div);
             });
         }
@@ -280,17 +344,16 @@
             let next = statusColors[nextIndex]; localAtt[sid] = next;
             const dot = document.getElementById(`dot-${sid}`);
             dot.className = `s-dot ${next}`; dot.innerText = statusNames[next];
-            document.getElementById('save-btn').style.background = "#FF4500";
             if(next === 'bg-late') {
                 const curP = window.master.profiles?.[sid]?.points || 0;
-                db.ref(`jjvs_v20_cloud/profiles/${sid}/points`).set(Math.max(0, curP - 1));
-                addLog(sid, "💀 遲到自動扣 1 點", `系統自動 (${adminInfo.n} 點名)`);
+                db.ref(`jjvs_v22_cloud/profiles/${sid}/points`).set(Math.max(0, curP - 1));
+                addLog(sid, "💀 遲到自動扣點", `[${adminInfo.n}] 點名處分`);
             }
         }
 
         function syncCloud() {
             const sd = document.getElementById('target-date').value;
-            db.ref(`jjvs_v20_cloud/attendance/${sd}`).set(localAtt).then(() => alert("已存檔"));
+            db.ref(`jjvs_v22_cloud/attendance/${sd}`).set(localAtt).then(() => alert("點名紀錄已存至雲端"));
         }
 
         function openDetail(sid) {
@@ -301,20 +364,23 @@
 
         function refreshModalUI(sid) {
             const s = students.find(x => x.id === sid);
-            const prof = (window.master.profiles && window.master.profiles[sid]) || { points: 0, medals: 0, msg: "無", tasks: [], logs: [] };
+            const prof = (window.master.profiles && window.master.profiles[sid]) || { points: 0, medals: 0, msg: "無訊息", logs: [] };
             document.getElementById('m-name').innerText = s.name;
             document.getElementById('m-msg').innerText = prof.msg || "目前無訊息";
             
+            // 渲染10格星
             const pts = prof.points || 0; const sb = document.getElementById('stamp-card'); sb.innerHTML = "";
             for(let i=0; i<10; i++) sb.innerHTML += `<div class="slot ${i < pts ? 'slot-active' : ''}">${i < pts ? '⭐' : ''}</div>`;
             
+            // 渲染金牌
             const med = prof.medals || 0; const mb = document.getElementById('medal-card'); mb.innerHTML = "";
-            for(let i=0; i<Math.max(med, 3); i++) mb.innerHTML += `<div class="slot ${i < med ? 'slot-active' : ''}">${i < med ? '🏅' : ''}</div>`;
+            for(let i=0; i<Math.max(med, 5); i++) mb.innerHTML += `<div class="slot ${i < med ? 'slot-active' : ''}">${i < med ? '🏅' : ''}</div>`;
             
+            // 渲染日誌
             const hBox = document.getElementById('m-history'); hBox.innerHTML = "";
             const combinedLogs = [...(prof.logs || [])];
             const att = window.master.attendance || {};
-            Object.keys(att).forEach(d => { if(att[d][sid]) combinedLogs.push({ time: d, act: "出席登記: "+statusNames[att[d][sid]], reason: "系統存檔", admin: "系統" }); });
+            Object.keys(att).forEach(d => { if(att[d][sid]) combinedLogs.push({ time: d+" 00:00", act: "出席登記: "+statusNames[att[d][sid]], reason: "系統存檔", admin: "SYSTEM" }); });
             combinedLogs.sort((a,b) => b.time.localeCompare(a.time)).forEach(l => {
                 hBox.innerHTML += `<div class="log-row">📅 ${l.time}<br><b>${l.act}</b><br>原因：${l.reason} <span style="float:right; color:#999;">${l.admin || ''}</span></div>`;
             });
@@ -323,36 +389,31 @@
                 document.getElementById('admin-tools').style.display = 'block';
                 document.getElementById('admin-pts-tool').style.display = 'block';
                 document.getElementById('admin-med-tool').style.display = 'block';
-                document.getElementById('admin-input-zone').style.display = 'block';
+                document.getElementById('admin-msg-zone').style.display = 'block';
                 document.getElementById('admin-only-info').style.display = 'block';
-                db.ref(`jjvs_v20_auth/${sid}/p`).once('value', sn => document.getElementById('m-pw').innerText = sn.val() || '未設');
+                db.ref(`jjvs_v22_auth/${sid}/p`).once('value', sn => document.getElementById('m-pw').innerText = sn.val() || '0000');
             }
             
-            // 檢查學生假單狀態
             const sd = document.getElementById('target-date').value;
-            const lKey = sd + "_" + sid;
-            const leave = window.master.leaves?.[lKey];
+            const leave = window.master.leaves?.[sd + "_" + sid];
             if(role === 'student' && leave === 'APPROVED') {
-                document.getElementById('student-leave-status').innerHTML = `<button class="btn" style="background:var(--safe); color:#fff;" onclick="showGuardPass('${s.name}', '${sd}')">🎟️ 顯示核可外出證</button>`;
-            } else if(role === 'student' && leave === 'PENDING') {
-                document.getElementById('student-leave-status').innerText = "⏳ 外出申請審核中...";
+                document.getElementById('student-leave-status').innerHTML = `<button class="btn" style="background:var(--safe); color:#fff;" onclick="showGuardPass('${s.name}', '${sd}')">🎫 出示外出查驗證</button>`;
             }
         }
 
-        function showGuardPass(name, date) {
-            document.getElementById('pass-name').innerText = name;
-            document.getElementById('pass-date').innerText = date;
-            document.getElementById('pass-admin').innerText = adminInfo.n || '校方審核';
+        function showGuardPass(n, d) {
+            document.getElementById('pass-name').innerText = n;
+            document.getElementById('pass-date').innerText = d;
+            document.getElementById('pass-admin').innerText = adminInfo.n;
             document.getElementById('pass-screen').style.display = 'block';
         }
 
         function applyLeave() {
-            const r = prompt("請輸入外出原因："); if(!r) return;
-            const sd = document.getElementById('target-date').value;
-            const lKey = sd + "_" + curStudent.id;
-            db.ref(`jjvs_v20_cloud/leaves/${lKey}`).set("PENDING");
-            db.ref(`jjvs_v20_cloud/profiles/${curStudent.id}/msg`).set(`⚠️ 提出外出申請：${r}`);
-            alert("已提交申請，請洽導師審核。");
+            const r = prompt("請說明外出具體原因："); if(!r) return;
+            const lKey = document.getElementById('target-date').value + "_" + curStudent.id;
+            db.ref(`jjvs_v22_cloud/leaves/${lKey}`).set("PENDING");
+            db.ref(`jjvs_v22_cloud/profiles/${curStudent.id}/msg`).set(`🚶 提出外出申請：${r}`);
+            alert("已成功送出申請，請等候核可。");
         }
 
         function renderLeaves() {
@@ -360,36 +421,34 @@
             const leaves = window.master.leaves || {};
             const sd = document.getElementById('target-date').value;
             let count = 0;
-            students.filter(s => s.group === currentGrp).forEach(s => {
-                const lKey = sd + "_" + s.id;
-                if(leaves[lKey] === 'PENDING') {
+            students.filter(s => s.group === currentGrp || adminInfo.cls === 'ALL').forEach(s => {
+                if(leaves[sd+"_"+s.id] === 'PENDING') {
                     count++;
-                    box.innerHTML += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;"><span>🚶 ${s.name} 申請外出</span><button class="btn btn-mini" style="background:var(--safe); color:#fff; width:auto; margin:0;" onclick="approveLeave('${s.id}')">核可</button></div>`;
+                    box.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:8px;"><span>🚶 ${s.name} 申請外出</span><button class="btn" style="width:60px; height:30px; padding:0; background:var(--safe); color:#fff;" onclick="approveLeave('${s.id}')">核可</button></div>`;
                 }
             });
-            if(count === 0) box.innerText = "今日目前無外出申請";
+            if(count === 0) box.innerText = "今日目前無外出申請。";
         }
 
         function approveLeave(sid) {
             const sd = document.getElementById('target-date').value;
-            const lKey = sd + "_" + sid;
-            db.ref(`jjvs_v20_cloud/leaves/${lKey}`).set("APPROVED");
+            db.ref(`jjvs_v22_cloud/leaves/${sd+"_"+sid}`).set("APPROVED");
             addLog(sid, "✅ 核可第八節外出", `核可人：${adminInfo.n}`);
         }
 
         function adj(type, v) {
-            const r = prompt("請輸入原因："); if(!r) return;
+            const r = prompt("請註明變更原因(日期已自動記錄)："); if(!r) return;
             const path = type === 'p' ? 'points' : 'medals';
             const cur = parseInt(window.master.profiles?.[curDetailSid]?.[path] || 0);
-            db.ref(`jjvs_v20_cloud/profiles/${curDetailSid}/${path}`).set(Math.max(0, cur + v));
-            addLog(curDetailSid, (type==='p'?'點數':'金牌')+(v>0?'➕ 加':'➖ 扣')+Math.abs(v), r);
+            db.ref(`jjvs_v22_cloud/profiles/${curDetailSid}/${path}`).set(Math.max(0, cur + v));
+            addLog(curDetailSid, (type==='p'?'點數':'金牌')+(v>0?'➕加':'➖扣')+Math.abs(v), r);
         }
 
         function addLog(sid, act, reason) {
             const time = new Date().toISOString().split('T')[0] + " " + new Date().toTimeString().slice(0,5);
             const logs = window.master.profiles?.[sid]?.logs || [];
             logs.push({ time, act, reason, admin: adminInfo.n });
-            db.ref(`jjvs_v20_cloud/profiles/${sid}/logs`).set(logs);
+            db.ref(`jjvs_v22_cloud/profiles/${sid}/logs`).set(logs);
         }
 
         function openSetup() {
@@ -403,34 +462,34 @@
             const a = document.getElementById('new-t-acc').value;
             const p = document.getElementById('new-t-pw').value;
             const c = document.getElementById('new-t-class').value;
-            if(!n || !a || !p) return alert("請填寫完整");
-            db.ref(`jjvs_v20_admins/${a}`).set({ n: n, p: CryptoJS.SHA256(p).toString(), cls: c }).then(() => {
-                alert("教師帳號已建立"); renderAdminList();
+            if(!n || !a || !p) return alert("請完整填寫");
+            db.ref(`jjvs_v22_admins/${a}`).set({ n: n, p: CryptoJS.SHA256(p).toString(), cls: c }).then(() => {
+                alert("已成功建立教師帳號"); renderAdminList();
             });
         }
 
         function renderAdminList() {
-            const box = document.getElementById('teacher-list'); box.innerHTML = "讀取中...";
-            db.ref('jjvs_v20_admins').once('value', sn => {
-                const data = sn.val(); box.innerHTML = "";
+            const box = document.getElementById('teacher-list'); box.innerHTML = "";
+            db.ref('jjvs_v22_admins').once('value', sn => {
+                const data = sn.val();
                 for(let acc in data) {
-                    box.innerHTML += `<div style="border-bottom:1px solid #ddd; padding:5px;">${data[acc].n} (${acc}) - 管理: ${data[acc].cls} <button onclick="delAdmin('${acc}')">刪除</button></div>`;
+                    box.innerHTML += `<div style="border-bottom:1px solid #ddd; padding:10px;">${data[acc].n} | 管理:${data[acc].cls} <button onclick="delAdmin('${acc}')" style="float:right; color:red;">刪除</button></div>`;
                 }
             });
         }
-        function delAdmin(acc) { if(confirm("刪除？")) db.ref(`jjvs_v20_admins/${acc}`).remove().then(renderAdminList); }
+        function delAdmin(acc) { if(confirm("確定刪除此帳號？")) db.ref(`jjvs_v22_admins/${acc}`).remove().then(renderAdminList); }
 
         function redeem() {
             const p = window.master.profiles?.[curDetailSid]?.points || 0;
             if(p >= 5) {
                 const m = window.master.profiles?.[curDetailSid]?.medals || 0;
-                db.ref(`jjvs_v20_cloud/profiles/${curDetailSid}`).update({ points: p-5, medals: m+1 });
-                addLog(curDetailSid, "🎟️ 點數換金牌", "自動兌換 (5星)");
-            } else alert("點數不足");
+                db.ref(`jjvs_v22_cloud/profiles/${curDetailSid}`).update({ points: p-5, medals: m+1 });
+                addLog(curDetailSid, "🎟️ 集點兌換金牌", "自動兌換 (消耗5星)");
+            } else alert("集點不足，還差 "+(5-p)+" 點");
         }
 
-        function updateMsg() { db.ref(`jjvs_v20_cloud/profiles/${curDetailSid}/msg`).set(document.getElementById('t-msg').value); alert("已發送"); }
-        function closeModal() { curDetailSid = null; document.getElementById('overlay').style.display='none'; document.getElementById('modal').style.display='none'; }
+        function updateMsg() { db.ref(`jjvs_v22_cloud/profiles/${curDetailSid}/msg`).set(document.getElementById('t-msg').value); alert("訊息已送出"); }
+        function closeModal() { curDetailSid = null; document.getElementById('overlay').style.display='none'; document.getElementById('modal').style.display='none'; document.getElementById('setup-modal').style.display='none'; }
     </script>
 </body>
 </html>
