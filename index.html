@@ -3,123 +3,352 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>音演三莊—學習管理系統</title>
+    <title>音演三莊—學生學習管理系統</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+
     <style>
         /* 視覺規格：黑底金邊與毛玻璃 */
+        :root {
+            --gold: #d4af37;
+            --glass: rgba(255, 255, 255, 0.08);
+            --border: rgba(212, 175, 55, 0.3);
+        }
+
         body {
-            background: radial-gradient(circle, #1a1a1a, #000000);
-            color: #d4af37; /* 金色文字 */
-            font-family: "Microsoft JhengHei", sans-serif;
+            background: radial-gradient(circle at center, #2c2c2c 0%, #000000 100%);
+            color: var(--gold);
+            font-family: "Microsoft JhengHei", "PingFang TC", sans-serif;
             margin: 0;
             padding: 20px;
             min-height: 100vh;
             background-attachment: fixed;
+            -webkit-tap-highlight-color: transparent;
         }
 
-        /* 背景音樂符號裝飾 (𝄞, 𝄢) */
+        /* 音樂符號背景裝飾 */
         body::before {
-            content: '𝄞 𝄢 🎹';
+            content: '𝄞 𝄢 🎹  musical';
             position: fixed;
-            top: 10%;
-            left: 5%;
-            font-size: 100px;
-            opacity: 0.05;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 15rem;
+            opacity: 0.03;
             pointer-events: none;
+            white-space: nowrap;
         }
 
-        /* 毛玻璃質感容器 */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(212, 175, 55, 0.3);
+        h1 {
+            font-size: 2.8rem;
+            text-align: center;
+            text-shadow: 0 0 15px rgba(212, 175, 55, 0.5);
+            margin-bottom: 30px;
+            letter-spacing: 5px;
+        }
+
+        /* 導覽列與按鈕 */
+        .nav-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            position: sticky;
+            top: 10px;
+            z-index: 100;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 18px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: var(--gold);
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .nav-btn.active {
+            background: var(--gold);
+            color: #000;
+            box-shadow: 0 0 20px var(--gold);
+        }
+
+        /* 學生卡片樣式 */
+        .student-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
             border-radius: 20px;
-            padding: 25px;
+            padding: 20px;
             margin-bottom: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
-        /* 手機字體極大化 */
-        h1 { font-size: 2.5rem; text-align: center; text-shadow: 0 0 10px #d4af37; }
-        .student-name { font-size: 1.8rem; font-weight: bold; }
-        .btn { font-size: 1.5rem; padding: 15px 30px; border-radius: 12px; border: none; cursor: pointer; }
+        .student-header {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
 
-        /* 出缺勤小格子循環顏色 */
+        .student-info {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        /* 出缺勤小格子 */
         .status-box {
-            width: 60px;
-            height: 60px;
-            border-radius: 10px;
-            display: inline-block;
-            margin-right: 15px;
+            width: 70px;
+            height: 70px;
+            border-radius: 12px;
             border: 2px solid #fff;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: transform 0.1s;
         }
+        .status-box:active { transform: scale(0.9); }
+
+        /* 顏色狀態定義 */
         .bg-present { background-color: #2ecc71; } /* 綠 */
         .bg-late { background-color: #f1c40f; }    /* 黃 */
         .bg-late-1 { background-color: #e67e22; }  /* 橘 */
         .bg-absent { background-color: #e74c3c; }  /* 紅 */
         .bg-leave { background-color: #3498db; }   /* 藍 */
 
-        /* 罰抄系統槓線核銷 */
+        /* 罰抄任務區 */
+        .task-list {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px dashed var(--border);
+        }
+
+        .task-item {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #eee;
+        }
+
         .completed {
             text-decoration: line-through;
-            color: #888 !important;
+            color: #888;
             opacity: 0.6;
+        }
+
+        /* 管理員介面 */
+        .admin-controls {
+            display: none;
+            background: rgba(212, 175, 55, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            font-size: 1.2rem;
+            background: #000;
+            border: 1px solid var(--gold);
+            color: var(--gold);
+            border-radius: 8px;
+            box-sizing: border-box;
+        }
+
+        .add-task-btn {
+            background: var(--gold);
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+
+        #loading {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 1.5rem;
         }
     </style>
 </head>
 <body>
 
-    <div id="app">
+    <div id="loading">載入雲端資料中...</div>
+
+    <div id="main-content" style="display:none;">
         <h1>𝄞 音演三莊 𝄢</h1>
-        
-        <div class="glass-card" style="display: flex; justify-content: space-around;">
-            <button class="btn" onclick="switchClass('音三')">音三</button>
-            <button class="btn" onclick="switchClass('演三')">演三</button>
-            <button class="btn" onclick="showAdmin()">管理員</button>
+
+        <div class="nav-bar">
+            <button class="nav-btn active" onclick="switchClass('音三', this)">音三</button>
+            <button class="nav-btn" onclick="switchClass('演三', this)">演三</button>
+            <button class="nav-btn" onclick="toggleAdmin()">⚙️ 管理</button>
         </div>
 
-        <div id="studentList">
+        <div id="student-list">
             </div>
     </div>
 
     <script>
-        // 初始化 55 位學生名單資料庫 (範例)
+        // 1. Firebase 配置
+        const firebaseConfig = {
+            apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
+            authDomain: "jjvs-att.firebaseapp.com",
+            databaseURL: "https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "jjvs-att",
+            storageBucket: "jjvs-att.firebasestorage.app",
+            messagingSenderId: "199163483355",
+            appId: "1:199163483355:web:ac66bbb7407acede4ce8fe"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // 2. 55 位學生名單
         const students = [
-            { id: 1, name: "毛語程", class: "音三" },
-            // ... (請將上方 55 位名單貼入此處)
-            { id: 41, name: "蕭旭成", class: "老師" }
+            { id: 1, name: "毛語程", group: "音三" }, { id: 2, name: "林叡成", group: "音三" },
+            { id: 3, name: "田宇紘", group: "音三" }, { id: 4, name: "吳昆達", group: "音三" },
+            { id: 5, name: "吳宥良", group: "音三" }, { id: 6, name: "黃崇恩", group: "音三" },
+            { id: 7, name: "林宏澤", group: "音三" }, { id: 8, name: "金品澔", group: "音三" },
+            { id: 9, name: "劉宸昀", group: "音三" }, { id: 10, name: "蔡呈樂", group: "音三" },
+            { id: 11, name: "蘇瑞吾", group: "音三" }, { id: 12, name: "梁之凡", group: "音三" },
+            { id: 13, name: "蔡宗佑", group: "音三" }, { id: 14, name: "黃穩達", group: "音三" },
+            { id: 15, name: "馮康維", group: "音三" }, { id: 16, name: "倪秉澤", group: "音三" },
+            { id: 17, name: "廖敏君", group: "音三" }, { id: 18, name: "劉慶霈", group: "音三" },
+            { id: 19, name: "蔡慧琳", group: "音三" }, { id: 20, name: "鄭淳融", group: "音三" },
+            { id: 21, name: "魏宜宸", group: "音三" }, { id: 22, name: "徐婉瑜", group: "音三" },
+            { id: 23, name: "安兪臻", group: "音三" }, { id: 24, name: "江岑君", group: "音三" },
+            { id: 25, name: "池宛昕", group: "音三" }, { id: 26, name: "李曉萍", group: "音三" },
+            { id: 27, name: "周玄禮", group: "音三" }, { id: 28, name: "王以昕", group: "音三" },
+            { id: 29, name: "林祐立", group: "音三" }, { id: 30, name: "邱詩涵", group: "音三" },
+            { id: 31, name: "胡云珊", group: "音三" }, { id: 32, name: "蔡逸宣", group: "音三" },
+            { id: 33, name: "高慧君", group: "音三" }, { id: 34, name: "張路淇", group: "音三" },
+            { id: 35, name: "陳芃瑾", group: "音三" }, { id: 36, name: "陳雨彤", group: "音三" },
+            { id: 37, name: "陳宥安", group: "音三" }, { id: 38, name: "陳圓卿", group: "音三" },
+            { id: 39, name: "傅克諳", group: "音三" }, { id: 40, name: "曾妘湘", group: "音三" },
+            { id: 41, name: "蕭旭成", group: "老師" },
+            { id: 42, name: "王玟茜", group: "演三" }, { id: 43, name: "王語舒", group: "演三" },
+            { id: 44, name: "姚宥湘", group: "演三" }, { id: 45, name: "陳思妤", group: "演三" },
+            { id: 46, name: "楊镕慈", group: "演三" }, { id: 47, name: "王偉家", group: "演三" },
+            { id: 48, name: "何建伸", group: "演三" }, { id: 49, name: "姜榮绅", group: "演三" },
+            { id: 50, name: "郭庭傑", group: "演三" }, { id: 51, name: "陳泊源", group: "演三" },
+            { id: 52, name: "陳軍任", group: "演三" }, { id: 53, name: "黃治容", group: "演三" },
+            { id: 54, name: "盧宥辰", group: "演三" }, { id: 55, name: "謝行知", group: "演三" }
         ];
 
-        // 點名狀態循環邏輯
-        function toggleAttendance(element) {
-            const states = ['bg-present', 'bg-late', 'bg-late-1', 'bg-absent', 'bg-leave'];
-            let currentClass = element.classList[1];
-            let nextIndex = (states.indexOf(currentClass) + 1) % states.length;
-            element.classList.remove(currentClass);
-            element.classList.add(states[nextIndex]);
-            
-            // 此處連動 Firebase 存檔
-            saveToFirebase(element.dataset.id, states[nextIndex]);
+        let currentClass = "音三";
+        let isAdmin = false;
+        const states = ['bg-present', 'bg-late', 'bg-late-1', 'bg-absent', 'bg-leave'];
+
+        // 3. 初始載入
+        db.ref('data').on('value', (snapshot) => {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-content').style.display = 'block';
+            renderList(snapshot.val() || {});
+        });
+
+        // 4. 切換班級
+        function switchClass(className, btn) {
+            currentClass = className;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            db.ref('data').once('value', (s) => renderList(s.val() || {}));
         }
 
-        // 渲染學生列表
-        function renderStudents(className) {
-            const list = document.getElementById('studentList');
-            list.innerHTML = "";
-            const filtered = students.filter(s => s.class === className);
+        // 5. 管理員開關
+        function toggleAdmin() {
+            if (!isAdmin) {
+                const pass = prompt("請輸入管理密碼：");
+                if (pass === "0902") {
+                    isAdmin = true;
+                    alert("管理員模式已啟動");
+                    db.ref('data').once('value', (s) => renderList(s.val() || {}));
+                } else {
+                    alert("密碼錯誤");
+                }
+            } else {
+                isAdmin = false;
+                db.ref('data').once('value', (s) => renderList(s.val() || {}));
+            }
+        }
+
+        // 6. 渲染清單
+        function renderList(allData) {
+            const listDiv = document.getElementById('student-list');
+            listDiv.innerHTML = "";
             
+            const filtered = students.filter(s => s.group === currentClass || (currentClass === "音三" && s.group === "老師"));
+
             filtered.forEach(s => {
-                const div = document.createElement('div');
-                div.className = "glass-card";
-                div.innerHTML = `
-                    <div style="display: flex; align-items: center;">
-                        <div class="status-box bg-present" data-id="${s.id}" onclick="toggleAttendance(this)"></div>
-                        <span class="student-name">${s.id}. ${s.name}</span>
+                const sData = allData[s.id] || { status: 'bg-present', tasks: [] };
+                const card = document.createElement('div');
+                card.className = "student-card";
+                
+                // 產生罰抄任務 HTML
+                let taskHtml = "";
+                if (sData.tasks) {
+                    sData.tasks.forEach((t, index) => {
+                        taskHtml += `
+                            <div class="task-item ${t.done ? 'completed' : ''}" onclick="toggleTask(${s.id}, ${index})">
+                                ✎ ${t.content}
+                            </div>
+                        `;
+                    });
+                }
+
+                card.innerHTML = `
+                    <div class="student-header">
+                        <div class="status-box ${sData.status}" onclick="cycleStatus(${s.id}, '${sData.status}')"></div>
+                        <div class="student-info">${s.id}. ${s.name}</div>
                     </div>
-                    <div class="task-area" id="tasks-${s.id}" style="margin-top: 15px; font-size: 1.2rem;">
-                        待辦：課文一遍 (3/25)
+                    <div class="task-list" id="task-list-${s.id}">
+                        ${taskHtml || '<div style="color:#666; font-size:1.1rem;">目前無待辦任務</div>'}
+                    </div>
+                    <div class="admin-controls" style="display: ${isAdmin ? 'block' : 'none'}">
+                        <input type="text" id="input-${s.id}" placeholder="輸入新罰抄任務...">
+                        <button class="add-task-btn" onclick="addTask(${s.id})">新增任務</button>
                     </div>
                 `;
-                list.appendChild(div);
+                listDiv.appendChild(card);
+            });
+        }
+
+        // 7. 出缺勤循環邏輯
+        function cycleStatus(id, currentStatus) {
+            if (!isAdmin) return; // 只有管理員可以點名
+            let nextIndex = (states.indexOf(currentStatus) + 1) % states.length;
+            db.ref(`data/${id}/status`).set(states[nextIndex]);
+        }
+
+        // 8. 罰抄任務邏輯
+        function addTask(id) {
+            const input = document.getElementById(`input-${id}`);
+            if (!input.value) return;
+
+            db.ref(`data/${id}/tasks`).once('value', (s) => {
+                const tasks = s.val() || [];
+                tasks.push({ content: input.value, done: false });
+                db.ref(`data/${id}/tasks`).set(tasks);
+                input.value = "";
+            });
+        }
+
+        function toggleTask(studentId, taskIndex) {
+            if (!isAdmin) return; // 只有管理員可以核銷
+            db.ref(`data/${studentId}/tasks/${taskIndex}/done`).once('value', (s) => {
+                db.ref(`data/${studentId}/tasks/${taskIndex}/done`).set(!s.val());
             });
         }
     </script>
