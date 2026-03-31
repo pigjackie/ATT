@@ -546,6 +546,61 @@ textarea:focus { border-color: var(--gold); }
 .toast.show { opacity: 1; }
 .toast.success { border-color: var(--green); color: var(--green); }
 .toast.error { border-color: var(--red); color: var(--red); }
+
+/* ===== CLICKABLE STUDENT NAME ===== */
+.student-name-btn {
+  font-size: 20px; font-weight: bold; color: var(--text-primary);
+  margin: 6px 0; cursor: pointer; padding: 4px 6px;
+  border-radius: 6px; transition: all 0.18s;
+  border-bottom: 2px solid transparent;
+  display: inline-block;
+}
+.student-name-btn:hover {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+  background: rgba(212,175,55,0.06);
+}
+.att-toggle {
+  cursor: pointer !important;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.att-toggle:hover {
+  transform: scale(1.12);
+  box-shadow: 0 0 8px rgba(212,175,55,0.3);
+}
+.card-hint {
+  font-size: 10px; color: var(--text-muted);
+  margin-top: 4px; letter-spacing: 0.5px;
+}
+
+/* ===== ATTENDANCE HISTORY ===== */
+.att-history-grid {
+  display: grid; grid-template-columns: repeat(7, 1fr);
+  gap: 4px; margin-bottom: 10px;
+}
+.att-day {
+  text-align: center; padding: 4px 2px;
+  border-radius: 4px; font-size: 10px;
+  border: 1px solid var(--border);
+}
+.att-day .day-label { color: var(--text-muted); margin-bottom: 2px; }
+.att-day .day-status { font-weight: bold; font-size: 12px; }
+.att-day.s-出 { border-color: rgba(46,204,113,0.4); background: rgba(46,204,113,0.08); }
+.att-day.s-出 .day-status { color: var(--green); }
+.att-day.s-遲 { border-color: rgba(241,196,15,0.4); background: rgba(241,196,15,0.08); }
+.att-day.s-遲 .day-status { color: var(--yellow); }
+.att-day.s-缺 { border-color: rgba(231,76,60,0.4); background: rgba(231,76,60,0.08); }
+.att-day.s-缺 .day-status { color: var(--red); }
+.att-day.s-假 { border-color: rgba(52,152,219,0.4); background: rgba(52,152,219,0.08); }
+.att-day.s-假 .day-status { color: var(--blue); }
+
+.att-summary { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
+.att-summary-item { font-size:12px; }
+
+/* ===== DETAIL PANEL WIDER ===== */
+#detailPanel { width: 520px; right: -520px; }
+@media(max-width:600px){ #detailPanel { width:100%; right:-100%; } }
+
 </style>
 </head>
 <body>
@@ -685,10 +740,12 @@ textarea:focus { border-color: var(--gold); }
     <div class="password-display" id="detailPassword">—</div>
   </div>
 
-  <!-- Attendance today -->
+  <!-- Attendance today + history -->
   <div class="detail-section">
-    <div class="detail-section-title">📋 今日狀態</div>
-    <div id="detailStatus" style="font-size:18px;font-weight:bold;"></div>
+    <div class="detail-section-title">📋 今日出勤狀態</div>
+    <div id="detailStatus" style="font-size:18px;font-weight:bold;margin-bottom:12px;"></div>
+    <div class="detail-section-title" style="margin-top:4px;">📅 出勤歷史（近21天）</div>
+    <div id="detailAttHistory"></div>
   </div>
 
   <!-- Points -->
@@ -728,7 +785,7 @@ textarea:focus { border-color: var(--gold); }
   <!-- Log -->
   <div class="detail-section">
     <div class="detail-section-title">📜 異動日誌</div>
-    <div id="detailLog" style="max-height:200px;overflow-y:auto;"></div>
+    <div id="detailLog" style="max-height:300px;overflow-y:auto;"></div>
   </div>
 </div>
 
@@ -1122,29 +1179,31 @@ async function renderStudentGrid() {
 
     const card = document.createElement('div');
     card.className = `student-card status-${todayAtt}`;
+    card.id = `card-${s.id}`;
     card.innerHTML = `
       <div class="card-header">
         <div class="student-num">${s.id}</div>
-        <div class="status-badge ${todayAtt}" id="badge-${s.id}">${todayAtt}</div>
+        <div class="status-badge ${todayAtt} att-toggle" id="badge-${s.id}" title="點擊切換出勤">${todayAtt}</div>
       </div>
-      <div class="student-name">${s.name}</div>
+      <div class="student-name-btn" title="點擊查看詳細資料">${s.name}</div>
       <div class="points-row">
         <div class="points-stars">${'★'.repeat(stars)}${'☆'.repeat(10-stars)}</div>
-        <div class="medals-count">${medals>0?'🎖️'.repeat(Math.min(medals,5)):''}</div>
+        <div class="medals-count">${medals>0?'🎖️×'+medals:''}</div>
       </div>
+      <div class="card-hint">👆名字查詳情 · 狀態改出勤</div>
     `;
-    // Click to cycle attendance status
-    card.onclick = (e) => {
-      if (e.target.closest('.student-card') && !e.target.closest('.detail-btn')) {
-        cycleAttendance(s, card);
-      }
-    };
-    // Double click to open detail
-    card.ondblclick = () => openDetail(s, dataMap[s.id]);
-    // Long press for detail on mobile
-    let pressTimer;
-    card.ontouchstart = () => { pressTimer = setTimeout(()=>openDetail(s, dataMap[s.id]), 600); };
-    card.ontouchend = () => clearTimeout(pressTimer);
+
+    // 點名字 → 開詳細面板
+    card.querySelector('.student-name-btn').addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDetail(s, dataMap[s.id]);
+    });
+
+    // 點狀態徽章 → 切換出勤
+    card.querySelector('.att-toggle').addEventListener('click', (e) => {
+      e.stopPropagation();
+      cycleAttendance(s, card);
+    });
 
     grid.appendChild(card);
   });
@@ -1225,7 +1284,36 @@ async function openDetail(student, data) {
   document.getElementById('detailName').textContent = student.name;
   document.getElementById('detailClass').textContent = student.cls + ' · ' + student.id;
   document.getElementById('detailPassword').textContent = d.password || '0000';
-  document.getElementById('detailStatus').textContent = d.attendance?.[today] || '未點名';
+
+  // 今日狀態
+  const todayStatus = d.attendance?.[today] || '未點名';
+  const statusEl = document.getElementById('detailStatus');
+  const statusColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[todayStatus]||'var(--text-muted)';
+  statusEl.innerHTML = `<span style="color:${statusColor};font-size:22px;">${todayStatus}</span>`;
+
+  // 出勤歷史（最近 21 天）
+  const attHistory = d.attendance || {};
+  const histDays = Object.keys(attHistory).sort().slice(-21);
+  const attSummary = {出:0,遲:0,缺:0,假:0};
+  histDays.forEach(day => { const v = attHistory[day]; if(attSummary[v]!==undefined) attSummary[v]++; });
+  const histEl = document.getElementById('detailAttHistory');
+  if(histEl){
+    histEl.innerHTML = `
+      <div class="att-summary">
+        <div class="att-summary-item" style="color:var(--green)">出席 ${attSummary['出']} 天</div>
+        <div class="att-summary-item" style="color:var(--yellow)">遲到 ${attSummary['遲']} 次</div>
+        <div class="att-summary-item" style="color:var(--red)">缺席 ${attSummary['缺']} 次</div>
+        <div class="att-summary-item" style="color:var(--blue)">請假 ${attSummary['假']} 次</div>
+      </div>
+      <div class="att-history-grid">
+        ${histDays.map(day=>{
+          const v = attHistory[day]||'未';
+          const shortDay = day.replace(/\d+\//,'').replace(/\//,'/');
+          return `<div class="att-day s-${v}"><div class="day-label">${shortDay}</div><div class="day-status">${v}</div></div>`;
+        }).join('')}
+      </div>
+    `;
+  }
 
   // Points grid
   const pts = d.points || 0;
