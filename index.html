@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>莊敬音樂科—管理系統</title>
+    <title>莊敬音樂科—旗艦管理系統</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -30,9 +30,13 @@
         }
         .s-points { position: absolute; top: -5px; right: -5px; background: var(--accent); color: #fff; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
 
-        .stamp-card { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; background: #fdf2e9; padding: 15px; border-radius: 20px; border: 2px solid #FFB74D; margin-top: 10px; }
-        .stamp-slot { width: 42px; height: 42px; border-radius: 50%; background: rgba(0,0,0,0.1); border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; transition: 0.3s; }
-        .stamp-active { background: #fff; border: 2px solid var(--primary); transform: scale(1.1); box-shadow: 0 0 10px var(--primary); }
+        /* 圖示盒樣式 */
+        .icon-box { 
+            display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; background: #fdf2e9; 
+            padding: 15px; border-radius: 20px; border: 2px solid #FFB74D; margin-top: 10px;
+        }
+        .slot { width: 40px; height: 40px; border-radius: 50%; background: rgba(0,0,0,0.1); border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: 0.3s; }
+        .slot-active { background: #fff; border: 2px solid var(--primary); transform: scale(1.05); }
 
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 450px; background: #fff; border-radius: 30px; padding: 25px; z-index: 1001; box-shadow: 0 25px 70px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; box-sizing: border-box; }
         .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; }
@@ -40,13 +44,12 @@
         .btn { width: 100%; padding: 14px; margin-top: 10px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; }
         .btn-save { background: #000; color: var(--primary); position: sticky; bottom: 15px; z-index: 100; border: 2px solid var(--primary); }
         .btn-gold { background: var(--primary); color: #000; }
-        .btn-mini { padding: 5px 10px; font-size: 0.8rem; margin: 0; border-radius: 8px; width: auto; }
+        .btn-adj { width: 45px; height: 45px; padding: 0; margin: 5px; border-radius: 10px; font-size: 1.2rem; }
 
         .bg-present { background:#2ecc71; } .bg-late { background:#f1c40f; } .bg-absent { background:#e74c3c; } .bg-leave { background:#3498db; }
-        .section-title { font-size: 1.1rem; font-weight: bold; border-left: 5px solid var(--primary); padding-left: 10px; margin: 15px 0 10px 0; display: block; text-align: left; }
-        .progress-bar { height: 12px; background: #ddd; border-radius: 6px; margin-top: 5px; overflow: hidden; position: relative; }
-        .progress-fill { height: 100%; background: var(--primary); transition: 0.5s; }
-        .task-item { background: #fefefe; padding: 12px; border-radius: 15px; border: 1px solid #eee; margin-bottom: 10px; position: relative; }
+        .section-title { font-size: 1.1rem; font-weight: bold; border-left: 5px solid var(--primary); padding-left: 10px; margin: 20px 0 10px 0; display: block; text-align: left; }
+        .log-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #eee; font-size: 0.85rem; color: #666; }
+        .pw-box { background: #f0f0f0; color: #000; padding: 5px 10px; border-radius: 8px; font-family: monospace; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -54,7 +57,7 @@
     <div id="gate-screen">
         <h1>🎹 莊敬音樂科 🎻</h1>
         <div class="gate-card">
-            <h3>行政強化系統 V13.5</h3>
+            <h3>全能管理系統 V14.0</h3>
             <button class="btn btn-gold" onclick="auth('admin')">管理員登入</button>
             <button class="btn" style="border: 2px solid #FFD700; background:#fff;" onclick="auth('student')">學生個人看板</button>
         </div>
@@ -63,19 +66,18 @@
     <div id="app-screen">
         <header>
             <h2 id="main-header" style="margin:0;">莊敬音樂科</h2>
-            <div id="login-info" style="font-size:0.9rem; margin-top:5px; font-weight:bold;">同步中...</div>
-            <button onclick="clearLogin()" style="background:#fff; border:1px solid #000; padding:5px 12px; border-radius:15px; font-size:0.8rem; margin-top:10px;">登出系統</button>
+            <div id="login-info" style="font-size:0.9rem; margin-top:5px; font-weight:bold;">雲端同步中...</div>
+            <button onclick="clearLogin()" style="background:#fff; border:1px solid #000; padding:5px 12px; border-radius:15px; font-size:0.8rem; margin-top:10px;">切換身分 / 登出</button>
         </header>
 
         <div id="admin-panel" style="display:none; padding-bottom: 80px;">
             <div style="background:#fff; padding:15px; border-radius:20px; margin-bottom:15px; border:2px solid var(--primary); text-align:center;">
-                📅 選擇日期：<input type="date" id="target-date" onchange="loadCloud()" style="padding:10px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">
-                <button class="btn" style="background:#f5f5f5; color:#666; font-size:0.8rem; height:35px; margin-top:10px;" onclick="resetToday()">🔄 全班當天設為出席</button>
+                📅 點名日期：<input type="date" id="target-date" onchange="loadCloud()" style="padding:10px; border-radius:10px; border:1px solid #ccc; font-size:1rem;">
             </div>
             <div id="tabs" style="display:flex; overflow-x:auto; gap:10px; margin-bottom:15px; padding-bottom:5px;"></div>
             <div id="student-grid" class="grid"></div>
             <button class="btn btn-save" id="save-btn" onclick="syncCloud()">💾 確認儲存今日紀錄</button>
-            <button class="btn" style="background: #E8F5E9; color: #2E7D32;" onclick="exportExcel()">📊 匯出總報表 (Excel)</button>
+            <button class="btn" style="background: #E8F5E9; color: #2E7D32;" onclick="exportExcel()">📊 匯出完整歷史報表</button>
         </div>
 
         <div id="student-home-view" style="display:none; text-align:center; padding-top:50px;">
@@ -85,25 +87,41 @@
 
     <div class="overlay" id="overlay" onclick="closeModal()"></div>
     <div class="modal" id="modal">
-        <h2 id="m-name" style="margin-top:0; color:#d48806; text-align:center;">載入中...</h2>
-        <div class="section-title">⭐ 好寶寶集點卡</div>
-        <div class="stamp-card" id="stamp-card"></div>
-        <div style="text-align:center; margin-top:10px; font-weight:bold;">
-            擁有免死金牌：<span id="m-medals" style="font-size:1.5rem; color:var(--accent);">0</span> 面
+        <h2 id="m-name" style="margin-top:0; color:#d48806; text-align:center;">姓名</h2>
+        
+        <div id="admin-pw-info" style="display:none; text-align:center; margin-bottom:10px;">
+            🔑 登入密碼：<span class="pw-box" id="m-pw">----</span>
         </div>
-        <button id="buy-btn" class="btn btn-gold" onclick="redeem()">🎟️ 5點換金牌</button>
-        <div class="section-title">📝 罰抄任務進度 (點擊增量)</div>
+
+        <div class="section-title">⭐ 好寶寶集點卡 (5點換金牌)</div>
+        <div class="icon-box" id="stamp-card"></div>
+        <div id="admin-pts-tool" style="display:none; text-align:center; margin-top:5px;">
+            <button class="btn btn-gold btn-adj" onclick="adjustPoints(1)">➕</button>
+            <button class="btn btn-adj" style="background:#eee" onclick="adjustPoints(-1)">➖</button>
+        </div>
+
+        <div class="section-title">🏅 免死金牌庫存</div>
+        <div class="icon-box" id="medal-card"></div>
+        <div id="admin-medals-tool" style="display:none; text-align:center; margin-top:5px;">
+            <button class="btn btn-gold btn-adj" onclick="adjustMedals(1)">➕</button>
+            <button class="btn btn-adj" style="background:var(--accent); color:#fff;" onclick="adjustMedals(-1)">➖</button>
+        </div>
+        <button id="buy-btn" class="btn btn-gold" style="margin-top:10px;" onclick="redeem()">🎟️ 消耗 5 星兌換金牌</button>
+
+        <div class="section-title">📝 罰抄任務與進度</div>
         <div id="m-task-list">尚無任務</div>
+
         <div class="section-title">💬 老師叮嚀訊息</div>
         <div id="m-msg" style="padding:15px; background:#FFF9C4; border-radius:15px; font-weight:bold;">無訊息</div>
-        <div class="section-title">📜 歷史缺曠回顧</div>
-        <div id="m-history" style="max-height:150px; overflow-y:auto; background:#f5f5f5; padding:10px; border-radius:15px;"></div>
+
+        <div class="section-title">📅 獎懲與出缺勤日誌</div>
+        <div id="m-history" style="max-height:200px; overflow-y:auto; background:#f5f5f5; padding:10px; border-radius:15px;"></div>
+
         <div id="admin-tools" style="display:none; margin-top:25px; border-top:2px solid #ddd; padding-top:20px;">
-            <div style="display:flex; gap:10px;"><button class="btn btn-gold" onclick="adjustPoints(1)">加 1 點 ⭐</button><button class="btn" onclick="adjustPoints(-1)">扣點</button></div>
-            <div style="display:flex; gap:10px; margin-top:5px;"><button class="btn" style="background:#fff; border:2px solid var(--accent); color:var(--accent);" onclick="adjustMedals(1)">獎勵金牌</button><button class="btn" style="background:var(--accent); color:#fff;" onclick="adjustMedals(-1)">消除金牌</button></div>
-            <div style="margin-top:15px; display:flex; gap:5px;"><input type="text" id="t-name" placeholder="內容" style="flex:2; padding:10px; border-radius:10px; border:1px solid #ccc;"><input type="number" id="t-max" placeholder="次" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;"></div>
-            <button class="btn btn-gold" onclick="addNewTask()">新增罰抄</button>
-            <textarea id="t-msg" placeholder="輸入私訊..." style="width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:10px; height:50px;"></textarea>
+            <strong style="color:#d48806;">🛠️ 罰抄與訊息管理</strong>
+            <div style="margin-top:10px; display:flex; gap:5px;"><input type="text" id="t-name" placeholder="內容" style="flex:2; padding:10px; border-radius:10px; border:1px solid #ccc;"><input type="number" id="t-max" placeholder="次" style="flex:1; padding:10px; border-radius:10px; border:1px solid #ccc;"></div>
+            <button class="btn btn-gold" onclick="addNewTask()">分派新任務</button>
+            <textarea id="t-msg" placeholder="輸入私訊..." style="width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:10px; height:50px; box-sizing:border-box;"></textarea>
             <button class="btn btn-gold" onclick="updateInfo()">發送訊息</button>
         </div>
         <button id="close-modal-btn" class="btn" style="background:#000; color:#fff; margin-top:20px;" onclick="closeModal()">關閉看板</button>
@@ -122,16 +140,12 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // 🟢 133位完整名單
         const students = [
-            // 音三莊
-            {id: "3A01", name: "01毛語程", group: "音三莊"},{id: "3A02", name: "02林叡成", group: "音三莊"},{id: "3A03", name: "03田宇紘", group: "音三莊"},{id: "3A04", name: "04吳昆達", group: "音三莊"},{id: "3A05", name: "05吳宥良", group: "音三莊"},{id: "3A06", name: "06黃崇恩", group: "音三莊"},{id: "3A07", name: "07林宏澤", group: "音三莊"},{id: "3A08", name: "08金品澔", group: "音三莊"},{id: "3A09", name: "09劉宸昀", group: "音三莊"},{id: "3A10", name: "10蔡呈樂", group: "音三莊"},{id: "3A11", name: "11蘇瑞吾", group: "音三莊"},{id: "3A12", name: "12梁之凡", group: "音三莊"},{id: "3A13", name: "13蔡宗佑", group: "音三莊"},{id: "3A14", name: "14黃穩達", group: "音三莊"},{id: "3A15", name: "15馮康維", group: "音三莊"},{id: "3A16", name: "16倪秉澤", group: "音三莊"},{id: "3A17", name: "17廖敏君", group: "音三莊"},{id: "3A18", name: "18劉慶霈", group: "音三莊"},{id: "3A19", name: "19蔡慧琳", group: "音三莊"},{id: "3A20", name: "20鄭淳融", group: "音三莊"},{id: "3A21", name: "21魏宜宸", group: "音三莊"},{id: "3A22", name: "22徐婉瑜", group: "音三莊"},{id: "3A23", name: "23安𠸍臻", group: "音三莊"},{id: "3A24", name: "24江岑君", group: "音三莊"},{id: "3A25", name: "25池宛昕", group: "音三莊"},{id: "3A26", name: "26李曉萍", group: "音三莊"},{id: "3A27", name: "27周玄禮", group: "音三莊"},{id: "3A28", name: "28王以昕", group: "音三莊"},{id: "3A29", name: "29林祐立", group: "音三莊"},{id: "3A30", name: "30邱詩涵", group: "音三莊"},{id: "3A31", name: "31胡云珊", group: "音三莊"},{id: "3A32", name: "32蔡逸宣", group: "音三莊"},{id: "3A33", name: "33高慧君", group: "音三莊"},{id: "3A34", name: "34張路淇", group: "音三莊"},{id: "3A35", name: "35陳芃瑾", group: "音三莊"},{id: "3A36", name: "36陳雨彤", group: "音三莊"},{id: "3A37", name: "37陳宥安", group: "音三莊"},{id: "3A38", name: "38陳圓卿", group: "音三莊"},{id: "3A39", name: "39傅克諳", group: "音三莊"},{id: "3A40", name: "40曾妘湘", group: "音三莊"},
-            // 演三莊
+            {id: "3A01", name: "01毛語程", group: "音三莊"},{id: "3A02", name: "02林叡成", group: "音三莊"},{id: "3A03", name: "03田宇紘", group: "音三莊"},{id: "3A04", name: "04吳昆達", group: "音三莊"},{id: "3A05", name: "05吳宥良", group: "音三莊"},{id: "3A06", name: "06黃崇恩", group: "音三莊"},{id: "3A07", name: "07林宏澤", group: "音三莊"},{id: "3A08", name: "08金品澔", group: "音三莊"},{id: "3A09", name: "09劉宸昀", group: "音三莊"},{id: "3A10", name: "10蔡呈樂", group: "音三莊"},{id: "3A11", name: "11蘇瑞吾", group: "音三莊"},{id: "3A12", name: "12梁之凡", group: "音三莊"},{id: "3A13", name: "13蔡宗佑", group: "音三莊"},{id: "3A14", name: "14黃穩達", group: "音三莊"},{id: "3A15", name: "15馮康維", group: "音三莊"},{id: "3A16", name: "16倪秉澤", group: "音三莊"},{id: "3A17", name: "17廖敏君", group: "音三莊"},{id: "3A18", name: "18劉慶霈", group: "音三莊"},{id: "3A19", name: "19蔡慧琳", group: "音三莊"},{id: "3A20", name: "20鄭淳融", group: "音三莊"},{id: "3A21", name: "21魏宜宸", group: "音三莊"},{id: "3A22", name: "22徐婉瑜", group: "音三莊"},{id: "3A23", name: "23安𠸍臻", group: "音三莊"},{id: "3A24", name: "24江岑君", group: "音三莊"},{id: "3A25", name: "25池宛昕", group: "音三莊"},{id: "3A26", name: "李曉萍", group: "音三莊"},{id: "3A27", name: "周玄禮", group: "音三莊"},{id: "3A28", name: "王以昕", group: "音三莊"},{id: "3A29", name: "林祐立", group: "音三莊"},{id: "3A30", name: "邱詩涵", group: "音三莊"},{id: "3A31", name: "胡云珊", group: "音三莊"},{id: "3A32", name: "蔡逸宣", group: "音三莊"},{id: "3A33", name: "高慧君", group: "音三莊"},{id: "3A34", name: "張路淇", group: "音三莊"},{id: "3A35", name: "陳芃瑾", group: "音三莊"},{id: "3A36", name: "陳雨彤", group: "音三莊"},{id: "3A37", name: "陳宥安", group: "音三莊"},{id: "3A38", name: "陳圓卿", group: "音三莊"},{id: "3A39", name: "傅克諳", group: "音三莊"},{id: "3A40", name: "曾妘湘", group: "音三莊"},
             {id: "3D02", name: "02王玟茜", group: "演三莊"},{id: "3D03", name: "03王語舒", group: "演三莊"},{id: "3D04", name: "04姚宥湘", group: "演三莊"},{id: "3D05", name: "05陳思妤", group: "演三莊"},{id: "3D06", name: "06楊鎔慈", group: "演三莊"},{id: "3D09", name: "09王偉家", group: "演三莊"},{id: "3D10", name: "10何建伸", group: "演三莊"},{id: "3D12", name: "12姜榮紳", group: "演三莊"},{id: "3D13", name: "13郭庭傑", group: "演三莊"},{id: "3D14", name: "14陳泊源", group: "演三莊"},{id: "3D15", name: "15陳軍任", group: "演三莊"},{id: "3D16", name: "16黃治容", group: "演三莊"},{id: "3D17", name: "17盧宥辰", group: "演三莊"},{id: "3D18", name: "18謝行知", group: "演三莊"},
-            // 音二莊
-            {id: "2A01", name: "01程冠中", group: "音二莊"},{id: "2A02", name: "02李安恬", group: "音二莊"},{id: "2A03", name: "03吳芊逸", group: "音二莊"},{id: "2A04", name: "04林辰欣", group: "音二莊"},{id: "2A05", name: "05林孟蓁", group: "音二莊"},{id: "2A06", name: "06林采妮", group: "音二莊"},{id: "2A07", name: "07林恩熙", group: "音二莊"},{id: "2A08", name: "08翁閩彗", group: "音二莊"},{id: "2A09", name: "09陳維妮", group: "音二莊"},{id: "2A10", name: "10連妤婷", group: "音二莊"},{id: "2A11", name: "11莊珈維", group: "音二莊"},{id: "2A12", name: "12黎育彤", group: "音二莊"},{id: "2A13", name: "13樊千菲", group: "音二莊"},{id: "2A14", name: "14蔡佳穎", group: "音二莊"},{id: "2A15", name: "15謝季秉", group: "音二莊"},{id: "2A16", name: "16陳妍欣", group: "音二莊"},{id: "2A17", name: "17羅筱涵", group: "音二莊"},{id: "2A18", name: "18蘇奕婷", group: "音二莊"},{id: "2A19", name: "19王璿凱", group: "音二莊"},{id: "2A20", name: "20吳承昊", group: "音二莊"},{id: "2A21", name: "21張治齊", group: "音二莊"},{id: "2A22", name: "22李秉軒", group: "音二莊"},{id: "2A23", name: "23林笠", group: "音二莊"},{id: "2A24", name: "24林允鋐", group: "音二莊"},{id: "2A25", name: "25徐國洲", group: "音二莊"},{id: "2A26", name: "26張定濂", group: "音二莊"},{id: "2A27", name: "27陳柏睿", group: "音二莊"},{id: "2A28", name: "28陳翌鈞", group: "音二莊"},{id: "2A29", name: "29黃偉宸", group: "音二莊"},{id: "2A30", name: "30黃宸約", group: "音二莊"},{id: "2A31", name: "31傅振瑜", group: "音二莊"},{id: "2A32", name: "32葉恒辰", group: "音二莊"},{id: "2A33", name: "33楊仁杉", group: "音二莊"},{id: "2A34", name: "34鄭元滿", group: "音二莊"},{id: "2A35", name: "35羅楷勳", group: "音二莊"},{id: "2A36", name: "36吳昕達", group: "音二莊"},{id: "2A37", name: "37沈榆恩", group: "音二莊"},{id: "2A38", name: "38紀柔帆", group: "音二莊"},{id: "2A39", name: "39盧宇杰", group: "音二莊"},{id: "2A40", name: "40江德凱", group: "音二莊"},{id: "2A41", name: "41李奕德", group: "音二莊"},{id: "2A42", name: "42林品傑", group: "音二莊"},{id: "2A43", name: "43陳元熙", group: "音二莊"},{id: "2A44", name: "44丁婷婷", group: "音二莊"},
-            // 演二樸
+            {id: "2A01", name: "01程冠中", group: "音二莊"},{id: "2A02", name: "02李安恬", group: "音二莊"},{id: "2A03", name: "03吳芊逸", group: "音二莊"},{id: "2A04", name: "04林辰欣", group: "音二莊"},{id: "2A05", name: "05林孟蓁", group: "音二莊"},{id: "2A06", name: "06林采妮", group: "音二莊"},{id: "2A07", name: "07林恩熙", group: "音二莊"},{id: "2A08", name: "08翁閩彗", group: "音二莊"},{id: "2A09", name: "09陳維妮", group: "音二莊"},{id: "2A10", name: "10連妤婷", group: "音二莊"},{id: "2A11", name: "11莊珈維", group: "音二莊"},{id: "2A12", name: "12黎育彤", group: "音二莊"},{id: "2A13", name: "13樊千菲", group: "音二莊"},{id: "2A14", name: "14蔡佳穎", group: "音二莊"},{id: "2A15", name: "15謝季秉", group: "音二莊"},{id: "2A16", name: "16陳妍欣", group: "音二莊"},{id: "2A17", name: "17羅筱涵", group: "音二莊"},{id: "2A18", name: "18蘇奕婷", group: "音二莊"},{id: "2A19", name: "19王璿凱", group: "音二莊"},{id: "2A20", name: "20吳承昊", group: "音二莊"},{id: "2A21", name: "21張治齊", group: "音二莊"},{id: "2A22", name: "22李秉軒", group: "音二莊"},{id: "2A23", name: "23林笠", group: "音二莊"},{id: "2A24", name: "24林允鋐", group: "音二莊"},{id: "2A25", name: "25徐國洲", group: "音二莊"},{id: "2A26", name: "張定濂", group: "音二莊"},{id: "2A27", name: "陳柏睿", group: "音二莊"},{id: "2A28", name: "陳翌鈞", group: "音二莊"},{id: "2A29", name: "黃偉宸", group: "音二莊"},{id: "2A30", name: "黃宸約", group: "音二莊"},{id: "2A31", name: "傅振瑜", group: "音二莊"},{id: "2A32", name: "葉恒辰", group: "音二莊"},{id: "2A33", name: "楊仁杉", group: "音二莊"},{id: "2A34", name: "鄭元滿", group: "音二莊"},{id: "2A35", name: "羅楷勳", group: "音二莊"},{id: "2A36", name: "吳昕達", group: "音二莊"},{id: "2A37", name: "沈榆恩", group: "音二莊"},{id: "2A38", name: "紀柔帆", group: "音二莊"},{id: "2A39", name: "盧宇杰", group: "音二莊"},{id: "2A40", name: "江德凱", group: "音二莊"},{id: "2A41", name: "李奕德", group: "音二莊"},{id: "2A42", name: "林品傑", group: "音二莊"},{id: "2A43", name: "陳元熙", group: "音二莊"},{id: "2A44", name: "丁婷婷", group: "音二莊"},
             {id: "2P02", name: "02簡佳嫻", group: "演二樸"},{id: "2P03", name: "03黃品妤", group: "演二樸"},
-            // 音一莊
             {id: "1A01", name: "01任恩予", group: "音一莊"},{id: "1A02", name: "02李孟臻", group: "音一莊"},{id: "1A03", name: "03潘縈汐", group: "音一莊"},{id: "1A04", name: "04謝幸芙", group: "音一莊"},{id: "1A05", name: "05李昕柔", group: "音一莊"},{id: "1A06", name: "06盧丞菲", group: "音一莊"},{id: "1A07", name: "07林欣霈", group: "音一莊"},{id: "1A08", name: "08林耘瑄", group: "音一莊"},{id: "1A09", name: "09林詩翡", group: "音一莊"},{id: "1A10", name: "10姜妤捷", group: "音一莊"},{id: "1A11", name: "11張筑笹", group: "音一莊"},{id: "1A12", name: "12廖聿淓", group: "音一莊"},{id: "1A13", name: "13曾彥瑄", group: "音一莊"},{id: "1A14", name: "14盧瑗", group: "音一莊"},{id: "1A15", name: "15鍾欣庭", group: "音一莊"},{id: "1A16", name: "16黃郁晴", group: "音一莊"},{id: "1A17", name: "17詹中愷", group: "音一莊"},{id: "1A18", name: "18鄭誌浩", group: "音一莊"},{id: "1A19", name: "19謝松煇", group: "音一莊"},{id: "1A20", name: "20羅子超", group: "音一莊"},{id: "1A21", name: "21羅笠準", group: "音一莊"},{id: "1A22", name: "22蘇冠綸", group: "音一莊"},{id: "1A23", name: "23蘇祺翔", group: "音一莊"},{id: "1A24", name: "24劉軒豪", group: "音一莊"},{id: "1A25", name: "25吳泓毅", group: "音一莊"},{id: "1A26", name: "26李維璟", group: "音一莊"},{id: "1A27", name: "27林孝廷", group: "音一莊"},{id: "1A28", name: "28林紹謙", group: "音一莊"},{id: "1A29", name: "29胡宇哲", group: "音一莊"},{id: "1A30", name: "30楊順發", group: "音一莊"},{id: "1A31", name: "31張又禾", group: "音一莊"},{id: "1A32", name: "32張允磊", group: "音一莊"},{id: "1A33", name: "33黃靖勛", group: "音一莊"}
         ];
 
@@ -153,13 +167,13 @@
             } else {
                 const n = prompt("姓名："); const f = students.find(s => s.name.includes(n));
                 if (!f) return alert("查無此人");
-                db.ref(`jjvs_v13_auth/${f.id}`).once('value', snap => {
+                db.ref(`jjvs_v14_auth/${f.id}`).once('value', snap => {
                     const d = snap.val();
                     if (!d) {
-                        const np = prompt("首入請設密碼："); db.ref(`jjvs_v13_auth/${f.id}`).set({ p: btoa(np) });
+                        const np = prompt("首入請設密碼："); db.ref(`jjvs_v14_auth/${f.id}`).set({ p: np });
                         curStudent = f; role = 'student'; localStorage.setItem('jjvs_role', 'student'); localStorage.setItem('jjvs_sid', f.id); start();
                     } else {
-                        const cp = prompt("密碼："); if (btoa(cp) === d.p) { curStudent = f; role = 'student'; localStorage.setItem('jjvs_role', 'student'); localStorage.setItem('jjvs_sid', f.id); start(); }
+                        const cp = prompt("輸入密碼："); if (cp === d.p) { curStudent = f; role = 'student'; localStorage.setItem('jjvs_role', 'student'); localStorage.setItem('jjvs_sid', f.id); start(); }
                     }
                 });
             }
@@ -188,13 +202,13 @@
         }
 
         function loadCloud() {
-            db.ref('jjvs_v13_cloud').on('value', snap => {
+            db.ref('jjvs_v14_cloud').on('value', snap => {
                 window.master = snap.val() || {};
                 const sd = document.getElementById('target-date').value;
                 localAtt = {...(window.master.attendance && window.master.attendance[sd])};
                 renderGrid();
                 if(curDetailSid) refreshModalUI(curDetailSid);
-                document.getElementById('login-info').innerText = role === 'admin' ? "管理員模式 (已連線)" : "學生："+curStudent.name;
+                document.getElementById('login-info').innerText = role === 'admin' ? "管理員模式 (連線中)" : "學生："+curStudent.name;
             });
         }
 
@@ -203,7 +217,7 @@
             const grid = document.getElementById('student-grid'); grid.innerHTML = "";
             students.filter(s => s.group === currentGrp).forEach(s => {
                 const st = localAtt[s.id] || 'bg-present';
-                const pts = (window.master.profiles && window.master.profiles[s.id] && window.master.profiles[s.id].points) || 0;
+                const pts = (window.master.profiles?.[s.id]?.points) || 0;
                 const div = document.createElement('div'); div.className = "s-box";
                 div.innerHTML = `<div class="s-points">${pts}P</div><div class="s-dot ${st}" id="dot-${s.id}" onclick="localToggle('${s.id}')">${statusNames[st]}</div><div style="font-weight:bold; font-size:1.1rem;" onclick="openDetail('${s.id}')">${s.name}</div>`;
                 grid.appendChild(div);
@@ -220,15 +234,9 @@
 
         function syncCloud() {
             const sd = document.getElementById('target-date').value;
-            db.ref(`jjvs_v13_cloud/attendance/${sd}`).set(localAtt).then(() => {
+            db.ref(`jjvs_v14_cloud/attendance/${sd}`).set(localAtt).then(() => {
                 alert("已存雲端"); document.getElementById('save-btn').style.background = "#000";
             });
-        }
-
-        function resetToday() {
-            if(!confirm("重設全體出席？")) return;
-            students.filter(s => s.group === currentGrp).forEach(s => localAtt[s.id] = 'bg-present');
-            renderGrid(); document.getElementById('save-btn').style.background = "#FF4500";
         }
 
         function openDetail(sid) {
@@ -239,96 +247,110 @@
 
         function refreshModalUI(sid) {
             const s = students.find(x => x.id === sid);
-            const prof = (window.master.profiles && window.master.profiles[sid]) || { points: 0, medals: 0, msg: "無", tasks: [] };
+            const prof = (window.master.profiles && window.master.profiles[sid]) || { points: 0, medals: 0, msg: "無", tasks: [], logs: [] };
             document.getElementById('m-name').innerText = s.name;
-            document.getElementById('m-medals').innerText = prof.medals || 0;
             document.getElementById('m-msg').innerText = prof.msg || "無訊息";
             
-            const pts = prof.points || 0; const sb = document.getElementById('stamp-card'); sb.innerHTML = "";
-            for(let i=0; i<5; i++) {
-                const sl = document.createElement('div');
-                sl.className = `stamp-slot ${i < pts ? 'stamp-active' : ''}`; sl.innerText = i < pts ? '⭐' : '';
-                sb.appendChild(sl);
-            }
+            // 點數與金牌視覺化
+            const pts = prof.points || 0; const sBox = document.getElementById('stamp-card'); sBox.innerHTML = "";
+            for(let i=0; i<5; i++) sBox.innerHTML += `<div class="slot ${i < pts ? 'slot-active' : ''}">${i < pts ? '⭐' : ''}</div>`;
             
+            const med = prof.medals || 0; const mBox = document.getElementById('medal-card'); mBox.innerHTML = "";
+            for(let i=0; i<Math.max(med, 3); i++) mBox.innerHTML += `<div class="slot ${i < med ? 'slot-active' : ''}">${i < med ? '🏅' : ''}</div>`;
+            
+            // 罰抄與日誌
             const tl = document.getElementById('m-task-list'); tl.innerHTML = "";
-            if(prof.tasks && prof.tasks.length > 0) {
+            if(prof.tasks) {
                 prof.tasks.forEach((t, i) => {
                     const p = Math.round((t.cur/t.max)*100);
-                    tl.innerHTML += `
-                        <div class="task-item">
-                            <div style="display:flex; justify-content:space-between; align-items:center;">
-                                <strong onclick="incTask('${sid}', ${i})">${t.name} (${t.cur}/${t.max})</strong>
-                                ${role === 'admin' ? `<button class="btn btn-mini" style="background:var(--danger); color:#fff;" onclick="deleteTask(${i})">🗑️ 刪除</button>` : ''}
-                            </div>
-                            <div class="progress-bar" onclick="incTask('${sid}', ${i})"><div class="progress-fill" style="width:${p}%"></div></div>
-                        </div>`;
+                    tl.innerHTML += `<div class="task-item"><div style="display:flex; justify-content:space-between; align-items:center;"><strong onclick="incTask('${sid}', ${i})">${t.name} (${t.cur}/${t.max})</strong>${role === 'admin' ? `<button class="btn btn-mini" style="background:var(--danger); color:#fff;" onclick="deleteTask(${i})">🗑️</button>` : ''}</div><div class="progress-bar" onclick="incTask('${sid}', ${i})"><div class="progress-fill" style="width:${p}%"></div></div></div>`;
                 });
-            } else { tl.innerHTML = "目前無罰抄任務"; }
+            }
 
             const hBox = document.getElementById('m-history'); hBox.innerHTML = "";
-            const att = window.master.attendance || {};
+            if(prof.logs) { // 顯示加減點數日誌
+                prof.logs.slice().reverse().forEach(l => {
+                    hBox.innerHTML += `<div class="log-item"><span>🕒 ${l.time}</span><span style="color:var(--accent); font-weight:bold;">${l.act}</span></div>`;
+                });
+            }
+            const att = window.master.attendance || {}; // 顯示缺曠
             Object.keys(att).sort().reverse().forEach(d => {
-                if(att[d][sid]) hBox.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #ddd;"><span>📅 ${d}</span><span class="${att[d][sid]}" style="color:#fff; padding:2px 8px; border-radius:5px;">${statusNames[att[d][sid]]}</span></div>`;
+                if(att[d][sid]) hBox.innerHTML += `<div class="log-item"><span>📅 ${d}</span><span class="${att[d][sid]}" style="color:#fff; padding:2px 8px; border-radius:5px;">${statusNames[att[d][sid]]}</span></div>`;
             });
-            if (role === 'admin') document.getElementById('admin-tools').style.display = 'block';
+
+            if (role === 'admin') {
+                document.getElementById('admin-tools').style.display = 'block';
+                document.getElementById('admin-pts-tool').style.display = 'block';
+                document.getElementById('admin-medals-tool').style.display = 'block';
+                document.getElementById('admin-pw-info').style.display = 'block';
+                db.ref(`jjvs_v14_auth/${sid}/p`).once('value', sn => document.getElementById('m-pw').innerText = sn.val() || '未設');
+            }
+        }
+
+        function addLog(sid, act) {
+            const time = new Date().toLocaleString('zh-TW', { hour12: false }).slice(5, 16);
+            const logs = window.master.profiles?.[sid]?.logs || [];
+            logs.push({ time, act });
+            db.ref(`jjvs_v14_cloud/profiles/${sid}/logs`).set(logs);
         }
 
         function adjustPoints(v) {
             const cur = parseInt(window.master.profiles?.[curDetailSid]?.points || 0);
-            db.ref(`jjvs_v13_cloud/profiles/${curDetailSid}/points`).set(Math.max(0, cur + v));
+            const next = Math.max(0, cur + v);
+            db.ref(`jjvs_v14_cloud/profiles/${curDetailSid}/points`).set(next);
+            addLog(curDetailSid, (v > 0 ? "➕ 加點數 " : "➖ 扣點數 ") + Math.abs(v));
         }
 
         function adjustMedals(v) {
             const cur = parseInt(window.master.profiles?.[curDetailSid]?.medals || 0);
-            db.ref(`jjvs_v13_cloud/profiles/${curDetailSid}/medals`).set(Math.max(0, cur + v));
+            const next = Math.max(0, cur + v);
+            db.ref(`jjvs_v14_cloud/profiles/${curDetailSid}/medals`).set(next);
+            addLog(curDetailSid, (v > 0 ? "🎖️ 獲得金牌 " : "💀 消耗金牌 ") + Math.abs(v));
+        }
+
+        function redeem() {
+            const p = parseInt(window.master.profiles?.[curDetailSid]?.points || 0);
+            const m = parseInt(window.master.profiles?.[curDetailSid]?.medals || 0);
+            if(p >= 5) {
+                db.ref(`jjvs_v14_cloud/profiles/${curDetailSid}`).update({ points: p-5, medals: m+1 });
+                addLog(curDetailSid, "🎟️ 星星兌換金牌"); alert("兌換成功");
+            }
         }
 
         function addNewTask() {
             const n = document.getElementById('t-name').value; const m = document.getElementById('t-max').value;
             if(!n || !m) return;
             const ts = (window.master.profiles?.[curDetailSid]?.tasks) || [];
-            ts.push({ name: n, max: m, cur: 0 }); db.ref(`jjvs_v13_cloud/profiles/${curDetailSid}/tasks`).set(ts);
-            document.getElementById('t-name').value = ""; document.getElementById('t-max').value = "";
+            ts.push({ name: n, max: m, cur: 0 }); db.ref(`jjvs_v14_cloud/profiles/${curDetailSid}/tasks`).set(ts);
+            addLog(curDetailSid, "📝 新增罰抄：" + n);
         }
 
         function incTask(sid, idx) {
             if(role !== 'admin') return; const ts = window.master.profiles[sid].tasks;
-            if(ts[idx].cur < ts[idx].max) { ts[idx].cur = parseInt(ts[idx].cur) + 1; db.ref(`jjvs_v13_cloud/profiles/${sid}/tasks`).set(ts); }
+            if(ts[idx].cur < ts[idx].max) { ts[idx].cur = parseInt(ts[idx].cur) + 1; db.ref(`jjvs_v14_cloud/profiles/${sid}/tasks`).set(ts); }
         }
 
         function deleteTask(idx) {
-            if(!confirm("確定刪除此任務？")) return;
             const ts = window.master.profiles[curDetailSid].tasks;
-            ts.splice(idx, 1); db.ref(`jjvs_v13_cloud/profiles/${curDetailSid}/tasks`).set(ts);
+            ts.splice(idx, 1); db.ref(`jjvs_v14_cloud/profiles/${curDetailSid}/tasks`).set(ts);
         }
 
         function updateInfo() {
             const msg = document.getElementById('t-msg').value;
-            db.ref(`jjvs_v13_cloud/profiles/${curDetailSid}/msg`).set(msg); alert("送出成功");
+            db.ref(`jjvs_v14_cloud/profiles/${curDetailSid}/msg`).set(msg); alert("送出成功");
         }
 
-        function redeem() {
-            const p = parseInt(window.master.profiles?.[curDetailSid]?.points || 0);
-            const m = parseInt(window.master.profiles?.[curDetailSid]?.medals || 0);
-            if(p >= 5) { db.ref(`jjvs_v13_cloud/profiles/${curDetailSid}`).update({ points: p-5, medals: m+1 }); alert("兌換成功！"); }
-        }
-
-        function closeModal() { if(role === 'student') return; curDetailSid = null; document.getElementById('overlay').style.display='none'; document.getElementById('modal').style.display='none'; }
+        function closeModal() { curDetailSid = null; document.getElementById('overlay').style.display='none'; document.getElementById('modal').style.display='none'; }
 
         function exportExcel() {
             const exp = []; const att = window.master.attendance || {}; const profs = window.master.profiles || {};
             Object.keys(att).sort().reverse().forEach(d => {
                 students.forEach(s => {
-                    const st = att[d][s.id];
-                    if (st) {
-                        const p = profs[s.id] || {};
-                        exp.push({ "日期": d, "班級": s.group, "姓名": s.name, "出席": statusNames[st], "點數": p.points || 0, "金牌": p.medals || 0, "訊息": p.msg || "" });
-                    }
+                    if (att[d][s.id]) exp.push({ "日期": d, "班級": s.group, "姓名": s.name, "狀態": statusNames[att[d][s.id]], "點數": profs[s.id]?.points || 0, "金牌": profs[s.id]?.medals || 0 });
                 });
             });
             const ws = XLSX.utils.json_to_sheet(exp); const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "學習紀錄"); XLSX.writeFile(wb, `莊敬音樂科報表.xlsx`);
+            XLSX.utils.book_append_sheet(wb, ws, "報表"); XLSX.writeFile(wb, `莊敬音樂科紀錄.xlsx`);
         }
     </script>
 </body>
