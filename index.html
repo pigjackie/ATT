@@ -4,79 +4,40 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>莊敬音樂科教務管理系統</title>
-
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-
 <style>
-/* ===== 蕭老師要求的黑金質感 CSS ===== */
-:root {
-  --gold: #D4AF37; --gold-light: #F0D060; --gold-dark: #A8891C;
-  --bg-deep: #0A0A0C; --bg-card: #111115; --bg-panel: #161619;
-  --text-primary: #F0E8D0; --text-secondary: #A09070;
-  --green: #2ECC71; --yellow: #F1C40F; --red: #E74C3C; --blue: #3498DB;
-  --border: rgba(212,175,55,0.2); --radius: 12px;
-}
-
+:root { --gold: #D4AF37; --gold-light: #F0D060; --bg-deep: #0A0A0C; --bg-card: #111115; --text-primary: #F0E8D0; --text-secondary: #A09070; --green: #2ECC71; --yellow: #F1C40F; --red: #E74C3C; --blue: #3498DB; --border: rgba(212,175,55,0.2); --radius: 12px; }
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 body { background: var(--bg-deep); color: var(--text-primary); font-family: 'Noto Serif TC', serif; overflow-x: hidden; min-height: 100vh; }
-
-/* 🔴 鋼琴鍵背景已在此處刪除，解決手機卡頓與發燙 */
-
+/* 🔴 鋼琴鍵浮水印 body::before 已在此處徹底移除，解決手機卡頓 */
 body::after { content: ''; position: fixed; top: 0; left: 0; right: 0; height: 3px; background: linear-gradient(90deg, transparent, var(--gold), transparent); z-index: 1000; }
-
 .screen { display: none; position: relative; z-index: 1; }
 .screen.active { display: block; }
-
-/* 登入畫面 */
 #loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at 50% 30%, rgba(212,175,55,0.08) 0%, transparent 60%); }
-.login-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 400px; max-width: 95vw; text-align: center; box-shadow: 0 0 20px rgba(212,175,55,0.15); }
-.login-tab { flex: 1; padding: 10px; background: transparent; border: 1px solid var(--border); color: var(--text-secondary); cursor: pointer; }
+.login-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 400px; max-width: 95vw; box-shadow: 0 0 20px rgba(212,175,55,0.15); }
+.login-tabs { display: flex; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-bottom: 25px; }
+.login-tab { flex: 1; padding: 10px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; transition: 0.2s; }
 .login-tab.active { background: var(--gold); color: #000; font-weight: bold; }
-
-/* 主程式佈局 */
 .topbar { position: sticky; top: 0; z-index: 100; background: rgba(10,10,12,0.95); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); padding: 0 20px; display: flex; align-items: center; height: 60px; gap: 15px; }
 .nav-tabs { display: flex; background: var(--bg-card); border-bottom: 1px solid var(--border); overflow-x: auto; }
 .nav-tab { padding: 14px 20px; background: transparent; border: none; color: var(--text-secondary); cursor: pointer; white-space: nowrap; border-bottom: 2px solid transparent; }
 .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
-
-/* 學生網格與卡片 */
 .student-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 20px; }
 @media (max-width: 768px) { .student-grid { grid-template-columns: repeat(2, 1fr); } }
-@media (max-width: 480px) { .student-grid { grid-template-columns: 1fr; } }
-
-.student-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; cursor: pointer; position: relative; transition: 0.2s; }
-.student-card:hover { border-color: var(--gold); transform: translateY(-2px); }
+.student-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 15px; cursor: pointer; position: relative; }
 .status-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: bold; }
-.出 { background: rgba(46,204,113,0.2); color: var(--green); }
-.遲 { background: rgba(241,196,15,0.2); color: var(--yellow); }
-.缺 { background: rgba(231,76,60,0.2); color: var(--red); }
-.假 { background: rgba(52,152,219,0.2); color: var(--blue); }
-
-/* 批次模式 */
-body.batch-mode .student-card.batch-selected { border-color: var(--gold); background: rgba(212,175,55,0.08); box-shadow: 0 0 0 2px var(--gold); }
-.batch-check { position: absolute; top: 8px; left: 8px; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: #000; display: none; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
+.出 { background: rgba(46,204,113,0.2); color: var(--green); } .遲 { background: rgba(241,196,15,0.2); color: var(--yellow); } .缺 { background: rgba(231,76,60,0.2); color: var(--red); } .假 { background: rgba(52,152,219,0.2); color: var(--blue); }
 body.batch-mode .batch-check { display: flex; }
-
-/* 集點卡與金牌 */
-.points-card-wrap { background: linear-gradient(135deg, #1a1608 0%, #221c09 50%, #1a1608 100%); border: 1px solid var(--gold-dark); border-radius: 14px; padding: 15px; margin: 10px 0; }
-.points-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.point-cell { aspect-ratio: 1; border-radius: 8px; border: 1.5px solid rgba(212,175,55,0.2); display: flex; align-items: center; justify-content: center; font-size: 20px; }
-.point-cell.filled { background: var(--gold); animation: stamp-in 0.3s ease; }
-@keyframes stamp-in { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
-
-/* 詳細面板 */
+.batch-check { position: absolute; top: 8px; left: 8px; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: #000; display: none; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; }
 #detailPanel { position: fixed; top: 0; right: -520px; width: 520px; height: 100vh; background: var(--bg-panel); border-left: 1px solid var(--border); z-index: 500; transition: 0.3s; padding: 25px; overflow-y: auto; box-shadow: -10px 0 40px #000; }
 #detailPanel.open { right: 0; }
-
-/* 其他通用元件 */
-.btn-sm { padding: 6px 14px; background: transparent; border: 1px solid var(--border); border-radius: 8px; color: var(--text-secondary); cursor: pointer; }
-.btn-sm.gold { background: var(--gold); color: #000; font-weight: bold; }
-.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--bg-panel); border: 1px solid var(--gold); padding: 12px 24px; border-radius: 30px; opacity: 0; transition: 0.3s; z-index: 10000; }
+.point-cell { aspect-ratio: 1; border-radius: 8px; border: 1.5px solid rgba(212,175,55,0.2); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+.point-cell.filled { background: var(--gold); }
+.toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: var(--bg-panel); border: 1px solid var(--gold); padding: 12px 24px; border-radius: 30px; opacity: 0; transition: 0.3s; z-index: 10000; color: #fff; }
 .toast.show { opacity: 1; }
 </style>
 </head>
@@ -84,35 +45,60 @@ body.batch-mode .batch-check { display: flex; }
 
 <div id="loginScreen" class="screen active">
   <div class="login-box">
-    <div style="font-size: 48px;">🎼</div>
-    <h2 style="color:var(--gold);">莊敬高職音樂科</h2>
-    <p style="color:var(--text-secondary); font-size: 13px; margin-bottom: 30px;">教務管理系統 · Royal Edition</p>
-    <div style="display: flex; margin-bottom: 25px;">
-      <button class="login-tab active" id="tabT" onclick="switchLogin('teacher')">教師登入</button>
-      <button class="login-tab" id="tabS" onclick="switchLogin('student')">學生登入</button>
+    <div style="font-size: 48px; text-align:center;">🎼</div>
+    <h2 style="color:var(--gold); text-align:center;">莊敬高職音樂科</h2>
+    <p style="color:var(--text-secondary); font-size: 13px; text-align:center; margin-bottom: 25px;">ROYAL ADMIN V50</p>
+    <div class="login-tabs">
+      <button class="login-tab active" id="btnT" onclick="switchLogin('teacher')">教師登入</button>
+      <button class="login-tab" id="btnS" onclick="switchLogin('student')">學生登入</button>
     </div>
-    <div id="loginArea">
-      <input type="text" id="loginName" placeholder="帳號/姓名" style="width:100%; padding:12px; background:#222; border:none; color:#fff; border-radius:10px; margin-bottom:15px;">
-      <input type="password" id="loginPass" placeholder="密碼" style="width:100%; padding:12px; background:#222; border:none; color:#fff; border-radius:10px; margin-bottom:20px;">
-      <button class="btn-sm gold" style="width:100%; padding:14px;" onclick="doLogin()">登入系統</button>
+    <div id="tForm">
+      <input type="text" id="tName" placeholder="帳號" style="width:100%; padding:12px; background:#222; border:none; color:#fff; border-radius:10px; margin-bottom:15px;">
+      <input type="password" id="tPass" placeholder="密碼" style="width:100%; padding:12px; background:#222; border:none; color:#fff; border-radius:10px; margin-bottom:20px;">
+      <button class="btn-sm gold" style="width:100%; padding:14px;" onclick="doLogin()">登入教師系統</button>
+    </div>
+    <div id="sForm" style="display:none;">
+      <input type="text" id="sName" placeholder="學生姓名" style="width:100%; padding:12px; background:#222; border:none; color:#fff; border-radius:10px; margin-bottom:15px;">
+      <input type="password" id="sPass" placeholder="密碼 (初始 0000)" style="width:100%; padding:12px; background:#222; border:none; color:#fff; border-radius:10px; margin-bottom:20px;">
+      <button class="btn-sm gold" style="width:100%; padding:14px;" onclick="doStudentLogin()">登入學生看板</button>
     </div>
   </div>
 </div>
 
 <div id="appScreen" class="screen">
   <div class="topbar">
-    <div style="font-size: 24px;">🎼</div>
+    <div style="font-size: 24px;">🏛️</div>
     <div style="flex:1; color:var(--gold); font-weight:bold;">行政總部 - <span id="uName">—</span></div>
-    <button class="btn-sm" onclick="doLogout()">登出</button>
+    <button class="btn-sm" onclick="location.reload()">登出</button>
   </div>
   <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchTab('attendance')">📋 點名管理</button>
-    <button class="nav-tab" onclick="switchTab('apply')">🚪 外出申請 <span id="badge" style="background:red; color:#fff; border-radius:10px; padding:1px 6px; font-size:10px; display:none;">0</span></button>
-    <button class="nav-tab" onclick="switchTab('report')">📊 數據報表</button>
-    <button class="nav-tab" id="mgrTab" style="display:none;" onclick="switchTab('mgr')">⚙️ 教師管理</button>
+    <button class="nav-tab active" onclick="switchTab('att')">📋 點名</button>
+    <button class="nav-tab" onclick="switchTab('apply')">🚪 申請 <span id="badge" style="background:red; color:white; border-radius:10px; padding:1px 6px; font-size:10px; display:none;">0</span></button>
+    <button class="nav-tab" onclick="switchTab('report')">📊 報表</button>
+    <button class="nav-tab" id="mgrTab" style="display:none;" onclick="switchTab('mgr')">⚙️ 管理</button>
   </div>
-  <div class="content-area" id="mainContent">
+  <div class="content-area" style="padding:20px;">
+    <div id="clsBtns" style="display:flex; gap:10px; overflow-x:auto; margin-bottom:15px;"></div>
+    <div id="toolbar" style="margin-bottom:15px; display:flex; gap:10px;">
+      <button class="btn-sm gold" onclick="saveAttendance()">💾 儲存點名</button>
+      <button class="btn-sm" onclick="toggleBatch()">☑️ 批次模式</button>
+      <button class="btn-sm" onclick="exportExcel()">📥 匯出 Excel</button>
     </div>
+    <div id="batchBar" style="display:none; background:var(--bg-card); padding:15px; border:1px solid var(--gold); border-radius:10px; margin-bottom:15px; gap:10px;">
+      <span style="color:var(--gold);">批次：已選 <span id="bCount">0</span> 人</span>
+      <button class="btn-sm gold" onclick="batchAdd(1)">⭐ +1點</button>
+      <button class="btn-sm" onclick="batchAdd(-1)">-1點</button>
+    </div>
+    <div id="sGrid" class="student-grid"></div>
+    <div id="applyArea" style="display:none;"></div>
+    <div id="reportArea" style="display:none;"></div>
+    <div id="mgrArea" style="display:none;"></div>
+  </div>
+</div>
+
+<div id="studentScreen" class="screen">
+  <div class="topbar"><div>🎓 學生個人看板</div><button class="btn-sm" onclick="location.reload()">登出</button></div>
+  <div id="sInfo" style="padding:40px 20px; text-align:center;"></div>
 </div>
 
 <div id="detailPanel">
@@ -120,153 +106,203 @@ body.batch-mode .batch-check { display: flex; }
     <h2 id="dName" style="color:var(--gold);">學生姓名</h2>
     <button class="btn-sm" onclick="closeDetail()">✕</button>
   </div>
-  <div class="points-card-wrap">
-    <div class="points-grid" id="dPoints"></div>
-    <p style="text-align:center; margin-top:10px;">目前點數：<span id="dPNum" style="color:var(--gold); font-weight:bold;">0</span></p>
-  </div>
-  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+  <div class="points-card-wrap"><div class="points-grid" id="ptsGrid"></div></div>
+  <p style="text-align:center;">目前星等：<span id="ptsNum" style="color:var(--gold); font-size:24px;">0</span> ⭐</p>
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:20px;">
     <button class="btn-sm gold" onclick="adj(1)">＋ 加點</button>
     <button class="btn-sm" onclick="adj(-1)">－ 扣點</button>
-    <button class="btn-sm gold" onclick="redeem()">🎖️ 兌換金牌</button>
-    <button class="btn-sm" style="color:var(--red);" onclick="resetOne()">🚨 重置此生</button>
+    <button class="btn-sm gold" onclick="redeem()">🎖️ 換金牌</button>
+    <button class="btn-sm" style="color:red;" onclick="resetOne()">🚨 重置此生</button>
   </div>
-  <div id="dLog" style="margin-top:20px; font-size:12px; border-top:1px solid var(--border); padding-top:15px;"></div>
+  <div id="dLogs" style="margin-top:20px; font-size:12px; color:var(--text-secondary); max-height:200px; overflow-y:auto;"></div>
 </div>
 
 <div id="toast" class="toast"></div>
 
 <script>
-// ===== 核心名單與配置 =====
-const MASTER = { name: "蕭旭成", pass: "0902" };
+// ===== 完全保留 V5 配置與 133 位名單 =====
+const FIREBASE_CONFIG = { apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw", databaseURL: "https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app" };
 const DB_ROOT = "jjvs_v_final_cloud";
+const MASTER = { name: "蕭旭成", pass: "0902" };
 const CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
 const STUDENT_DATA = [
-  // 您名單中的 133 人... (此處縮寫以防字數過長被 AI 截斷，但實際邏輯不變)
-  {id:"M3-01",name:"毛語程",cls:"音三莊"},{id:"M3-02",name:"林叡成",cls:"音三莊"},{id:"M3-03",name:"田宇紘",cls:"音三莊"},
-  {id:"M3-04",name:"吳昆達",cls:"音三莊"},{id:"M3-05",name:"吳宥良",cls:"音三莊"},{id:"M3-06",name:"黃崇恩",cls:"音三莊"},
-  {id:"M3-07",name:"林宏澤",cls:"音三莊"},{id:"M3-08",name:"金品澔",cls:"音三莊"},{id:"M3-09",name:"劉宸昀",cls:"音三莊"},
-  {id:"M3-10",name:"蔡呈樂",cls:"音三莊"},{id:"M3-11",name:"蘇瑞吾",cls:"音三莊"},{id:"M3-12",name:"梁之凡",cls:"音三莊"},
-  {id:"M3-13",name:"蔡宗佑",cls:"音三莊"},{id:"M3-14",name:"黃穩達",cls:"音三莊"},{id:"M3-15",name:"馮康維",cls:"音三莊"},
-  {id:"M3-16",name:"倪秉澤",cls:"音三莊"},{id:"M3-17",name:"廖敏君",cls:"音三莊"},{id:"M3-18",name:"劉慶霈",cls:"音三莊"},
-  {id:"M3-19",name:"蔡慧琳",cls:"音三莊"},{id:"M3-20",name:"鄭淳融",cls:"音三莊"},{id:"M3-21",name:"魏宜宸",cls:"音三莊"},
-  {id:"M3-22",name:"徐婉瑜",cls:"音三莊"},{id:"M3-23",name:"安𠸍臻",cls:"音三莊"},{id:"M3-24",name:"江岑君",cls:"音三莊"},
-  {id:"M3-25",name:"池宛昕",cls:"音三莊"},{id:"M3-26",name:"李曉萍",cls:"音三莊"},{id:"M3-27",name:"周玄禮",cls:"音三莊"},
-  {id:"M3-28",name:"王以昕",cls:"音三莊"},{id:"M3-29",name:"林祐立",cls:"音三莊"},{id:"M3-30",name:"邱詩涵",cls:"音三莊"},
-  {id:"M3-31",name:"胡云珊",cls:"音三莊"},{id:"M3-32",name:"蔡逸宣",cls:"音三莊"},{id:"M3-33",name:"高慧君",cls:"音三莊"},
-  {id:"M3-34",name:"張路淇",cls:"音三莊"},{id:"M3-35",name:"陳芃瑾",cls:"音三莊"},{id:"M3-36",name:"陳雨彤",cls:"音三莊"},
-  {id:"M3-37",name:"陳宥安",cls:"音三莊"},{id:"M3-38",name:"陳圓卿",cls:"音三莊"},{id:"M3-39",name:"傅克諳",cls:"音三莊"},
-  {id:"M3-40",name:"曾妘湘",cls:"音三莊"},{id:"P3-02",name:"王玟茜",cls:"演三莊"},{id:"P3-03",name:"王語舒",cls:"演三莊"},
-  {id:"P3-04",name:"姚宥湘",cls:"演三莊"},{id:"P3-05",name:"陳思妤",cls:"演三莊"},{id:"P3-06",name:"楊鎔慈",cls:"演三莊"},
-  {id:"P3-09",name:"王偉家",cls:"演三莊"},{id:"P3-10",name:"何建伸",cls:"演三莊"},{id:"P3-12",name:"姜榮紳",cls:"演三莊"},
-  {id:"P3-13",name:"郭庭傑",cls:"演三莊"},{id:"P3-14",name:"陳泊源",cls:"演三莊"},{id:"P3-15",name:"陳軍任",cls:"演三莊"},
-  {id:"P3-16",name:"黃治容",cls:"演三莊"},{id:"P3-17",name:"盧宥辰",cls:"演三莊"},{id:"P3-18",name:"謝行知",cls:"演三莊"},
-  {id:"M2-01",name:"程冠中",cls:"音二莊"},{id:"M2-02",name:"李安恬",cls:"音二莊"},{id:"M2-03",name:"吳芊逸",cls:"音二莊"},
-  {id:"M2-04",name:"林辰欣",cls:"音二莊"},{id:"M2-05",name:"林孟蓁",cls:"音二莊"},{id:"M2-06",name:"林采妮",cls:"音二莊"},
-  {id:"M2-07",name:"林恩熙",cls:"音二莊"},{id:"M2-08",name:"翁閩彗",cls:"音二莊"},{id:"M2-09",name:"陳維妮",cls:"音二莊"},
-  {id:"M2-10",name:"連妤婷",cls:"音二莊"},{id:"M2-11",name:"莊珈維",cls:"音二莊"},{id:"M2-12",name:"黎育彤",cls:"音二莊"},
-  {id:"M2-13",name:"樊千菲",cls:"音二莊"},{id:"M2-14",name:"蔡佳穎",cls:"音二莊"},{id:"M2-15",name:"謝季秉",cls:"音二莊"},
-  {id:"M2-16",name:"陳妍欣",cls:"音二莊"},{id:"M2-17",name:"羅筱涵",cls:"音二莊"},{id:"M2-18",name:"蘇奕婷",cls:"音二莊"},
-  {id:"M2-19",name:"王璿凱",cls:"音二莊"},{id:"M2-20",name:"吳承昊",cls:"音二莊"},{id:"M2-21",name:"張治齊",cls:"音二莊"},
-  {id:"M2-22",name:"李秉軒",cls:"音二莊"},{id:"M2-23",name:"林笠",cls:"音二莊"},{id:"M2-24",name:"林允鋐",cls:"音二莊"},
-  {id:"M2-25",name:"徐國洲",cls:"音二莊"},{id:"M2-26",name:"張定濂",cls:"音二莊"},{id:"M2-27",name:"陳柏睿",cls:"音二莊"},
-  {id:"M2-28",name:"陳翌鈞",cls:"音二莊"},{id:"M2-29",name:"黃偉宸",cls:"音二莊"},{id:"M2-30",name:"黃宸約",cls:"音二莊"},
-  {id:"M2-31",name:"傅振瑜",cls:"音二莊"},{id:"M2-32",name:"葉恒辰",cls:"音二莊"},{id:"M2-33",name:"楊仁杉",cls:"音二莊"},
-  {id:"M2-34",name:"鄭元滿",cls:"音二莊"},{id:"M2-35",name:"羅楷勳",cls:"音二莊"},{id:"M2-36",name:"吳昕達",cls:"音二莊"},
-  {id:"M2-37",name:"沈榆恩",cls:"音二莊"},{id:"M2-38",name:"紀柔帆",cls:"音二莊"},{id:"M2-39",name:"盧宇杰",cls:"音二莊"},
-  {id:"M2-40",name:"江德凱",cls:"音二莊"},{id:"M2-41",name:"李奕德",cls:"音二莊"},{id:"M2-42",name:"林品傑",cls:"音二莊"},
-  {id:"M2-43",name:"陳元熙",cls:"音二莊"},{id:"M2-44",name:"丁婷婷",cls:"音二莊"},{id:"P2-02",name:"簡佳嫻",cls:"演二樸"},
-  {id:"P2-03",name:"黃品妤",cls:"演二樸"},{id:"M1-01",name:"任恩予",cls:"音一莊"},{id:"M1-02",name:"李孟臻",cls:"音一莊"},
-  {id:"M1-03",name:"潘縈汐",cls:"音一莊"},{id:"M1-04",name:"謝幸芙",cls:"音一莊"},{id:"M1-05",name:"李昕柔",cls:"音一莊"},
-  {id:"M1-06",name:"盧丞菲",cls:"音一莊"},{id:"M1-07",name:"林欣霈",cls:"音一莊"},{id:"M1-08",name:"林耘瑄",cls:"音一莊"},
-  {id:"M1-09",name:"林詩翡",cls:"音一莊"},{id:"M1-10",name:"姜妤捷",cls:"音一莊"},{id:"M1-11",name:"張筑笹",cls:"音一莊"},
-  {id:"M1-12",name:"廖聿淓",cls:"音一莊"},{id:"M1-13",name:"曾彥瑄",cls:"音一莊"},{id:"M1-14",name:"盧瑗",cls:"音一莊"},
-  {id:"M1-15",name:"鍾欣庭",cls:"音一莊"},{id:"M1-16",name:"黃郁晴",cls:"音一莊"},{id:"M1-17",name:"詹中愷",cls:"音一莊"},
-  {id:"M1-18",name:"鄭誌浩",cls:"音一莊"},{id:"M1-19",name:"謝松煇",cls:"音一莊"},{id:"M1-20",name:"羅子超",cls:"音一莊"},
-  {id:"M1-21",name:"羅笠準",cls:"音一莊"},{id:"M1-22",name:"蘇冠綸",cls:"音一莊"},{id:"M1-23",name:"蘇祺翔",cls:"音一莊"},
-  {id:"M1-24",name:"劉軒豪",cls:"音一莊"},{id:"M1-25",name:"吳泓毅",cls:"音一莊"},{id:"M1-26",name:"李維璟",cls:"音一莊"},
-  {id:"M1-27",name:"林孝廷",cls:"音一莊"},{id:"M1-28",name:"林紹謙",cls:"音一莊"},{id:"M1-29",name:"胡宇哲",cls:"音一莊"},
-  {id:"M1-30",name:"楊順發",cls:"音一莊"},{id:"M1-31",name:"張又禾",cls:"音一莊"},{id:"M1-32",name:"張允磊",cls:"音一莊"},
-  {id:"M1-33",name:"黃靖勛",cls:"音一莊"}
+  // 您名單中的 133 人... (完整名單已嵌入，確保資料不流失)
+  {id:"M3-01",name:"毛語程",cls:"音三莊"},{id:"M3-02",name:"林叡成",cls:"音三莊"},{id:"M3-03",name:"田宇紘",cls:"音三莊"},{id:"M3-04",name:"吳昆達",cls:"音三莊"},{id:"M3-05",name:"吳宥良",cls:"音三莊"},{id:"M3-06",name:"黃崇恩",cls:"音三莊"},{id:"M3-07",name:"林宏澤",cls:"音三莊"},{id:"M3-08",name:"金品澔",cls:"音三莊"},{id:"M3-09",name:"劉宸昀",cls:"音三莊"},{id:"M3-10",name:"蔡呈樂",cls:"音三莊"},{id:"M3-11",name:"蘇瑞吾",cls:"音三莊"},{id:"M3-12",name:"梁之凡",cls:"音三莊"},{id:"M3-13",name:"蔡宗佑",cls:"音三莊"},{id:"M3-14",name:"黃穩達",cls:"音三莊"},{id:"M3-15",name:"馮康維",cls:"音三莊"},{id:"M3-16",name:"倪秉澤",cls:"音三莊"},{id:"M3-17",name:"廖敏君",cls:"音三莊"},{id:"M3-18",name:"劉慶霈",cls:"音三莊"},{id:"M3-19",name:"蔡慧琳",cls:"音三莊"},{id:"M3-20",name:"鄭淳融",cls:"音三莊"},{id:"M3-21",name:"魏宜宸",cls:"音三莊"},{id:"M3-22",name:"徐婉瑜",cls:"音三莊"},{id:"M3-23",name:"安𠸍臻",cls:"音三莊"},{id:"M3-24",name:"江岑君",cls:"音三莊"},{id:"M3-25",name:"池宛昕",cls:"音三莊"},{id:"M3-26",name:"李曉萍",cls:"音三莊"},{id:"M3-27",name:"周玄禮",cls:"音三莊"},{id:"M3-28",name:"王以昕",cls:"音三莊"},{id:"M3-29",name:"林祐立",cls:"音三莊"},{id:"M3-30",name:"邱詩涵",cls:"音三莊"},{id:"M3-31",name:"胡云珊",cls:"音三莊"},{id:"M3-32",name:"蔡逸宣",cls:"音三莊"},{id:"M3-33",name:"高慧君",cls:"音三莊"},{id:"M3-34",name:"張路淇",cls:"音三莊"},{id:"M3-35",name:"陳芃瑾",cls:"音三莊"},{id:"M3-36",name:"陳雨彤",cls:"音三莊"},{id:"M3-37",name:"陳宥安",cls:"音三莊"},{id:"M3-38",name:"陳圓卿",cls:"音三莊"},{id:"M3-39",name:"傅克諳",cls:"音三莊"},{id:"M3-40",name:"曾妘湘",cls:"音三莊"},{id:"P3-02",name:"王玟茜",cls:"演三莊"},{id:"P3-03",name:"王語舒",cls:"演三莊"},{id:"P3-04",name:"姚宥湘",cls:"演三莊"},{id:"P3-05",name:"陳思妤",cls:"演三莊"},{id:"P3-06",name:"楊鎔慈",cls:"演三莊"},{id:"P3-09",name:"王偉家",cls:"演三莊"},{id:"P3-10",name:"何建伸",cls:"演三莊"},{id:"P3-12",name:"姜榮紳",cls:"演三莊"},{id:"P3-13",name:"郭庭傑",cls:"演三莊"},{id:"P3-14",name:"陳泊源",cls:"演三莊"},{id:"P3-15",name:"陳軍任",cls:"演三莊"},{id:"P3-16",name:"黃治容",cls:"演三莊"},{id:"P3-17",name:"盧宥辰",cls:"演三莊"},{id:"P3-18",name:"謝行知",cls:"演三莊"},{id:"M2-01",name:"程冠中",cls:"音二莊"},{id:"M2-02",name:"李安恬",cls:"音二莊"},{id:"M2-03",name:"吳芊逸",cls:"音二莊"},{id:"M2-04",name:"林辰欣",cls:"音二莊"},{id:"M2-05",name:"林孟蓁",cls:"音二莊"},{id:"M2-06",name:"林采妮",cls:"音二莊"},{id:"M2-07",name:"林恩熙",cls:"音二莊"},{id:"M2-08",name:"翁閩彗",cls:"音二莊"},{id:"M2-09",name:"陳維妮",cls:"音二莊"},{id:"M2-10",name:"連妤婷",cls:"音二莊"},{id:"M2-11",name:"莊珈維",cls:"音二莊"},{id:"M2-12",name:"黎育彤",cls:"音二莊"},{id:"M2-13",name:"樊千菲",cls:"音二莊"},{id:"M2-14",name:"蔡佳穎",cls:"音二莊"},{id:"M2-15",name:"謝季秉",cls:"音二莊"},{id:"M2-16",name:"陳妍欣",cls:"音二莊"},{id:"M2-17",name:"羅筱涵",cls:"音二莊"},{id:"M2-18",name:"蘇奕婷",cls:"音二莊"},{id:"M2-19",name:"王璿凱",cls:"音二莊"},{id:"M2-20",name:"吳承昊",cls:"音二莊"},{id:"M2-21",name:"張治齊",cls:"音二莊"},{id:"M2-22",name:"李秉軒",cls:"音二莊"},{id:"M2-23",name:"林笠",cls:"音二莊"},{id:"M2-24",name:"林允鋐",cls:"音二莊"},{id:"M2-25",name:"徐國洲",cls:"音二莊"},{id:"M2-26",name:"張定濂",cls:"音二莊"},{id:"M2-27",name:"陳柏睿",cls:"音二莊"},{id:"M2-28",name:"陳翌鈞",cls:"音二莊"},{id:"M2-29",name:"黃偉宸",cls:"音二莊"},{id:"M2-30",name:"黃宸約",cls:"音二莊"},{id:"M2-31",name:"傅振瑜",cls:"音二莊"},{id:"M2-32",name:"葉恒辰",cls:"音二莊"},{id:"M2-33",name:"楊仁杉",cls:"音二莊"},{id:"M2-34",name:"鄭元滿",cls:"音二莊"},{id:"M2-35",name:"羅楷勳",cls:"音二莊"},{id:"M2-36",name:"吳昕達",cls:"音二莊"},{id:"M2-37",name:"沈榆恩",cls:"音二莊"},{id:"M2-38",name:"紀柔帆",cls:"音二莊"},{id:"M2-39",name:"盧宇杰",cls:"音二莊"},{id:"M2-40",name:"江德凱",cls:"音二莊"},{id:"M2-41",name:"李奕德",cls:"音二莊"},{id:"M2-42",name:"林品傑",cls:"音二莊"},{id:"M2-43",name:"陳元熙",cls:"音二莊"},{id:"M2-44",name:"丁婷婷",cls:"音二莊"},{id:"P2-02",name:"簡佳嫻",cls:"演二樸"},{id:"P2-03",name:"黃品妤",cls:"演二樸"},{id:"M1-01",name:"任恩予",cls:"音一莊"},{id:"M1-02",name:"李孟臻",cls:"音一莊"},{id:"M1-03",name:"潘縈汐",cls:"音一莊"},{id:"M1-04",name:"謝幸芙",cls:"音一莊"},{id:"M1-05",name:"李昕柔",cls:"音一莊"},{id:"M1-06",name:"盧丞菲",cls:"音一莊"},{id:"M1-07",name:"林欣霈",cls:"音一莊"},{id:"M1-08",name:"林耘瑄",cls:"音一莊"},{id:"M1-09",name:"林詩翡",cls:"音一莊"},{id:"M1-10",name:"姜妤捷",cls:"音一莊"},{id:"M1-11",name:"張筑笹",cls:"音一莊"},{id:"M1-12",name:"廖聿淓",cls:"音一莊"},{id:"M1-13",name:"曾彥瑄",cls:"音一莊"},{id:"M1-14",name:"盧瑗",cls:"音一莊"},{id:"M1-15",name:"鍾欣庭",cls:"音一莊"},{id:"M1-16",name:"黃郁晴",cls:"音一莊"},{id:"M1-17",name:"詹中愷",cls:"音一莊"},{id:"M1-18",name:"鄭誌浩",cls:"音一莊"},{id:"M1-19",name:"謝松煇",cls:"音一莊"},{id:"M1-20",name:"羅子超",cls:"音一莊"},{id:"M1-21",name:"羅笠準",cls:"音一莊"},{id:"M1-22",name:"蘇冠綸",cls:"音一莊"},{id:"M1-23",name:"蘇祺翔",cls:"音一莊"},{id:"M1-24",name:"劉軒豪",cls:"音一莊"},{id:"M1-25",name:"吳泓毅",cls:"音一莊"},{id:"M1-26",name:"李維璟",cls:"音一莊"},{id:"M1-27",name:"林孝廷",cls:"音一莊"},{id:"M1-28",name:"林紹謙",cls:"音一莊"},{id:"M1-29",name:"胡宇哲",cls:"音一莊"},{id:"M1-30",name:"楊順發",cls:"音一莊"},{id:"M1-31",name:"張又禾",cls:"音一莊"},{id:"M1-32",name:"張允磊",cls:"音一莊"},{id:"M1-33",name:"黃靖勛",cls:"音一莊"}
 ];
 
-firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(FIREBASE_CONFIG);
 const db = firebase.database();
 let role='', currentUser=null, curSid=null, curGrp='音三莊', isBatch=false, localProfiles={}, pendingAtt={};
 
-// ===== 行政功能實作 =====
-function doLogin() {
-  const acc = document.getElementById('loginName').value.trim();
-  const pw = document.getElementById('loginPass').value.trim();
-  if(acc === MASTER.name && pw === MASTER.pass) {
-    role='admin'; currentUser=MASTER; startApp(); return;
-  }
-  // 這裡可加入其他教師或學生的 Firebase 驗證邏輯...
+// ===== 核心驗證邏輯修復 =====
+function switchLogin(type) {
+  document.querySelectorAll('.login-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(type==='teacher'?'btnT':'btnS').classList.add('active');
+  document.getElementById('tForm').style.display = type==='teacher'?'block':'none';
+  document.getElementById('sForm').style.display = type==='student'?'block':'none';
+}
+
+async function doLogin() {
+  const acc = document.getElementById('tName').value.trim();
+  const pw = document.getElementById('tPass').value.trim();
+  if(acc === MASTER.name && pw === MASTER.pass) { role='admin'; currentUser=MASTER; startApp(); return; }
+  
+  showToast("驗證中...");
+  db.ref(`${DB_ROOT}/teachers`).once('value', sn => {
+    const ts = sn.val();
+    let found = false;
+    for(let k in ts) { if(ts[k].name===acc && ts[k].pass===pw) { role='admin'; currentUser=ts[k]; found=true; break; } }
+    if(found) startApp(); else showToast("帳號密碼錯誤", "red");
+  });
+}
+
+async function doStudentLogin() {
+  const name = document.getElementById('sName').value.trim();
+  const pw = document.getElementById('sPass').value.trim();
+  const stu = STUDENT_DATA.find(s=>s.name===name);
+  if(!stu) return showToast("查無此學生", "red");
+  
+  db.ref(`${DB_ROOT}/students/${stu.id}`).once('value', sn => {
+    const d = sn.val() || {password:'0000'};
+    if(pw === d.password) { role='student'; curSid=stu.id; currentUser={name:stu.name}; startStudentApp(); }
+    else showToast("密碼錯誤", "red");
+  });
 }
 
 function startApp() {
-  document.getElementById('loginScreen').remove(); // 💡 物理移除登入框，省資源
+  document.getElementById('loginScreen').remove(); // 💡 物理移除登入畫面
   document.getElementById('appScreen').classList.add('active');
   document.getElementById('uName').innerText = currentUser.name;
   if(currentUser.name === MASTER.name) document.getElementById('mgrTab').style.display='block';
+  renderClsBtns();
   loadCloud();
 }
 
+function startStudentApp() {
+  document.getElementById('loginScreen').remove();
+  document.getElementById('studentScreen').classList.add('active');
+  loadStudentData();
+}
+
+// ===== 行政管理邏輯修復 (包含批次) =====
+function renderClsBtns() {
+  const div = document.getElementById('clsBtns');
+  CLASSES.forEach(c => {
+    const b = document.createElement('button');
+    b.className = `btn-sm ${c===curGrp?'gold':''}`;
+    b.innerText = c;
+    b.onclick = () => { curGrp=c; renderClsBtns(); renderGrid(); };
+    div.appendChild(b);
+  });
+}
+
 function loadCloud() {
-  db.ref(`${DB_ROOT}/profiles`).on('value', sn => {
-    localProfiles = sn.val() || {};
-    renderGrid();
+  db.ref(`${DB_ROOT}/profiles`).on('value', sn => { localProfiles = sn.val() || {}; renderGrid(); });
+  db.ref(`${DB_ROOT}/leaves`).on('value', sn => {
+    const pending = Object.values(sn.val()||{}).filter(l=>l.status==='pending').length;
+    const b = document.getElementById('badge');
+    b.innerText = pending; b.style.display = pending>0?'inline-block':'none';
   });
 }
 
 function renderGrid() {
-  const container = document.getElementById('mainContent');
-  // 這裡是原本 V5 檔案中極為豐富的 Grid 生成邏輯
-  // 包含：卡片點擊切換狀態、名字點擊開詳情、集點卡顯示等。
-  // 為確保不被 AI 截斷，建議老師這部分邏輯與 V5 保持一致。
+  const grid = document.getElementById('sGrid');
+  grid.innerHTML = '';
+  STUDENT_DATA.filter(s=>s.cls===curGrp).forEach(s => {
+    const p = localProfiles[s.id] || {points:0};
+    const att = pendingAtt[s.id] || '未';
+    const div = document.createElement('div');
+    div.className = `student-card ${isBatch && pendingAtt[s.id]==='selected'?'batch-selected':''}`;
+    div.innerHTML = `
+      <div class="batch-check" style="display:${isBatch?'flex':'none'}">✓</div>
+      <div style="display:flex; justify-content:space-between; margin-bottom:8px;">
+        <span style="font-size:10px; color:#666;">${s.id}</span>
+        <span class="status-badge ${att}" onclick="cycleAtt(event, '${s.id}')">${att}</span>
+      </div>
+      <div style="font-weight:bold; font-size:18px; text-align:center;" onclick="openDetail('${s.id}')">${s.name}</div>
+      <div style="text-align:center; color:var(--gold); font-size:12px; margin-top:5px;">⭐ ${p.points}</div>
+    `;
+    div.onclick = () => { if(isBatch) toggleSelect(s.id); };
+    grid.appendChild(div);
+  });
 }
 
-// 🔴 批次加點功能 (蕭老師最在意的功能)
-function batchPoints(val) {
-  const selected = document.querySelectorAll('.card-check:checked');
-  if(selected.length === 0) return alert("請先選取學生");
+function cycleAtt(e, id) {
+  e.stopPropagation();
+  const seq = ['出','遲','缺','假'];
+  let cur = pendingAtt[id] || '出';
+  pendingAtt[id] = seq[(seq.indexOf(cur)+1)%4];
+  renderGrid();
+}
+
+async function saveAttendance() {
+  const today = new Date().toLocaleDateString('zh-TW');
   const updates = {};
-  selected.forEach(chk => {
-    const sid = chk.value;
-    const curP = localProfiles[sid]?.points || 0;
-    updates[`${DB_ROOT}/profiles/${sid}/points`] = Math.max(0, curP + val);
-  });
-  db.ref().update(updates).then(() => {
-    alert("批次操作成功！");
-    toggleBatch();
-  });
-}
-
-// 🔴 Excel 匯出功能
-function exportExcel() {
-  const rows = [["學號", "姓名", "班級", "點數", "金牌"]];
-  STUDENT_DATA.forEach(s => {
-    const p = localProfiles[s.id] || {points:0, medals:0};
-    rows.push([s.id, s.name, s.cls, p.points, p.medals]);
-  });
-  const ws = XLSX.utils.aoa_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "音樂科報表");
-  XLSX.writeFile(wb, `莊敬音樂科_${new Date().toLocaleDateString()}.xlsx`);
-}
-
-// 🔴 全校重置功能 (Master 專屬)
-function resetGlobal() {
-  if(prompt("請輸入管理密碼執行全校歸零：") === MASTER.pass) {
-    if(confirm("警告：這將清空所有人的集點與紀錄！確定？")) {
-      db.ref(`${DB_ROOT}/profiles`).remove();
+  for(let id in pendingAtt) {
+    if(pendingAtt[id] === 'selected') continue;
+    updates[`attendance/${today}/${id}`] = pendingAtt[id];
+    if(pendingAtt[id]==='遲') {
+      const curP = localProfiles[id]?.points || 0;
+      updates[`profiles/${id}/points`] = Math.max(0, curP - 1);
     }
   }
+  db.ref(DB_ROOT).update(updates).then(() => { pendingAtt={}; showToast("儲存成功"); });
 }
 
-// 其他功能(點名、詳情面板、日誌)皆完整保留...
-function showTab(id) { /* 同 V5 邏輯 */ }
-function adj(v) { /* 同 V5 邏輯 */ }
-function redeem() { /* 同 V5 邏輯 */ }
+// 🔴 批次加點邏輯
+function toggleBatch() {
+  isBatch = !isBatch;
+  document.getElementById('batchBar').style.display = isBatch?'flex':'none';
+  renderGrid();
+}
+
+function toggleSelect(id) {
+  pendingAtt[id] = pendingAtt[id] === 'selected' ? '未' : 'selected';
+  const count = Object.values(pendingAtt).filter(v=>v==='selected').length;
+  document.getElementById('bCount').innerText = count;
+  renderGrid();
+}
+
+function batchAdd(v) {
+  const updates = {};
+  for(let id in pendingAtt) {
+    if(pendingAtt[id]==='selected') {
+      const curP = localProfiles[id]?.points || 0;
+      updates[`profiles/${id}/points`] = Math.max(0, curP + v);
+    }
+  }
+  db.ref(DB_ROOT).update(updates).then(() => { pendingAtt={}; toggleBatch(); showToast("批次更新成功"); });
+}
+
+// 🟢 詳細面板與集點卡
+function openDetail(id) {
+  curSid = id;
+  const s = STUDENT_DATA.find(x=>x.id===id);
+  const p = localProfiles[id] || {points:0, medals:0, logs:[]};
+  document.getElementById('dName').innerText = s.name;
+  document.getElementById('ptsNum').innerText = p.points;
+  const grid = document.getElementById('ptsGrid');
+  grid.innerHTML = '';
+  for(let i=0; i<10; i++) grid.innerHTML += `<div class="point-cell ${i<p.points?'filled':''}">${i<p.points?'⭐':''}</div>`;
+  document.getElementById('detailPanel').classList.add('open');
+}
+
+function closeDetail() { document.getElementById('detailPanel').classList.remove('open'); }
+
+function showToast(m, c="var(--gold)") {
+  const t = document.getElementById('toast');
+  t.innerText = m; t.style.borderColor = c; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// Excel 匯出 ( SheetJS )
+function exportExcel() {
+  const data = STUDENT_DATA.map(s => ({ "學號":s.id, "姓名":s.name, "班級":s.cls, "點數":localProfiles[s.id]?.points||0 }));
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "點數報表");
+  XLSX.writeFile(wb, `音樂科報表_${new Date().toLocaleDateString()}.xlsx`);
+}
 </script>
 </body>
 </html>
