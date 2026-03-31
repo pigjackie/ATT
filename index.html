@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>莊敬音樂科—旗艦管理系統</title>
+    <title>莊敬音樂科—管理系統</title>
     
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -17,45 +17,43 @@
         .gate-card { background: #fff; padding: 30px; border-radius: 30px; box-shadow: 0 15px 40px rgba(0,0,0,0.2); width: 85%; max-width: 380px; text-align: center; }
 
         #app-screen { display: none; padding: 10px; }
-        header { text-align: center; background: var(--primary); padding: 20px; border-radius: 0 0 40px 40px; margin: -10px -10px 15px -10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        header { text-align: center; background: var(--primary); padding: 20px; border-radius: 0 0 40px 40px; margin: -10px -10px 15px -10px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; }
         
-        /* 1x3 網格 */
         .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
         .s-box { background: #fff; border-radius: 18px; padding: 15px 5px; text-align: center; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee; position: relative; }
         
-        /* 狀態方塊嵌入文字 */
         .s-dot { 
             width: 55px; height: 55px; border-radius: 15px; margin: 0 auto 10px; 
             border: 3px solid #fff; box-shadow: 0 3px 6px rgba(0,0,0,0.1); cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.5rem; font-weight: bold; color: #fff; text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
         }
-        .s-points { position: absolute; top: -5px; right: -5px; background: var(--accent); color: #fff; font-size: 0.7rem; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
+        .s-points { position: absolute; top: -5px; right: -5px; background: var(--accent); color: #fff; font-size: 0.75rem; padding: 2px 6px; border-radius: 10px; font-weight: bold; }
 
-        /* 視覺化集點卡 */
+        /* 視覺化集點卡樣式 */
         .stamp-card { 
             display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; 
-            background: #fdf2e9; padding: 15px; border-radius: 15px; border: 2px solid #FFB74D; margin-top: 10px;
+            background: #fdf2e9; padding: 15px; border-radius: 20px; border: 2px solid #FFB74D; margin-top: 15px;
         }
         .stamp-slot { 
-            width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.05); 
-            border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.08); 
+            border: 2px dashed #ccc; display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
-        .stamp-active { background: #fff; border: 2px solid var(--primary); animation: pop 0.3s ease; }
+        .stamp-active { background: #fff; border: 2px solid var(--primary); box-shadow: 0 4px 8px rgba(255,215,0,0.4); transform: scale(1.1); }
 
-        @keyframes pop { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
-
-        /* 模組與按鈕 */
         .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 92%; max-width: 450px; background: #fff; border-radius: 30px; padding: 25px; z-index: 1001; box-shadow: 0 25px 70px rgba(0,0,0,0.5); max-height: 85vh; overflow-y: auto; }
         .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; }
         
         .btn { width: 100%; padding: 14px; margin-top: 10px; border-radius: 15px; border: none; font-weight: bold; cursor: pointer; }
         .btn-save { background: #000; color: var(--primary); position: sticky; bottom: 15px; z-index: 100; border: 2px solid var(--primary); }
         .btn-gold { background: var(--primary); color: #000; }
-        .btn-reset { background: #f5f5f5; color: #666; border: 1px solid #ccc; font-size: 0.85rem; padding: 8px; }
 
-        .bg-present { background:#2ecc71; } .bg-late { background:#f1c40f; } .bg-late-1 { background:#e67e22; } .bg-absent { background:#e74c3c; } .bg-leave { background:#3498db; }
+        /* 狀態顏色 (移除 1 遲) */
+        .bg-present { background:#2ecc71; } .bg-late { background:#f1c40f; } .bg-absent { background:#e74c3c; } .bg-leave { background:#3498db; }
         .section-title { font-size: 1.1rem; font-weight: bold; border-left: 5px solid var(--primary); padding-left: 10px; margin: 20px 0 10px 0; }
+        .progress-bar { height: 10px; background: #ddd; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        .progress-fill { height: 100%; background: var(--primary); transition: 0.3s; }
     </style>
 </head>
 <body>
@@ -63,7 +61,7 @@
     <div id="gate-screen">
         <h1>🎹 莊敬音樂科 🎻</h1>
         <div class="gate-card">
-            <h3>旗艦管理系統 V10.0</h3>
+            <h3 style="margin-top:0;">旗艦管理系統 V11.5</h3>
             <button class="btn btn-gold" onclick="auth('admin')">管理員登入</button>
             <button class="btn" style="border: 2px solid #FFD700; background:#fff;" onclick="auth('student')">學生個人看板</button>
         </div>
@@ -72,61 +70,60 @@
     <div id="app-screen">
         <header>
             <h2 style="margin:0;">莊敬音樂科</h2>
-            <div id="login-info" style="font-size:0.9rem; margin-top:5px; font-weight:bold;"></div>
-            <button onclick="location.reload()" style="background:#fff; border:1px solid #000; padding:5px 12px; border-radius:15px; font-size:0.8rem; margin-top:10px;">登出系統</button>
+            <div id="login-info" style="font-size:0.9rem; margin-top:5px; font-weight:bold;">正在同步雲端...</div>
+            <button onclick="clearLogin()" style="background:#fff; border:1px solid #000; padding:5px 12px; border-radius:15px; font-size:0.8rem; margin-top:10px;">安全登出</button>
         </header>
 
         <div id="admin-panel" style="display:none; padding-bottom: 80px;">
-            <div style="background:#fff; padding:15px; border-radius:20px; margin-bottom:10px; border:2px solid var(--primary); text-align:center;">
+            <div style="background:#fff; padding:15px; border-radius:20px; margin-bottom:15px; border:2px solid var(--primary); text-align:center;">
                 📅 日期：<input type="date" id="target-date" onchange="loadCloud()" style="padding:8px; border-radius:10px; border:1px solid #ccc; font-size:1.1rem;">
-                <button class="btn btn-reset" onclick="resetToday()">🔄 重設本班今日點名 (全出席)</button>
+                <button class="btn" style="background:#f5f5f5; color:#666; font-size:0.85rem; border:1px solid #ccc; padding:8px;" onclick="resetToday()">🔄 本班今日重設為出席</button>
             </div>
             <div id="tabs" style="display:flex; overflow-x:auto; gap:10px; margin-bottom:15px; padding-bottom:5px;"></div>
             <div id="student-grid" class="grid"></div>
-            <button class="btn btn-save" id="save-btn" onclick="syncCloud()">💾 確認儲存今日所有紀錄</button>
+            <button class="btn btn-save" id="save-btn" onclick="syncCloud()">💾 確認儲存今日紀錄</button>
         </div>
     </div>
 
     <div class="overlay" id="overlay" onclick="closeModal()"></div>
     <div class="modal" id="modal">
-        <h2 id="m-name" style="margin-top:0; color:#d48806;">學生姓名</h2>
+        <h2 id="m-name" style="margin-top:0; color:#d48806; text-align:center;">姓名</h2>
         
         <div class="section-title">⭐ 好寶寶集點卡 (5點換金牌)</div>
-        <div class="stamp-card" id="stamp-card">
-            </div>
+        <div class="stamp-card" id="stamp-card"></div>
         <div style="text-align:center; margin-top:10px; font-weight:bold; color:var(--accent);">
-            目前免死金牌：<span id="m-medals" style="font-size:1.5rem;">0</span> 面
+            已擁有免死金牌：<span id="m-medals" style="font-size:1.5rem;">0</span> 面
         </div>
-        <button id="buy-btn" class="btn btn-gold" onclick="redeem()">🎟️ 點數集滿！兌換金牌</button>
+        <button id="buy-btn" class="btn btn-gold" onclick="redeem()">🎟️ 集滿 5 點！點此換金牌</button>
 
-        <div class="section-title">📝 罰抄任務進度</div>
+        <div class="section-title">📝 罰抄進度</div>
         <div id="m-task-list" style="background:#fefefe; padding:10px; border-radius:15px; border:1px solid #eee;"></div>
 
-        <div class="section-title">💬 老師私訊</div>
+        <div class="section-title">💬 老師訊息</div>
         <div id="m-msg" style="padding:15px; background:#FFF9C4; border-radius:15px; font-weight:bold;">無訊息</div>
 
-        <div class="section-title">📜 歷史紀錄回顧</div>
+        <div class="section-title">📜 歷史缺曠紀錄</div>
         <div id="m-history" style="max-height:150px; overflow-y:auto; background:#f5f5f5; padding:10px; border-radius:15px;"></div>
 
         <div id="admin-tools" style="display:none; margin-top:25px; border-top:2px solid #ddd; padding-top:20px;">
-            <strong>🛠️ 老師控制台</strong>
+            <strong style="color:#d48806;">🛠️ 管理員控制台</strong>
             <div style="display:flex; gap:10px; margin-top:10px;">
                 <button class="btn btn-gold" style="margin:0;" onclick="adjustPoints(1)">加 1 點 ⭐</button>
-                <button class="btn" style="margin:0; background:#eee;" onclick="adjustPoints(-1)">扣 1 點</button>
+                <button class="btn" style="margin:0; background:#eee;" onclick="adjustPoints(-1)">扣除點數</button>
             </div>
             <div style="margin-top:15px;">
                 <input type="text" id="t-name" placeholder="罰抄內容" style="width:60%; padding:10px; border-radius:10px; border:1px solid #ccc;">
                 <input type="number" id="t-max" placeholder="次數" style="width:30%; padding:10px; border-radius:10px; border:1px solid #ccc;">
-                <button class="btn btn-gold" onclick="addNewTask()">新增罰抄</button>
+                <button class="btn btn-gold" onclick="addNewTask()">新增罰抄任務</button>
             </div>
-            <textarea id="t-msg" placeholder="輸入訊息..." style="width:100%; padding:12px; border-radius:12px; border:1px solid #ccc; margin-top:10px; height:60px;"></textarea>
-            <button class="btn btn-gold" onclick="updateInfo()">發送訊息</button>
+            <textarea id="t-msg" placeholder="輸入訊息..." style="width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:10px; height:50px; box-sizing:border-box;"></textarea>
+            <button class="btn btn-gold" onclick="updateInfo()">發送私訊</button>
         </div>
-        <button class="btn" style="background:#000; color:#fff; margin-top:20px;" onclick="closeModal()">返回列表</button>
+        <button class="btn" style="background:#000; color:#fff; margin-top:20px;" onclick="closeModal()">關閉返回</button>
     </div>
 
     <script>
-        // 1. Firebase (蕭老師金鑰)
+        // 1. Firebase 
         const firebaseConfig = {
             apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
             authDomain: "jjvs-att.firebaseapp.com",
@@ -139,7 +136,7 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // 2. 名單資料 (133位)
+        // 2. 名單
         const classNames = ["音三莊", "演三莊", "音二莊", "演二樸", "音一莊"];
         const students = [
             {id: "3A01", name: "01毛語程", group: "音三莊"},{id: "3A02", name: "02林叡成", group: "音三莊"},{id: "3A03", name: "03田宇紘", group: "音三莊"},{id: "3A04", name: "04吳昆達", group: "音三莊"},{id: "3A05", name: "05吳宥良", group: "音三莊"},{id: "3A06", name: "06黃崇恩", group: "音三莊"},{id: "3A07", name: "07林宏澤", group: "音三莊"},{id: "3A08", name: "08金品澔", group: "音三莊"},{id: "3A09", name: "09劉宸昀", group: "音三莊"},{id: "3A10", name: "10蔡呈樂", group: "音三莊"},{id: "3A11", name: "11蘇瑞吾", group: "音三莊"},{id: "3A12", name: "12梁之凡", group: "音三莊"},{id: "3A13", name: "13蔡宗佑", group: "音三莊"},{id: "3A14", name: "14黃穩達", group: "音三莊"},{id: "3A15", name: "15馮康維", group: "音三莊"},{id: "3A16", name: "16倪秉澤", group: "音三莊"},{id: "3A17", name: "17廖敏君", group: "音三莊"},{id: "3A18", name: "18劉慶霈", group: "音三莊"},{id: "3A19", name: "19蔡慧琳", group: "音三莊"},{id: "3A20", name: "20鄭淳融", group: "音三莊"},{id: "3A21", name: "21魏宜宸", group: "音三莊"},{id: "3A22", name: "22徐婉瑜", group: "音三莊"},{id: "3A23", name: "23安𠸍臻", group: "音三莊"},{id: "3A24", name: "24江岑君", group: "音三莊"},{id: "3A25", name: "25池宛昕", group: "音三莊"},{id: "3A26", name: "26李曉萍", group: "音三莊"},{id: "3A27", name: "27周玄禮", group: "音三莊"},{id: "3A28", name: "28王以昕", group: "音三莊"},{id: "3A29", name: "29林祐立", group: "音三莊"},{id: "3A30", name: "30邱詩涵", group: "音三莊"},{id: "3A31", name: "31胡云珊", group: "音三莊"},{id: "3A32", name: "32蔡逸宣", group: "音三莊"},{id: "3A33", name: "33高慧君", group: "音三莊"},{id: "3A34", name: "34張路淇", group: "音三莊"},{id: "3A35", name: "35陳芃瑾", group: "音三莊"},{id: "3A36", name: "36陳雨彤", group: "音三莊"},{id: "3A37", name: "37陳宥安", group: "音三莊"},{id: "3A38", name: "38陳圓卿", group: "音三莊"},{id: "3A39", name: "39傅克諳", group: "音三莊"},{id: "3A40", name: "40曾妘湘", group: "音三莊"},
@@ -149,39 +146,47 @@
             {id: "1A01", name: "01任恩予", group: "音一莊"},{id: "1A02", name: "02李孟臻", group: "音一莊"},{id: "1A03", name: "03潘縈汐", group: "音一莊"},{id: "1A04", name: "04謝幸芙", group: "音一莊"},{id: "1A05", name: "05李昕柔", group: "音一莊"},{id: "1A06", name: "06盧丞菲", group: "音一莊"},{id: "1A07", name: "07林欣霈", group: "音一莊"},{id: "1A08", name: "08林耘瑄", group: "音一莊"},{id: "1A09", name: "09林詩翡", group: "音一莊"},{id: "1A10", name: "10姜妤捷", group: "音一莊"},{id: "1A11", name: "11張筑笹", group: "音一莊"},{id: "1A12", name: "12廖聿淓", group: "音一莊"},{id: "1A13", name: "13曾彥瑄", group: "音一莊"},{id: "1A14", name: "14盧瑗", group: "音一莊"},{id: "1A15", name: "15鍾欣庭", group: "音一莊"},{id: "1A16", name: "16黃郁晴", group: "音一莊"},{id: "1A17", name: "17詹中愷", group: "音一莊"},{id: "1A18", name: "18鄭誌浩", group: "音一莊"},{id: "1A19", name: "19謝松煇", group: "音一莊"},{id: "1A20", name: "20羅子超", group: "音一莊"},{id: "1A21", name: "21羅笠準", group: "音一莊"},{id: "1A22", name: "22蘇冠綸", group: "音一莊"},{id: "1A23", name: "23蘇祺翔", group: "音一莊"},{id: "1A24", name: "24劉軒豪", group: "音一莊"},{id: "1A25", name: "25吳泓毅", group: "音一莊"},{id: "1A26", name: "26李維璟", group: "音一莊"},{id: "1A27", name: "27林孝廷", group: "音一莊"},{id: "1A28", name: "28林紹謙", group: "音一莊"},{id: "1A29", name: "29胡宇哲", group: "音一莊"},{id: "1A30", name: "30楊順發", group: "音一莊"},{id: "1A31", name: "31張又禾", group: "音一莊"},{id: "1A32", name: "32張允磊", group: "音一莊"},{id: "1A33", name: "33黃靖勛", group: "音一莊"}
         ];
 
-        let role = ''; let currentGrp = "音三莊"; let curStudent = null;
-        let selDate = new Date().toISOString().split('T')[0];
+        let role = ''; let currentGrp = "音三莊"; let curStudent = null; let curDetailSid = null;
         let localAtt = {}; 
-        const statusColors = ['bg-present', 'bg-late', 'bg-late-1', 'bg-absent', 'bg-leave'];
-        const statusNames = { 'bg-present': '出', 'bg-late': '遲', 'bg-late-1': '1遲', 'bg-absent': '缺', 'bg-leave': '假' };
+        const statusColors = ['bg-present', 'bg-late', 'bg-absent', 'bg-leave']; // 移除 1 遲
+        const statusNames = { 'bg-present': '出', 'bg-late': '遲', 'bg-absent': '缺', 'bg-leave': '假' };
+
+        window.onload = function() {
+            const savedRole = localStorage.getItem('jjvs_role');
+            const savedId = localStorage.getItem('jjvs_sid');
+            if(savedRole === 'admin') { role = 'admin'; start(); }
+            else if(savedRole === 'student' && savedId) { curStudent = students.find(s => s.id === savedId); role = 'student'; start(); }
+        };
 
         function auth(type) {
             if (type === 'admin') {
                 const p = prompt("授權碼：");
-                if (btoa(p) === "MDkwMg==") { role = 'admin'; start(); }
+                if (btoa(p) === "MDkwMg==") { role = 'admin'; localStorage.setItem('jjvs_role', 'admin'); start(); }
             } else {
                 const name = prompt("姓名：");
                 const f = students.find(s => s.name.includes(name));
                 if (!f) return alert("名單無此人");
-                db.ref(`jjvs_v10_auth/${f.id}`).once('value', snap => {
+                db.ref(`jjvs_v11_auth/${f.id}`).once('value', snap => {
                     const d = snap.val();
                     if (!d) {
-                        const np = prompt("設定密碼：");
-                        db.ref(`jjvs_v10_auth/${f.id}`).set({ p: btoa(np) });
-                        curStudent = f; role = 'student'; start();
+                        const np = prompt("自訂密碼：");
+                        db.ref(`jjvs_v11_auth/${f.id}`).set({ p: btoa(np) });
+                        curStudent = f; role = 'student'; localStorage.setItem('jjvs_role', 'student'); localStorage.setItem('jjvs_sid', f.id); start();
                     } else {
-                        const cp = prompt("密碼：");
-                        if (btoa(cp) === d.p) { curStudent = f; role = 'student'; start(); }
+                        const cp = prompt("輸入密碼：");
+                        if (btoa(cp) === d.p) { curStudent = f; role = 'student'; localStorage.setItem('jjvs_role', 'student'); localStorage.setItem('jjvs_sid', f.id); start(); }
                     }
                 });
             }
         }
 
+        function clearLogin() { localStorage.clear(); location.reload(); }
+
         function start() {
             document.getElementById('gate-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            document.getElementById('target-date').value = selDate;
-            document.getElementById('login-info').innerText = role === 'admin' ? "管理員模式" : "學生："+curStudent.name;
+            document.getElementById('target-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('login-info').innerText = role === 'admin' ? "管理員模式 (自動登入)" : "學生："+curStudent.name;
             if (role === 'admin') { document.getElementById('admin-panel').style.display = 'block'; initTabs(); }
             else { openDetail(curStudent.id); }
             loadCloud();
@@ -200,12 +205,12 @@
         }
 
         function loadCloud() {
-            selDate = document.getElementById('target-date').value;
-            db.ref('jjvs_v10_cloud').on('value', snap => {
+            const selDate = document.getElementById('target-date').value;
+            db.ref('jjvs_v11_cloud').on('value', snap => {
                 window.master = snap.val() || {};
                 localAtt = {...(window.master.attendance && window.master.attendance[selDate])};
                 renderGrid();
-                if(role === 'student' && document.getElementById('modal').style.display === 'block') openDetail(curStudent.id);
+                if(curDetailSid) refreshModalUI(curDetailSid); // 如果彈窗開著，強制刷新星星與任務
             });
         }
 
@@ -220,7 +225,7 @@
                 div.innerHTML = `
                     <div class="s-points">${pts}P</div>
                     <div class="s-dot ${st}" id="dot-${s.id}" onclick="localToggle('${s.id}')">${statusNames[st]}</div>
-                    <div style="font-weight:bold; font-size:1.1rem;" onclick="openDetail('${s.id}')">${s.name}</div>
+                    <div style="font-weight:bold;" onclick="openDetail('${s.id}')">${s.name}</div>
                 `;
                 grid.appendChild(div);
             });
@@ -231,78 +236,82 @@
             let next = statusColors[(statusColors.indexOf(cur) + 1) % statusColors.length];
             localAtt[sid] = next;
             const dot = document.getElementById(`dot-${sid}`);
-            dot.className = `s-dot ${next}`;
-            dot.innerText = statusNames[next];
+            dot.className = `s-dot ${next}`; dot.innerText = statusNames[next];
             document.getElementById('save-btn').style.background = "#FF4500";
         }
 
         function syncCloud() {
-            db.ref(`jjvs_v10_cloud/attendance/${selDate}`).set(localAtt).then(() => {
-                alert("儲存成功"); document.getElementById('save-btn').style.background = "#000";
+            const selDate = document.getElementById('target-date').value;
+            db.ref(`jjvs_v11_cloud/attendance/${selDate}`).set(localAtt).then(() => {
+                alert("已存雲端"); document.getElementById('save-btn').style.background = "#000";
             });
         }
 
         function resetToday() {
-            if(!confirm("確定要重設本班今日點名為全體出席嗎？(未按下儲存前不會正式生效)")) return;
+            if(!confirm("重設全體出席？")) return;
             students.filter(s => s.group === currentGrp).forEach(s => localAtt[s.id] = 'bg-present');
-            renderGrid();
-            document.getElementById('save-btn').style.background = "#FF4500";
+            renderGrid(); document.getElementById('save-btn').style.background = "#FF4500";
         }
 
         function openDetail(sid) {
+            curDetailSid = sid;
+            refreshModalUI(sid);
+            document.getElementById('admin-tools').style.display = role === 'admin' ? 'block' : 'none';
+            document.getElementById('overlay').style.display = 'block';
+            document.getElementById('modal').style.display = 'block';
+        }
+
+        // 🟢 核心功能：刷新彈窗內容 (含星星)
+        function refreshModalUI(sid) {
             const s = students.find(x => x.id === sid);
             document.getElementById('m-name').innerText = s.name;
             const prof = (window.master.profiles && window.master.profiles[sid]) || { points: 0, medals: 0, msg: "無", tasks: [] };
             
-            // 視覺化集點卡渲染
+            // 1. 星星集點卡渲染
             const pts = prof.points || 0;
             document.getElementById('m-medals').innerText = prof.medals || 0;
-            const stampCard = document.getElementById('stamp-card'); stampCard.innerHTML = "";
+            const stampBox = document.getElementById('stamp-card'); stampBox.innerHTML = "";
             for(let i=0; i<5; i++) {
                 const slot = document.createElement('div');
                 slot.className = `stamp-slot ${i < pts ? 'stamp-active' : ''}`;
                 slot.innerText = i < pts ? '⭐' : '';
-                stampCard.appendChild(slot);
+                stampBox.appendChild(slot);
             }
             
+            // 2. 訊息與任務
             document.getElementById('m-msg').innerText = prof.msg || "無訊息";
             const tList = document.getElementById('m-task-list'); tList.innerHTML = "";
             if(prof.tasks) {
                 prof.tasks.forEach((t, i) => {
                     const percent = Math.round((t.cur/t.max)*100);
                     tList.innerHTML += `
-                        <div style="margin-bottom:15px; cursor:pointer;" onclick="incTask('${sid}', ${i})">
+                        <div style="margin-bottom:12px; cursor:pointer;" onclick="incTask('${sid}', ${i})">
                             <div style="display:flex; justify-content:space-between;"><strong>${t.name}</strong> <span>${t.cur}/${t.max}</span></div>
                             <div class="progress-bar"><div class="progress-fill" style="width:${percent}%"></div></div>
                         </div>`;
                 });
-            } else { tList.innerHTML = "無罰抄任務"; }
+            } else { tList.innerHTML = "目前無罰抄任務"; }
 
+            // 3. 歷史紀錄
             const hBox = document.getElementById('m-history'); hBox.innerHTML = "";
             const att = window.master.attendance || {};
             Object.keys(att).sort().reverse().forEach(d => {
                 if(att[d][sid]) hBox.innerHTML += `<div style="display:flex; justify-content:space-between; padding:5px 0; border-bottom:1px solid #ddd;"><span>📅 ${d}</span><span class="${att[d][sid]}" style="color:#fff; padding:2px 8px; border-radius:5px;">${statusNames[att[d][sid]]}</span></div>`;
             });
-
-            document.getElementById('admin-tools').style.display = role === 'admin' ? 'block' : 'none';
-            document.getElementById('overlay').style.display = 'block';
-            document.getElementById('modal').style.display = 'block';
         }
 
         function adjustPoints(v) {
-            const sid = getSid();
-            const cur = parseInt(window.master.profiles[sid]?.points || 0);
-            db.ref(`jjvs_v10_cloud/profiles/${sid}/points`).set(cur + v);
+            const cur = parseInt(window.master.profiles?.[curDetailSid]?.points || 0);
+            db.ref(`jjvs_v11_cloud/profiles/${curDetailSid}/points`).set(cur + v);
         }
 
         function addNewTask() {
             const n = document.getElementById('t-name').value;
             const m = document.getElementById('t-max').value;
             if(!n || !m) return;
-            const sid = getSid();
-            const ts = (window.master.profiles && window.master.profiles[sid] && window.master.profiles[sid].tasks) || [];
+            const ts = (window.master.profiles && window.master.profiles[curDetailSid] && window.master.profiles[curDetailSid].tasks) || [];
             ts.push({ name: n, max: m, cur: 0 });
-            db.ref(`jjvs_v10_cloud/profiles/${sid}/tasks`).set(ts);
+            db.ref(`jjvs_v11_cloud/profiles/${curDetailSid}/tasks`).set(ts);
         }
 
         function incTask(sid, idx) {
@@ -310,27 +319,30 @@
             const ts = window.master.profiles[sid].tasks;
             if(ts[idx].cur < ts[idx].max) {
                 ts[idx].cur = parseInt(ts[idx].cur) + 1;
-                db.ref(`jjvs_v10_cloud/profiles/${sid}/tasks`).set(ts);
+                db.ref(`jjvs_v11_cloud/profiles/${sid}/tasks`).set(ts);
             }
         }
 
         function updateInfo() {
             const msg = document.getElementById('t-msg').value;
-            db.ref(`jjvs_v10_cloud/profiles/${getSid()}/msg`).set(msg); alert("更新成功");
+            db.ref(`jjvs_v11_cloud/profiles/${curDetailSid}/msg`).set(msg); alert("送出成功");
         }
 
         function redeem() {
-            const sid = getSid();
-            const p = parseInt(window.master.profiles[sid]?.points || 0);
-            const m = parseInt(window.master.profiles[sid]?.medals || 0);
+            const p = parseInt(window.master.profiles?.[curDetailSid]?.points || 0);
+            const m = parseInt(window.master.profiles?.[curDetailSid]?.medals || 0);
             if(p >= 5) {
-                db.ref(`jjvs_v10_cloud/profiles/${sid}`).update({ points: p-5, medals: m+1 });
-                alert("兌換金牌成功！");
-            } else { alert("點數不足 5 點喔！"); }
+                db.ref(`jjvs_v11_cloud/profiles/${curDetailSid}`).update({ points: p-5, medals: m+1 });
+                alert("恭喜獲得免死金牌！");
+            } else { alert("還差 " + (5-p) + " 點！"); }
         }
 
-        function getSid() { return students.find(x => x.name === document.getElementById('m-name').innerText).id; }
-        function closeModal() { if(role === 'student') return; document.getElementById('overlay').style.display='none'; document.getElementById('modal').style.display='none'; }
+        function closeModal() { 
+            if(role === 'student') return; 
+            curDetailSid = null;
+            document.getElementById('overlay').style.display='none'; 
+            document.getElementById('modal').style.display='none'; 
+        }
     </script>
 </body>
 </html>
