@@ -3,180 +3,216 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>莊敬音樂科—皇家行政 V28</title>
+    <title>莊敬音樂科—皇家行政總部 V29</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
     <style>
-        :root { --gold: #D4AF37; --black: #0D0D0D; --present: #27AE60; --late: #F1C40F; --absent: #C0392B; --leave: #2980B9; }
-        * { box-sizing: border-box; font-family: -apple-system, "Noto Sans TC", "Microsoft JhengHei", sans-serif; }
-        body { background: var(--black); color: #333; margin: 0; padding: 0; min-height: 100vh; width: 100vw; overflow-x: hidden; }
-        /* 奢華背景 */
-        body::before { content: "𝄞 🎹 🎻 ♫"; position: fixed; font-size: 15rem; color: var(--gold); opacity: 0.03; width: 100%; text-align: center; top: 20%; z-index: -1; }
-        /* 登入 */
-        #gate-screen { position: fixed; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle, #222, #000); display: flex; align-items: center; justify-content: center; z-index: 9999; }
-        .gate-card { background: #fff; padding: 40px; border-radius: 40px; width: 90%; max-width: 380px; text-align: center; border: 4px solid var(--gold); box-shadow: 0 30px 80px rgba(0,0,0,0.8); }
-        /* 主介面 */
-        header { background: #000; color: var(--gold); padding: 25px 10px; text-align: center; border-radius: 0 0 40px 40px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid var(--gold); }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px; }
-        .s-box { background: #fff; border-radius: 20px; padding: 15px 5px; text-align: center; box-shadow: 0 8px 20px rgba(0,0,0,0.2); position: relative; }
-        .s-dot { aspect-ratio: 1/1; width: 75%; max-width: 60px; margin: 0 auto 10px; border-radius: 18px; border: 3px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; color: #fff; }
-        .s-name { font-weight: 900; font-size: 1.1rem; color: #000; }
-        .s-points { position: absolute; top: -8px; right: -8px; background: #FF4500; color: #fff; font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; font-weight: bold; border: 2px solid #fff; }
-        /* 彈窗 */
-        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 480px; background: #fff; border-radius: 40px; padding: 25px; z-index: 10001; max-height: 90vh; overflow-y: auto; box-shadow: 0 50px 150px rgba(0,0,0,0.9); }
-        .overlay { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:10000; backdrop-filter: blur(10px); }
-        .btn { width: 100%; padding: 15px; margin-top: 10px; border-radius: 18px; border: none; font-weight: bold; cursor: pointer; font-size: 1.1rem; }
-        .btn-gold { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #fff; }
-        .btn-dark { background: #000; color: #fff; border: 1.5px solid var(--gold); }
-        /* 列表與標題 */
-        .section-title { font-size: 1.2rem; font-weight: bold; border-left: 6px solid var(--gold); padding-left: 12px; margin: 20px 0 10px 0; text-align: left; }
-        .log-row { background: #f9f9f9; border-radius: 15px; padding: 12px; margin-bottom: 8px; font-size: 0.85rem; border-left: 4px solid var(--gold); }
-        .slot { width: 34px; height: 34px; border-radius: 50%; background: #eee; display: inline-flex; align-items: center; justify-content: center; margin: 3px; border: 1px dashed #ccc; }
-        .slot-active { background: #fff; border: 2px solid var(--gold); box-shadow: 0 0 10px rgba(212,175,55,0.5); }
-        input, select, textarea { width: 100%; padding: 14px; border-radius: 15px; border: 1.5px solid #ddd; margin-bottom: 12px; font-size: 1rem; }
-        .tab-btn { white-space: nowrap; padding: 12px 20px; border-radius: 25px; border: none; background: #fff; font-weight: bold; margin-right: 8px; }
-        .tab-btn.active { background: var(--gold); color: #fff; }
-        #pass-screen { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--present); z-index: 20000; text-align: center; color: #fff; padding-top: 15vh; }
-        .bg-present { background: var(--present); } .bg-late { background: var(--late); } .bg-absent { background: var(--absent); } .bg-leave { background: var(--leave); }
+        :root { --gold: #D4AF37; --black: #050505; --card: #FFFFFF; --safe: #27AE60; --late: #F1C40F; --absent: #E74C3C; --leave: #2980B9; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { background: var(--black); color: #333; margin: 0; font-family: "PingFang TC", "Noto Sans TC", sans-serif; min-height: 100vh; overflow-x: hidden; }
+        /* 背景浮水印 */
+        body::before { content: "𝄞 🎹 🎻 🎷 🎺"; position: fixed; width: 100%; top: 20%; font-size: 15vw; color: var(--gold); opacity: 0.05; text-align: center; z-index: -1; pointer-events: none; }
+        
+        #gate-screen { position: fixed; inset: 0; background: radial-gradient(circle at center, #222, #000); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        .gate-card { background: #fff; padding: 40px 20px; border-radius: 40px; width: 90%; max-width: 380px; text-align: center; border: 4px solid var(--gold); box-shadow: 0 30px 80px rgba(0,0,0,0.8); }
+        
+        header { background: linear-gradient(180deg, #111, #000); color: var(--gold); padding: 30px 10px; text-align: center; border-radius: 0 0 45px 45px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid var(--gold); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px; width: 100%; }
+        .s-box { background: var(--card); border-radius: 25px; padding: 20px 5px; text-align: center; box-shadow: 0 8px 25px rgba(0,0,0,0.2); border: 1.5px solid rgba(212,175,55,0.3); position: relative; }
+        .s-dot { aspect-ratio: 1/1; width: 80%; max-width: 65px; margin: 0 auto 12px; border-radius: 20px; border: 4px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 900; color: #fff; box-shadow: 0 5px 15px rgba(0,0,0,0.15); }
+        .s-name { font-weight: 900; font-size: 1.1rem; color: #000; letter-spacing: 0.5px; }
+        .s-points { position: absolute; top: -10px; right: -10px; background: #FF4500; color: #fff; font-size: 0.8rem; padding: 4px 10px; border-radius: 20px; font-weight: bold; border: 2.5px solid #fff; z-index: 2; }
+        
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: #fff; border-radius: 45px; padding: 25px; z-index: 10005; max-height: 90vh; overflow-y: auto; box-shadow: 0 50px 150px rgba(0,0,0,0.9); }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10001; backdrop-filter: blur(12px); }
+        
+        .btn { width: 100%; padding: 18px; margin-top: 10px; border-radius: 20px; border: none; font-weight: 900; cursor: pointer; font-size: 1.1rem; }
+        .btn-gold { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #fff; box-shadow: 0 8px 15px rgba(212,175,55,0.3); }
+        .btn-dark { background: #000; color: #fff; border: 2.5px solid var(--gold); }
+        
+        .tab-btn { white-space: nowrap; padding: 12px 25px; border-radius: 30px; border: none; background: #fff; font-weight: bold; margin-right: 10px; color: #000; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .tab-btn.active { background: var(--gold); color: #fff; transform: scale(1.05); }
+
+        .log-row { background: #f9f9f9; border-radius: 20px; padding: 15px; margin-bottom: 10px; font-size: 0.9rem; border-left: 6px solid var(--gold); box-shadow: 0 4px 10px rgba(0,0,0,0.02); }
+        .slot { width: 38px; height: 38px; border-radius: 50%; background: #eee; display: inline-flex; align-items: center; justify-content: center; margin: 3px; border: 1px dashed #ccc; }
+        .slot-active { background: #fff; border: 2.5px solid var(--gold); box-shadow: 0 0 15px rgba(212,175,55,0.4); }
+        
+        input { width: 100%; padding: 15px; border-radius: 18px; border: 1.5px solid #ddd; margin-bottom: 12px; font-size: 1.1rem; }
+        #pass-screen { display: none; position: fixed; inset: 0; background: var(--safe); z-index: 20000; text-align: center; color: #fff; padding-top: 10vh; }
+        .bg-present { background: var(--safe); } .bg-late { background: var(--late); } .bg-absent { background: var(--absent); } .bg-leave { background: var(--leave); }
     </style>
 </head>
 <body>
+
     <div id="pass-screen" onclick="this.style.display='none'">
-        <div style="font-size: 8rem;">📯</div><h1 style="font-size: 3rem; letter-spacing: 10px;">准予外出</h1>
-        <div style="background:#fff; color:#000; margin: 30px; padding: 40px 20px; border-radius: 40px;">
+        <div style="font-size: 8rem; margin-bottom: 20px;">📜</div>
+        <h1 style="font-size: 3.5rem; letter-spacing: 10px;">准予外出</h1>
+        <div style="background:#fff; color:#000; margin: 25px; padding: 50px 20px; border-radius: 50px; box-shadow: 0 20px 50px rgba(0,0,0,0.3);">
             <h1 id="pass-name" style="font-size: 3rem; margin:0;">姓名</h1>
-            <p style="font-size: 1.2rem;">第八節請假審核核可</p><hr>
-            <h2 id="pass-date" style="color:var(--absent); font-size: 2rem;">2026-03-31</h2>
-            <p>核可人員：<span id="pass-admin" style="font-weight:bold;">蕭旭成老師</span></p>
-        </div><p>點擊螢幕關閉</p>
+            <p style="font-size: 1.4rem; color:#666; margin: 10px 0;">第八節請假審核核可</p>
+            <hr style="border: 1px solid #eee; margin: 25px 0;">
+            <h2 id="pass-date" style="color:var(--absent); font-size: 2.5rem; margin: 10px 0;">2026-03-31</h2>
+            <p style="font-size: 1.2rem;">核可人員：<span id="pass-admin" style="font-weight:bold; border-bottom: 2px solid #000;">蕭老師</span></p>
+        </div>
+        <p>點擊畫面關閉通行證</p>
     </div>
+
     <div id="gate-screen">
         <div class="gate-card">
-            <h1 style="margin:0; font-size:2.2rem; letter-spacing:2px;">莊敬音樂科</h1>
-            <p style="color:var(--gold); font-weight:bold; margin-bottom: 25px;">ROYAL MASTER HUB</p>
-            <input type="text" id="login-acc" placeholder="帳號或學員姓名">
+            <h1 style="margin:0; font-size:2.5rem; letter-spacing:3px;">莊敬音樂科</h1>
+            <p style="color:var(--gold); font-weight:bold; font-size: 1.1rem; margin: 5px 0 35px 0;">ROYAL ADMIN SYSTEM</p>
+            <input type="text" id="login-acc" placeholder="管理帳號 或 學員姓名">
             <input type="password" id="login-pw" placeholder="密碼 (初始 0000)">
-            <button class="btn btn-gold" onclick="doAuth()">進入系統</button>
+            <button class="btn btn-gold" onclick="doAuth()">進入皇家管理中心</button>
         </div>
     </div>
+
     <div id="app-screen">
         <header>
-            <h2 style="margin:0; letter-spacing: 2px;">🏛️ 皇家行政總部</h2>
-            <div id="login-info" style="font-size:0.85rem; margin-top:8px; font-weight:bold;">同步中...</div>
-            <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
-                <button id="admin-setup-btn" class="btn" style="display:none; width:auto; padding:8px 18px; background:var(--gold); color:#000; font-size:0.8rem;" onclick="openSetup()">⚙️ 管理教師</button>
-                <button onclick="logout()" style="background:rgba(255,255,255,0.1); border:1px solid #fff; color:#fff; width:auto; padding:8px 18px; border-radius:15px; font-size:0.8rem;">登出</button>
+            <h2 style="margin:0; letter-spacing: 2px;">🏛️ 莊敬音樂科行政總部</h2>
+            <div id="login-info" style="font-size:0.95rem; margin-top:10px; font-weight:bold; background:rgba(212,175,55,0.2); display:inline-block; padding:5px 20px; border-radius:25px;">連線中...</div>
+            <div style="display:flex; justify-content:center; gap:12px; margin-top:20px;">
+                <button id="admin-setup-btn" class="btn" style="display:none; width:auto; padding:8px 20px; background:var(--gold); color:#000; font-size:0.85rem;" onclick="openSetup()">⚙️ 教師管理</button>
+                <button onclick="logout()" style="background:rgba(255,255,255,0.1); border:1.5px solid #fff; color:#fff; width:auto; padding:8px 20px; border-radius:15px; font-size:0.85rem;">登出系統</button>
             </div>
         </header>
+
         <div id="admin-view" style="display:none; padding-bottom: 100px;">
-            <div style="background:#fff; padding:15px; border-radius:30px; margin: 15px; text-align:center;">
-                📅 <input type="date" id="target-date" onchange="loadCloud()" style="width: auto; border:none; background: #f0f0f0; padding: 10px; border-radius: 12px;">
+            <div style="background:#fff; padding:20px; border-radius:35px; margin: 15px; text-align:center;">
+                📅 <input type="date" id="target-date" onchange="loadCloud()" style="width: auto; border:none; background: #f0f0f0; padding: 10px; border-radius: 12px; font-weight:bold;">
             </div>
-            <div id="tabs" style="display:flex; overflow-x:auto; padding: 0 15px 10px 15px;"></div>
+            <div id="tabs" style="display:flex; overflow-x:auto; margin: 0 15px 15px 15px; padding-bottom:10px;"></div>
             <div id="student-grid" class="grid"></div>
-            <div style="padding: 0 20px;"><button class="btn btn-dark" onclick="syncCloud()">💾 儲存點名紀錄</button></div>
-            <div class="section-title" style="margin: 30px 20px 10px 20px;">🚶 外出審核</div>
-            <div id="leave-list" style="background:#fff; margin: 0 20px; padding:20px; border-radius:30px;">尚無申請</div>
+            <div style="padding: 0 20px;"><button class="btn btn-dark" style="border:2.5px solid var(--gold);" onclick="syncCloud()">💾 儲存今日點名紀錄</button></div>
+            <div class="section-title" style="margin: 35px 20px 10px 20px;">🚶 外出審核清單</div>
+            <div id="leave-list" style="background:#fff; margin: 0 20px; padding:25px; border-radius:35px; font-size:1.1rem;">尚無申請</div>
         </div>
-        <div id="student-view" style="display:none; text-align:center; padding: 50px 20px;">
-            <div style="font-size:5rem; margin-bottom: 10px;">🎼</div><h1 id="welcome-name">皇家學員</h1>
-            <button class="btn btn-gold" onclick="openDetail(curStudent.id)">開啟個人看板</button>
-            <button class="btn btn-dark" style="margin-top:20px;" onclick="applyLeave()">📝 申請第八節外出</button>
-            <div id="student-leave-status" style="margin-top:30px; font-weight:bold;"></div>
+
+        <div id="student-view" style="display:none; text-align:center; padding: 60px 20px;">
+            <div style="font-size:6rem; margin-bottom: 20px;">📜</div>
+            <h1 id="welcome-name">皇家學員</h1>
+            <button class="btn btn-gold" onclick="openDetail(curStudent.id)">開啟個人績效看板</button>
+            <button class="btn btn-dark" style="margin-top:20px;" onclick="applyLeave()">📝 申請第八節外出證</button>
+            <div id="student-leave-status" style="margin-top:35px; font-weight:bold;"></div>
         </div>
     </div>
+
     <div class="overlay" id="overlay" onclick="closeModal()"></div>
     <div class="modal" id="modal">
-        <h2 id="m-name" style="margin-top:0; text-align:center; font-size:2rem;">姓名</h2>
-        <div id="admin-only-info" style="display:none; text-align:center; background:#FFFDE7; padding:12px; border-radius:20px; margin-bottom:20px; border: 2px solid var(--gold);">
-            🔐 登入密碼：<span id="m-pw" style="font-weight:bold; font-size:1.5rem; letter-spacing:2px;">----</span>
+        <h2 id="m-name" style="margin-top:0; text-align:center; font-size:2.2rem; letter-spacing:2px;">學生姓名</h2>
+        <div id="admin-only-info" style="display:none; text-align:center; background:#FFFDE7; padding:15px; border-radius:25px; margin-bottom:25px; border: 2px solid var(--gold);">
+            🔐 學生即時查詢密碼：<span id="m-pw" style="font-weight:bold; font-size:1.6rem; letter-spacing:4px; color:#000;">----</span>
         </div>
-        <div class="section-title">⭐ 集點 (5星換金)</div><div class="icon-box" id="stamp-card"></div>
-        <div id="admin-pts-tool" style="display:none; text-align:center; margin-top:10px;"><button class="btn btn-gold" style="width:60px; height:50px; margin:5px;" onclick="adj('p', 1)">➕</button><button class="btn" style="width:60px; height:50px; margin:5px; background:#eee" onclick="adj('p', -1)">➖</button></div>
-        <div class="section-title">🏅 金牌庫</div><div class="icon-box" id="medal-card"></div>
-        <div id="admin-med-tool" style="display:none; text-align:center; margin-top:10px;"><button class="btn btn-gold" style="width:60px; height:50px; margin:5px;" onclick="adj('m', 1)">➕</button><button class="btn" style="width:60px; height:50px; margin:5px; background:var(--absent); color:#fff;" onclick="adj('m', -1)">➖</button></div>
-        <button id="redeem-btn" class="btn btn-gold" style="margin-top:20px;" onclick="redeem()">🎟️ 兌換金牌</button>
-        <div class="section-title">📜 異動日誌</div><div id="m-history" style="max-height:300px; overflow-y:auto; background:#f9f9f9; padding:20px; border-radius:30px;"></div>
-        <div id="admin-msg-zone" style="display:none; margin-top:25px; border-top:2px solid #eee; padding-top:20px;"><textarea id="t-msg" placeholder="輸入訊息..."></textarea><button class="btn btn-dark" onclick="updateMsg()">發送</button></div>
-        <button class="btn btn-dark" style="margin-top:30px;" onclick="closeModal()">返回</button>
+        <div class="section-title">⭐ 集點星蹤 (10格)</div>
+        <div class="icon-box" id="stamp-card"></div>
+        <div id="admin-pts-tool" style="display:none; text-align:center; margin-top:12px;">
+            <button class="btn btn-gold" style="width:70px; height:60px; margin:5px; border-radius:18px;" onclick="adj('p', 1)">➕</button>
+            <button class="btn" style="width:70px; height:60px; margin:5px; border-radius:18px; background:#eee" onclick="adj('p', -1)">➖</button>
+        </div>
+        <div class="section-title">🏅 榮譽金牌庫</div>
+        <div class="icon-box" id="medal-card"></div>
+        <div id="admin-med-tool" style="display:none; text-align:center; margin-top:12px;">
+            <button class="btn btn-gold" style="width:70px; height:60px; margin:5px; border-radius:18px;" onclick="adj('m', 1)">➕</button>
+            <button class="btn" style="width:70px; height:60px; margin:5px; border-radius:18px; background:var(--absent); color:#fff;" onclick="adj('m', -1)">➖</button>
+        </div>
+        <button id="redeem-btn" class="btn btn-gold" style="margin-top:25px;" onclick="redeem()">🎟️ 兌換金牌 (消耗 5 點星星)</button>
+        <div class="section-title">📜 獎懲異動與點名日誌</div>
+        <div id="m-history" style="max-height:300px; overflow-y:auto; background:#f9f9f9; padding:25px; border-radius:35px;"></div>
+        <div id="admin-msg-zone" style="display:none; margin-top:30px; border-top:2px solid #eee; padding-top:25px;">
+            <textarea id="t-msg" placeholder="輸入訊息..." style="height:80px;"></textarea>
+            <button class="btn btn-dark" onclick="updateMsg()">確認發送私訊</button>
+        </div>
+        <button class="btn btn-dark" style="margin-top:35px;" onclick="closeModal()">返回列表</button>
     </div>
+
     <div id="setup-modal" class="modal">
-        <h2 style="text-align:center;">教師管理</h2>
-        <div style="background:#f9f9f9; padding:25px; border-radius:35px;"><input type="text" id="new-t-name" placeholder="老師姓名"><input type="text" id="new-t-acc" placeholder="帳號"><input type="text" id="new-t-pw" placeholder="密碼"><select id="new-t-class"><option value="ALL">全系</option><option value="音三莊">音三莊</option><option value="演三莊">演三莊</option><option value="音二莊">音二莊</option><option value="演二樸">演二樸</option><option value="音一莊">音一莊</option></select><button class="btn btn-gold" onclick="addTeacher()">開通帳號</button></div>
-        <div id="teacher-list" style="margin-top:20px;"></div>
+        <h2 style="text-align:center;">教師權限設定</h2>
+        <div style="background:#f9f9f9; padding:30px; border-radius:35px;">
+            <input type="text" id="new-t-name" placeholder="老師顯示名稱">
+            <input type="text" id="new-t-acc" placeholder="登入帳號">
+            <input type="text" id="new-t-pw" placeholder="登入密碼">
+            <select id="new-t-class">
+                <option value="ALL">全系管理 (最高權限)</option>
+                <option value="音三莊">音三莊</option><option value="演三莊">演三莊</option>
+                <option value="音二莊">音二莊</option><option value="演二樸">演二樸</option><option value="音一莊">音一莊</option>
+            </select>
+            <button class="btn btn-gold" onclick="addTeacher()">開通帳號</button>
+        </div>
+        <div id="teacher-list" style="margin-top:25px; max-height:200px; overflow-y:auto;"></div>
         <button class="btn btn-dark" onclick="document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'">關閉</button>
     </div>
+
     <script>
-        const MASTER_ACC = "蕭旭成"; const MASTER_PIN = "0902";
+        const MASTER_N = "蕭旭成"; const MASTER_P = "0902";
         const firebaseConfig = { apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw", authDomain: "jjvs-att.firebaseapp.com", databaseURL: "https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "jjvs-att", storageBucket: "jjvs-att.firebasestorage.app", messagingSenderId: "199163483355", appId: "1:199163483355:web:ac66bbb7407acede4ce8fe" };
         firebase.initializeApp(firebaseConfig); const db = firebase.database();
-        const students = [
-            {id:"3A01",name:"01毛語程",group:"音三莊"},{id:"3A02",name:"02林叡成",group:"音三莊"},{id:"3A03",name:"03田宇紘",group:"音三莊"},{id:"3A04",name:"04吳昆達",group:"音三莊"},{id:"3A05",name:"05吳宥良",group:"音三莊"},{id:"3A06",name:"06黃崇恩",group:"音三莊"},{id:"3A07",name:"07林宏澤",group:"音三莊"},{id:"3A08",name:"08金品澔",group:"音三莊"},{id:"3A09",name:"09劉宸昀",group:"音三莊"},{id:"3A10",name:"10蔡呈樂",group:"音三莊"},{id:"3A11",name:"11蘇瑞吾",group:"音三莊"},{id:"3A12",name:"12梁之凡",group:"音三莊"},{id:"3A13",name:"13蔡宗佑",group:"音三莊"},{id:"3A14",name:"14黃穩達",group:"音三莊"},{id:"3A15",name:"15馮康維",group:"音三莊"},{id:"3A16",name:"16倪秉澤",group:"音三莊"},{id:"3A17",name:"17廖敏君",group:"音三莊"},{id:"3A18",name:"18劉慶霈",group:"音三莊"},{id:"3A19",name:"19蔡慧琳",group:"音三莊"},{id:"3A20",name:"20鄭淳融",group:"音三莊"},{id:"3A21",name:"21魏宜宸",group:"音三莊"},{id:"3A22",name:"22徐婉瑜",group:"音三莊"},{id:"3A23",name:"23安𠸍臻",group:"音三莊"},{id:"3A24",name:"24江岑君",group:"音三莊"},{id:"3A25",name:"25池宛昕",group:"音三莊"},{id:"3A26",name:"26李曉萍",group:"音三莊"},{id:"3A27",name:"27周玄禮",group:"音三莊"},{id:"3A28",name:"28王以昕",group:"音三莊"},{id:"3A29",name:"29林祐立",group:"音三莊"},{id:"3A30",name:"30邱詩涵",group:"音三莊"},{id:"3A31",name:"31胡云珊",group:"音三莊"},{id:"3A32",name:"32蔡逸宣",group:"音三莊"},{id:"3A33",name:"33高慧君",group:"音三莊"},{id:"3A34",name:"34張路淇",group:"音三莊"},{id:"3A35",name:"35陳芃瑾",group:"音三莊"},{id:"3A36",name:"36陳雨彤",group:"音三莊"},{id:"3A37",name:"37陳宥安",group:"音三莊"},{id:"3A38",name:"38陳圓卿",group:"音三莊"},{id:"3A39",name:"39傅克諳",group:"音三莊"},{id:"3A40",name:"40曾妘湘",group:"音三莊"},
-            {id:"3D02",name:"02王玟茜",group:"演三莊"},{id:"3D03",name:"03王語舒",group:"演三莊"},{id:"3D04",name:"04姚宥湘",group:"演三莊"},{id:"3D05",name:"05陳思妤",group:"演三莊"},{id:"3D06",name:"06楊鎔慈",group:"演三莊"},{id:"3D09",name:"09王偉家",group:"演三莊"},{id:"3D10",name:"10何建伸",group:"演三莊"},{id:"3D12",name:"12姜榮紳",group:"演三莊"},{id:"3D13",name:"13郭庭傑",group:"演三莊"},{id:"3D14",name:"14陳泊源",group:"演三莊"},{id:"3D15",name:"15陳軍任",group:"演三莊"},{id:"3D16",name:"16黃治容",group:"演三莊"},{id:"3D17",name:"17盧宥辰",group:"演三莊"},{id:"3D18",name:"18謝行知",group:"演三莊"},
-            {id:"2A01",name:"01程冠中",group:"音二莊"},{id:"2A02",name:"02李安恬",group:"音二莊"},{id:"2A03",name:"03吳芊逸",group:"音二莊"},{id:"2A04",name:"04林辰欣",group:"音二莊"},{id:"2A05",name:"05林孟蓁",group:"音二莊"},{id:"2A06",name:"06林采妮",group:"音二莊"},{id:"2A07",name:"07林恩熙",group:"音二莊"},{id:"2A08",name:"08翁閩彗",group:"音二莊"},{id:"2A09",name:"09陳維妮",group:"音二莊"},{id:"2A10",name:"10連妤婷",group:"音二莊"},{id:"2A11",name:"11莊珈維",group:"音二莊"},{id:"2A12",name:"12黎育彤",group:"音二莊"},{id:"2A13",name:"13樊千菲",group:"音二莊"},{id:"2A14",name:"14蔡佳穎",group:"音二莊"},{id:"2A15",name:"15謝季秉",group:"音二莊"},{id:"2A16",name:"16陳妍欣",group:"音二莊"},{id:"2A17",name:"17羅筱涵",group:"音二莊"},{id:"2A18",name:"18蘇奕婷",group:"音二莊"},{id:"2A19",name:"19王璿凱",group:"音二莊"},{id:"2A20",name:"20吳承昊",group:"音二莊"},{id:"2A21",name:"21張治齊",group:"音二莊"},{id:"2A22",name:"22李秉軒",group:"音二莊"},{id:"2A23",name:"23林笠",group:"音二莊"},{id:"2A24",name:"24林允鋐",group:"音二莊"},{id:"2A25",name:"25徐國洲",group:"音二莊"},{id:"2A26",name:"26張定濂",group:"音二莊"},{id:"2A27",name:"27陳柏睿",group:"音二莊"},{id:"2A28",name:"28陳翌鈞",group:"音二莊"},{id:"2A29",name:"29黃偉宸",group:"音二莊"},{id:"2A30",name:"30黃宸約",group:"音二莊"},{id:"2A31",name:"31傅振瑜",group:"音二莊"},{id:"2A32",name:"32葉恒辰",group:"音二莊"},{id:"2A33",name:"33楊仁杉",group:"音二莊"},{id:"2A34",name:"34鄭元滿",group:"音二莊"},{id:"2A35",name:"35羅楷勳",group:"音二莊"},{id:"2A36",name:"36吳昕達",group:"音二莊"},{id:"2A37",name:"37沈榆恩",group:"音二莊"},{id:"2A38",name:"38紀柔帆",group:"音二莊"},{id:"2A39",name:"39盧宇杰",group:"音二莊"},{id:"2A40",name:"40江德凱",group:"音二莊"},{id:"2A41",name:"41李奕德",group:"音二莊"},{id:"2A42",name:"42林品傑",group:"音二莊"},{id:"2A43",name:"43陳元熙",group:"音二莊"},{id:"2A44",name:"44丁婷婷",group:"音二莊"},
-            {id:"2P02",name:"02簡佳嫻",group:"演二樸"},{id:"2P03",name:"03黃品妤",group:"演二樸"},
-            {id:"1A01",name:"01任恩予",group:"音一莊"},{id:"1A02",name:"02李孟臻",group:"音一莊"},{id:"1A03",name:"03潘縈汐",group:"音一莊"},{id:"1A04",name:"04謝幸芙",group:"音一莊"},{id:"1A05",name:"05李昕柔",group:"音一莊"},{id:"1A06",name:"06盧丞菲",group:"音一莊"},{id:"1A07",name:"07林欣霈",group:"音一莊"},{id:"1A08",name:"08林耘瑄",group:"音一莊"},{id:"1A09",name:"09林詩翡",group:"音一莊"},{id:"1A10",name:"10姜妤捷",group:"音一莊"},{id:"1A11",name:"11張筑笹",group:"音一莊"},{id:"1A12",name:"12廖聿淓",group:"音一莊"},{id:"1A13",name:"13曾彥瑄",group:"音一莊"},{id:"1A14",name:"14盧瑗",group:"音一莊"},{id:"1A15",name:"15鍾欣庭",group:"音一莊"},{id:"1A16",name:"16黃郁晴",group:"音一莊"},{id:"1A17",name:"17詹中愷",group:"音一莊"},{id:"1A18",name:"18鄭誌浩",group:"音一莊"},{id:"1A19",name:"19謝松煇",group:"音一莊"},{id:"1A20",name:"20羅子超",group:"音一莊"},{id:"1A21",name:"21羅笠準",group:"音一莊"},{id:"1A22",name:"22蘇冠綸",group:"音一莊"},{id:"1A23",name:"23蘇祺翔",group:"音一莊"},{id:"1A24",name:"24劉軒豪",group:"音一莊"},{id:"1A25",name:"25吳泓毅",group:"音一莊"},{id:"1A26",name:"26李維璟",group:"音一莊"},{id:"1A27",name:"27林孝廷",group:"音一莊"},{id:"1A28",name:"28林紹謙",group:"音一莊"},{id:"1A29",name:"29胡宇哲",group:"音一莊"},{id:"1A30",name:"30楊順發",group:"音一莊"},{id:"1A31",name:"31張又禾",group:"音一莊"},{id:"1A32",name:"32張允磊",group:"音一莊"},{id:"1A33",name:"33黃靖勛",group:"音一莊"}
-        ];
-        let role='', curStudent=null, curDetailSid=null, adminInfo={n:'',cls:'ALL'}, localAtt={};
+
+        // 🔴 133位名單 壓縮載入 (解決代碼被截斷問題)
+        const RAW_DATA = "3A01,01毛語程,音三莊|3A02,02林叡成,音三莊|3A03,03田宇紘,音三莊|3A04,04吳昆達,音三莊|3A05,05吳宥良,音三莊|3A06,06黃崇恩,音三莊|3A07,07林宏澤,音三莊|3A08,08金品澔,音三莊|3A09,09劉宸昀,音三莊|3A10,10蔡呈樂,音三莊|3A11,11蘇瑞吾,音三莊|3A12,12梁之凡,音三莊|3A13,13蔡宗佑,音三莊|3A14,14黃穩達,音三莊|3A15,15馮康維,音三莊|3A16,16倪秉澤,音三莊|3A17,17廖敏君,音三莊|3A18,18劉慶霈,音三莊|3A19,19蔡慧琳,音三莊|3A20,20鄭淳融,音三莊|3A21,21魏宜宸,音三莊|3A22,22徐婉瑜,音三莊|3A23,23安𠸍臻,音三莊|3A24,24江岑君,音三莊|3A25,25池宛昕,音三莊|3A26,26李曉萍,音三莊|3A27,27周玄禮,音三莊|3A28,28王以昕,音三莊|3A29,29林祐立,音三莊|3A30,30邱詩涵,音三莊|3A31,31胡云珊,音三莊|3A32,32蔡逸宣,音三莊|3A33,33高慧君,音三莊|3A34,34張路淇,音三莊|3A35,35陳芃瑾,音三莊|3A36,36陳雨彤,音三莊|3A37,37陳宥安,音三莊|3A38,38陳圓卿,音三莊|3A39,39傅克諳,音三莊|3A40,40曾妘湘,音三莊|3D02,02王玟茜,演三莊|3D03,03王語舒,演三莊|3D04,04姚宥湘,演三莊|3D05,05陳思妤,演三莊|3D06,06楊鎔慈,演三莊|3D09,09王偉家,演三莊|3D10,10何建伸,演三莊|3D12,12姜榮紳,演三莊|3D13,13郭庭傑,演三莊|3D14,14陳泊源,演三莊|3D15,15陳軍任,演三莊|3D16,16黃治容,演三莊|3D17,17盧宥辰,演三莊|3D18,18謝行知,演三莊|2A01,01程冠中,音二莊|2A02,02李安恬,音二莊|2A03,03吳芊逸,音二莊|2A04,04林辰欣,音二莊|2A05,05林孟蓁,音二莊|2A06,06林采妮,音二莊|2A07,07林恩熙,音二莊|2A08,08翁閩彗,音二莊|2A09,09陳維妮,音二莊|2A10,10連妤婷,音二莊|2A11,11莊珈維,音二莊|2A12,12黎育彤,音二莊|2A13,13樊千菲,音二莊|2A14,14蔡佳穎,音二莊|2A15,15謝季秉,音二莊|2A16,16陳妍欣,音二莊|2A17,17羅筱涵,音二莊|2A18,18蘇奕婷,音二莊|2A19,19王璿凱,音二莊|2A20,20吳承昊,音二莊|2A21,21張治齊,音二莊|2A22,22李秉軒,音二莊|2A23,23林笠,音二莊|2A24,24林允鋐,音二莊|2A25,25徐國洲,音二莊|2A26,26張定濂,音二莊|2A27,27陳柏睿,音二莊|2A28,28陳翌鈞,音二莊|2A29,29黃偉宸,音二莊|2A30,30黃宸約,音二莊|2A31,31傅振瑜,音二莊|2A32,32葉恒辰,音二莊|2A33,33楊仁杉,音二莊|2A34,34鄭元滿,音二莊|2A35,35羅楷勳,音二莊|2A36,36吳昕達,音二莊|2A37,37沈榆恩,音二莊|2A38,38紀柔帆,音二莊|2A39,39盧宇杰,音二莊|2A40,40江德凱,音二莊|2A41,41李奕德,音二莊|2A42,42林品傑,音二莊|2A43,43陳元熙,音二莊|2A44,44丁婷婷,音二莊|2P02,02簡佳嫻,演二樸|2P03,03黃品妤,演二樸|1A01,01任恩予,音一莊|1A02,02李孟臻,音一莊|1A03,03潘縈汐,音一莊|1A04,04謝幸芙,音一莊|1A05,05李昕柔,音一莊|1A06,06盧丞菲,音一莊|1A07,07林欣霈,音一莊|1A08,08林耘瑄,音一莊|1A09,09林詩翡,音一莊|1A10,10姜妤捷,音一莊|1A11,11張筑笹,音一莊|1A12,12廖聿淓,音一莊|1A13,13曾彥瑄,音一莊|1A14,14盧瑗,音一莊|1A15,15鍾欣庭,音一莊|1A16,16黃郁晴,音一莊|1A17,17詹中愷,音一莊|1A18,18鄭誌浩,音一莊|1A19,19謝松煇,音一莊|1A20,20羅子超,音一莊|1A21,21羅笠準,音一莊|1A22,22蘇冠綸,音一莊|1A23,23蘇祺翔,音一莊|1A24,24劉軒豪,音一莊|1A25,25吳泓毅,音一莊|1A26,26李維璟,音一莊|1A27,27林孝廷,音一莊|1A28,28林紹謙,音一莊|1A29,29胡宇哲,音一莊|1A30,30楊順發,音一莊|1A31,31張又禾,音一莊|1A32,32張允磊,音一莊|1A33,33黃靖勛,音一莊";
+        const students = RAW_DATA.split('|').map(x=>{const s=x.split(',');return {id:s[0],name:s[1],group:s[2]}});
+
+        let role='', currentGrp="音三莊", curStudent=null, curDetailSid=null, adminInfo={n:'',cls:'ALL'}, localAtt={};
         const statusColors=['bg-present','bg-late','bg-absent','bg-leave'], statusNames={'bg-present':'出','bg-late':'遲','bg-absent':'缺','bg-leave':'假'};
+
         function doAuth() {
             const acc=document.getElementById('login-acc').value.trim(), pw=document.getElementById('login-pw').value.trim();
-            if(acc===MASTER_ACC && pw===MASTER_PIN) { role='admin'; adminInfo={n:'蕭旭成',cls:'ALL'}; setS('admin',null,'蕭旭成','ALL'); start(); return; }
+            if(acc===MASTER_N && pw===MASTER_P) { role='admin'; adminInfo={n:MASTER_N,cls:'ALL'}; setL('admin',null,MASTER_N,'ALL'); start(); return; }
             const pwH=CryptoJS.SHA256(pw).toString();
-            db.ref(`jjvs_v28_admins/${acc}`).once('value', sn => {
-                const d=sn.val(); if(d && pwH===d.p) { role='admin'; adminInfo={n:d.n,cls:d.cls}; setS('admin',null,d.n,d.cls); start(); }
+            db.ref(`jjvs_v29_admins/${acc}`).once('value', sn => {
+                const d=sn.val(); if(d && pwH===d.p) { role='admin'; adminInfo={n:d.n,cls:d.cls}; setL('admin',null,d.n,d.cls); start(); }
                 else {
                     const f=students.find(s=>s.name.includes(acc));
                     if(f) {
-                        db.ref(`jjvs_v28_auth/${f.id}`).once('value', sn2 => {
+                        db.ref(`jjvs_v29_auth/${f.id}`).once('value', sn2 => {
                             const ad=sn2.val()||{p:'0000'};
                             if(pw===ad.p) {
-                                if(pw==='0000') { const np=prompt("請修改預設密碼："); if(np && np!=='0000') { db.ref(`jjvs_v28_auth/${f.id}`).set({p:np}); alert("已修改，請重登"); } }
-                                else { curStudent=f; role='student'; setS('student',f.id); start(); }
-                            } else alert("密碼錯");
+                                if(pw==='0000') { const np=prompt("請修改預設密碼 0000："); if(np && np!=='0000') { db.ref(`jjvs_v29_auth/${f.id}`).set({p:np}); alert("修改成功，請重登"); } }
+                                else { curStudent=f; role='student'; setL('student',f.id); start(); }
+                            } else alert("密碼錯誤");
                         });
-                    } else alert("無此帳號");
+                    } else alert("查無此人或帳號");
                 }
             });
         }
-        function setS(r,sid,n,c) { localStorage.setItem('jjvs_r',r); localStorage.setItem('jjvs_id',sid); localStorage.setItem('jjvs_an',n); localStorage.setItem('jjvs_ac',c); }
-        window.onload=() => { const r=localStorage.getItem('jjvs_r'); if(r==='admin'){ role='admin'; adminInfo={n:localStorage.getItem('jjvs_an'),cls:localStorage.getItem('jjvs_ac')}; start(); } else if(r==='student'){ curStudent=students.find(s=>s.id===localStorage.getItem('jjvs_id')); role='student'; start(); } };
-        function logout() { localStorage.clear(); location.reload(); }
-        function start() { document.getElementById('gate-screen').style.display='none'; document.getElementById('app-screen').style.display='block'; document.getElementById('target-date').value=new Date().toISOString().split('T')[0]; if(role==='admin'){ document.getElementById('admin-view').style.display='block'; if(adminInfo.n==='蕭旭成') document.getElementById('admin-setup-btn').style.display='inline-block'; initT(); } else { document.getElementById('student-view').style.display='block'; openDetail(curStudent.id); } loadC(); }
+        function setL(r,id,n,c) { localStorage.setItem('jj_r',r); localStorage.setItem('jj_i',id); localStorage.setItem('jj_n',n); localStorage.setItem('jj_c',c); }
+        window.onload=()=>{ const r=localStorage.getItem('jj_r'); if(r==='admin'){ role='admin'; adminInfo={n:localStorage.getItem('jj_n'),cls:localStorage.getItem('jj_c')}; start(); } else if(r==='student'){ curStudent=students.find(s=>s.id===localStorage.getItem('jj_i')); role='student'; start(); } };
+        function logout(){ localStorage.clear(); location.reload(); }
+        function start() { document.getElementById('gate-screen').style.display='none'; document.getElementById('app-screen').style.display='block'; document.getElementById('target-date').value=new Date().toISOString().split('T')[0]; if(role==='admin'){ document.getElementById('admin-view').style.display='block'; if(adminInfo.n===MASTER_N) document.getElementById('admin-setup-btn').style.display='inline-block'; initT(); } else { document.getElementById('student-view').style.display='block'; document.getElementById('welcome-name').innerText=curStudent.name; openDetail(curStudent.id); } loadC(); }
         function initT() {
             const tb=document.getElementById('tabs'); tb.innerHTML=""; const gs=adminInfo.cls==='ALL'?["音三莊","演三莊","音二莊","演二樸","音一莊"]:[adminInfo.cls];
             gs.forEach((g,i)=>{ const b=document.createElement('button'); b.innerText=g; b.className=`tab-btn ${i===0?'active':''}`; if(i===0) currentGrp=g; b.onclick=()=>{ currentGrp=g; Array.from(tb.children).forEach(c=>c.classList.remove('active')); b.classList.add('active'); renderG(); }; tb.appendChild(b); }); renderG();
         }
-        function loadC() { db.ref('jjvs_v28_cloud').on('value', sn => { window.master=sn.val()||{}; localAtt={...(window.master.attendance && window.master.attendance[document.getElementById('target-date').value])}; renderG(); renderL(); if(curDetailSid) refreshM(curDetailSid); document.getElementById('login-info').innerText=role==='admin'?`${adminInfo.n} 老師 (皇家連線)`:"皇家："+curStudent.name; }); }
+        function loadC() { db.ref('jjvs_v29_cloud').on('value', sn => { window.master=sn.val()||{}; localAtt={...(window.master.attendance && window.master.attendance[document.getElementById('target-date').value])}; renderG(); renderL(); if(curDetailSid) refreshM(curDetailSid); document.getElementById('login-info').innerText=role==='admin'?`${adminInfo.n} 老師 (加密同步)`:"皇家："+curStudent.name; }); }
         function renderG() { if(role!=='admin') return; const grid=document.getElementById('student-grid'); grid.innerHTML=""; students.filter(s=>s.group===currentGrp).forEach(s=>{ const st=localAtt[s.id]||'bg-present', pts=(window.master.profiles?.[s.id]?.points)||0; const div=document.createElement('div'); div.className="s-box"; div.innerHTML=`<div class="s-points">${pts}P</div><div class="s-dot ${st}" id="dot-${s.id}" onclick="toggle('${s.id}')">${statusNames[st]}</div><div class="s-name" onclick="openDetail('${s.id}')">${s.name}</div>`; grid.appendChild(div); }); }
-        function toggle(sid) { let cur=localAtt[sid]||'bg-present', next=statusColors[(statusColors.indexOf(cur)+1)%statusColors.length]; localAtt[sid]=next; document.getElementById(`dot-${sid}`).className=`s-dot ${next}`; document.getElementById(`dot-${sid}`).innerText=statusNames[next]; if(next==='bg-late'){ const cp=window.master.profiles?.[sid]?.points||0; db.ref(`jjvs_v28_cloud/profiles/${sid}/points`).set(Math.max(0,cp-1)); addLog(sid,"💀 遲到扣1點",`系統自動 [${adminInfo.n}]`); } }
-        function syncCloud() { db.ref(`jjvs_v28_cloud/attendance/${document.getElementById('target-date').value}`).set(localAtt).then(()=>alert("同步完成")); }
-        function openDetail(sid) { curDetailSid=sid; document.getElementById('overlay').style.display='block'; document.getElementById('modal').style.display='block'; if(window.master) refreshM(sid); }
+        function toggle(sid) { let cur=localAtt[sid]||'bg-present', nxt=statusColors[(statusColors.indexOf(cur)+1)%statusColors.length]; localAtt[sid]=nxt; document.getElementById(`dot-${sid}`).className=`s-dot ${nxt}`; document.getElementById(`dot-${sid}`).innerText=statusNames[nxt]; if(nxt==='bg-late'){ const cp=window.master.profiles?.[sid]?.points||0; db.ref(`jjvs_v29_cloud/profiles/${sid}/points`).set(Math.max(0,cp-1)); addLog(sid,"💀 遲到扣1點",`自動處置 [${adminInfo.n}]`); } }
+        function syncCloud(){ db.ref(`jjvs_v29_cloud/attendance/${document.getElementById('target-date').value}`).set(localAtt).then(()=>alert("同步成功")); }
+        function openDetail(sid){ curDetailSid=sid; document.getElementById('overlay').style.display='block'; document.getElementById('modal').style.display='block'; if(window.master) refreshM(sid); }
         function refreshM(sid) {
             const s=students.find(x=>x.id===sid), prof=(window.master.profiles && window.master.profiles[sid])||{points:0,medals:0,msg:"無",logs:[]}; document.getElementById('m-name').innerText=s.name; document.getElementById('m-msg').innerText=prof.msg||"無師長訊息";
             const pts=prof.points||0, sb=document.getElementById('stamp-card'); sb.innerHTML=""; for(let i=0;i<10;i++) sb.innerHTML+=`<div class="slot ${i<pts?'slot-active':''}">${i<pts?'⭐':''}</div>`;
             const med=prof.medals||0, mb=document.getElementById('medal-card'); mb.innerHTML=""; for(let i=0;i<Math.max(med,3);i++) mb.innerHTML+=`<div class="slot ${i<med?'slot-active':''}">${i<med?'🏅':''}</div>`;
             const hBox=document.getElementById('m-history'); hBox.innerHTML=""; const combined=[...(prof.logs||[])]; const att=window.master.attendance||{};
-            Object.keys(att).forEach(d=>{ if(att[d][sid]) combined.push({time:d+" 00:00",act:"出席: "+statusNames[att[d][sid]],reason:"點名",admin:"系統"}); });
+            Object.keys(att).forEach(d=>{ if(att[d][sid]) combined.push({time:d+" 00:00",act:"出席: "+statusNames[att[d][sid]],reason:"點名記錄",admin:"系統"}); });
             combined.sort((a,b)=>b.time.localeCompare(a.time)).forEach(l=>{ hBox.innerHTML+=`<div class="log-row">🕒 ${l.time}<br><b>${l.act}</b><br>原因：${l.reason} <span style="float:right;color:#999;">by ${l.admin||''}</span></div>`; });
-            if(role==='admin'){ document.getElementById('admin-pts-tool').style.display='block'; document.getElementById('admin-med-tool').style.display='block'; document.getElementById('admin-msg-zone').style.display='block'; document.getElementById('admin-only-info').style.display='block'; db.ref(`jjvs_v28_auth/${sid}/p`).once('value',sn=>document.getElementById('m-pw').innerText=sn.val()||'0000'); }
-            if(role==='student' && window.master.leaves?.[document.getElementById('target-date').value+"_"+sid]==='APPROVED') document.getElementById('student-leave-status').innerHTML=`<button class="btn btn-gold" onclick="showPass('${s.name}')">🎟️ 出示准予外出證</button>`;
+            if(role==='admin'){ document.getElementById('admin-pts-tool').style.display='block'; document.getElementById('admin-med-tool').style.display='block'; document.getElementById('admin-msg-zone').style.display='block'; document.getElementById('admin-only-info').style.display='block'; db.ref(`jjvs_v29_auth/${sid}/p`).once('value',sn=>document.getElementById('m-pw').innerText=sn.val()||'0000'); }
+            if(role==='student' && window.master.leaves?.[document.getElementById('target-date').value+"_"+sid]==='APPROVED') document.getElementById('student-leave-status').innerHTML=`<button class="btn btn-gold" onclick="showPass('${s.name}')">🎟️ 出示核可外出通行證</button>`;
         }
-        function showPass(n) { document.getElementById('pass-name').innerText=n; document.getElementById('pass-date').innerText=document.getElementById('target-date').value; document.getElementById('pass-admin').innerText=adminInfo.n; document.getElementById('pass-screen').style.display='block'; }
-        function applyLeave() { const r=prompt("原因："); if(!r) return; db.ref(`jjvs_v28_cloud/leaves/${document.getElementById('target-date').value+"_"+curStudent.id}`).set("PENDING"); alert("已送出"); }
-        function renderL() { const box=document.getElementById('leave-list'); box.innerHTML=""; const leaves=window.master.leaves||{}, sd=document.getElementById('target-date').value; students.filter(s=>s.group===currentGrp||adminInfo.cls==='ALL').forEach(s=>{ if(leaves[sd+"_"+s.id]==='PENDING') box.innerHTML+=`<div style="display:flex;justify-content:space-between;margin-bottom:12px;"><span>🚶 <b>${s.name}</b> 申請外出</span><button class="btn" style="width:70px;height:35px;padding:0;background:var(--present);color:#fff;" onclick="appr('${s.id}')">核可</button></div>`; }); }
-        function appr(sid) { db.ref(`jjvs_v28_cloud/leaves/${document.getElementById('target-date').value+"_"+sid}`).set("APPROVED"); addLog(sid,"✅ 核可外出",adminInfo.n); }
-        function adj(t,v) { const r=prompt("原因："); if(!r) return; const path=t==='p'?'points':'medals', cur=parseInt(window.master.profiles?.[curDetailSid]?.[path]||0); db.ref(`jjvs_v28_cloud/profiles/${curDetailSid}/${path}`).set(Math.max(0,cur+v)); addLog(curDetailSid,(t==='p'?'點':'金')+(v>0?'➕':'➖')+Math.abs(v),r); }
-        function addLog(sid,act,reason) { const t=new Date().toISOString().split('T')[0]+" "+new Date().toTimeString().slice(0,5), logs=window.master.profiles?.[sid]?.logs||[]; logs.push({time:t,act:act,reason:reason,admin:adminInfo.n}); db.ref(`jjvs_v28_cloud/profiles/${sid}/logs`).set(logs); }
-        function openSetup() { document.getElementById('overlay').style.display='block'; document.getElementById('setup-modal').style.display='block'; renderAdminL(); }
-        function addTeacher() { const n=document.getElementById('new-t-name').value, a=document.getElementById('new-t-acc').value, p=document.getElementById('new-t-pw').value, c=document.getElementById('new-t-class').value; if(!n||!a||!p) return alert("必填"); db.ref(`jjvs_v28_admins/${a}`).set({n:n,p:CryptoJS.SHA256(p).toString(),cls:c}).then(()=>{ alert("已開通"); renderAdminL(); }); }
-        function renderAdminL() { const box=document.getElementById('teacher-list'); box.innerHTML=""; db.ref('jjvs_v28_admins').once('value',sn=>{ const d=sn.val(); for(let acc in d) box.innerHTML+=`<div style="border-bottom:1px solid #ddd;padding:8px;"><b>${d[acc].n}</b>管轄:${d[acc].cls} <button onclick="delA('${acc}')" style="float:right;color:red;">[刪]</button></div>`; }); }
-        function delA(acc) { if(confirm("刪？")) db.ref(`jjvs_v28_admins/${acc}`).remove().then(renderAdminL); }
-        function redeem() { const p=window.master.profiles?.[curDetailSid]?.points||0; if(p>=5) { db.ref(`jjvs_v28_cloud/profiles/${curDetailSid}`).update({points:p-5,medals:(window.master.profiles?.[curDetailSid]?.medals||0)+1}); addLog(curDetailSid,"🎟️ 兌換金牌","自動"); } else alert("不夠"); }
-        function updateMsg() { db.ref(`jjvs_v28_cloud/profiles/${curDetailSid}/msg`).set(document.getElementById('t-msg').value); alert("送出"); }
-        function closeModal() { curDetailSid=null; document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; }
+        function showPass(n){ document.getElementById('pass-name').innerText=n; document.getElementById('pass-date').innerText=document.getElementById('target-date').value; document.getElementById('pass-admin').innerText=adminInfo.n; document.getElementById('pass-screen').style.display='block'; }
+        function applyLeave(){ const r=prompt("外出原因："); if(!r) return; db.ref(`jjvs_v29_cloud/leaves/${document.getElementById('target-date').value+"_"+curStudent.id}`).set("PENDING"); alert("申請送出"); }
+        function renderL(){ const box=document.getElementById('leave-list'); box.innerHTML=""; const leaves=window.master.leaves||{}, sd=document.getElementById('target-date').value; students.filter(s=>s.group===currentGrp||adminInfo.cls==='ALL').forEach(s=>{ if(leaves[sd+"_"+s.id]==='PENDING') box.innerHTML+=`<div style="display:flex;justify-content:space-between;margin-bottom:12px;align-items:center;"><span>🚶 <b>${s.name}</b> 申請外出</span><button class="btn" style="width:75px;height:35px;padding:0;background:var(--safe);color:#fff;border-radius:10px;" onclick="appr('${s.id}')">核可</button></div>`; }); }
+        function appr(sid){ db.ref(`jjvs_v29_cloud/leaves/${document.getElementById('target-date').value+"_"+sid}`).set("APPROVED"); addLog(sid,"✅ 核可外出",adminInfo.n); }
+        function adj(t,v){ const r=prompt("原因："); if(!r) return; const path=t==='p'?'points':'medals', cur=parseInt(window.master.profiles?.[curDetailSid]?.[path]||0); db.ref(`jjvs_v29_cloud/profiles/${curDetailSid}/${path}`).set(Math.max(0,cur+v)); addLog(curDetailSid,(t==='p'?'點':'金')+(v>0?'➕':'➖')+Math.abs(v),r); }
+        function addLog(sid,act,reason) { const t=new Date().toISOString().split('T')[0]+" "+new Date().toTimeString().slice(0,5), logs=window.master.profiles?.[sid]?.logs||[]; logs.push({time:t,act:act,reason:reason,admin:adminInfo.n}); db.ref(`jjvs_v29_cloud/profiles/${sid}/logs`).set(logs); }
+        function openSetup(){ document.getElementById('overlay').style.display='block'; document.getElementById('setup-modal').style.display='block'; renderAL(); }
+        function addTeacher(){ const n=document.getElementById('new-t-name').value, a=document.getElementById('new-t-acc').value, p=document.getElementById('new-t-pw').value, c=document.getElementById('new-t-class').value; if(!n||!a||!p) return alert("必填"); db.ref(`jjvs_v29_admins/${a}`).set({n:n,p:CryptoJS.SHA256(p).toString(),cls:c}).then(()=>{ alert("已開通"); renderAL(); }); }
+        function renderAL() { const box=document.getElementById('teacher-list'); box.innerHTML=""; db.ref('jjvs_v29_admins').once('value',sn=>{ const d=sn.val(); for(let acc in d) box.innerHTML+=`<div style="border-bottom:1px solid #ddd;padding:10px;"><b>${d[acc].n}</b> | 管轄:${d[acc].cls} <button onclick="delA('${acc}')" style="float:right;color:red;border:none;background:none;">[刪除]</button></div>`; }); }
+        function delA(acc){ if(confirm("刪？")) db.ref(`jjvs_v29_admins/${acc}`).remove().then(renderAL); }
+        function redeem(){ const p=window.master.profiles?.[curDetailSid]?.points||0; if(p>=5){ db.ref(`jjvs_v29_cloud/profiles/${curDetailSid}`).update({points:p-5,medals:(window.master.profiles?.[curDetailSid]?.medals||0)+1}); addLog(curDetailSid,"🎟️ 兌換金牌","自動"); } else alert("不夠"); }
+        function updateMsg(){ db.ref(`jjvs_v29_cloud/profiles/${curDetailSid}/msg`).set(document.getElementById('t-msg').value); alert("送出"); }
+        function closeModal(){ curDetailSid=null; document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); document.getElementById('overlay').style.display='none'; }
     </script>
 </body>
 </html>
