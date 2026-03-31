@@ -1,416 +1,338 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>莊敬音樂科教務管理系統</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>莊敬音樂科—皇家行政總部 V32</title>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <style>
+        :root { --gold: #D4AF37; --black: #050505; --white: #FFFFFF; --safe: #27AE60; --late: #F1C40F; --absent: #C0392B; --leave: #2980B9; }
+        * { box-sizing: border-box; font-family: "PingFang TC", "Noto Sans TC", sans-serif; }
+        body { background: var(--black); color: #333; margin: 0; min-height: 100vh; overflow-x: hidden; }
+        body::before { content: "𝄞 🎹 🎻 ♫"; position: fixed; width: 100%; top: 25%; font-size: 12vw; color: var(--gold); opacity: 0.04; text-align: center; z-index: -1; pointer-events: none; }
+        
+        /* 門禁畫面 */
+        #loginScreen { position: fixed; inset: 0; background: radial-gradient(circle at center, #222, #000); display: flex; align-items: center; justify-content: center; z-index: 10000; }
+        .login-box { background: #fff; padding: 40px; border-radius: 40px; width: 90%; max-width: 380px; text-align: center; border: 4px solid var(--gold); box-shadow: 0 30px 80px rgba(0,0,0,0.8); }
+        
+        /* 主畫面 */
+        #appScreen, #studentScreen { display: none; width: 100%; min-height: 100vh; background: var(--black); }
+        header { background: #000; color: var(--gold); padding: 30px 10px; text-align: center; border-radius: 0 0 45px 45px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid var(--gold); }
+        
+        /* 1x3 網格 */
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px; width: 100%; }
+        .s-box { background: #fff; border-radius: 25px; padding: 20px 5px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1.5px solid rgba(212,175,55,0.3); position: relative; }
+        .s-dot { aspect-ratio: 1/1; width: 85%; max-width: 65px; margin: 0 auto 10px; border-radius: 20px; border: 4px solid #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 900; color: #fff; }
+        .s-name { font-weight: 900; font-size: 1.1rem; color: #000; letter-spacing: 1px; }
+        .s-points { position: absolute; top: -8px; right: -8px; background: #FF4500; color: #fff; font-size: 0.75rem; padding: 4px 10px; border-radius: 15px; font-weight: bold; border: 2.5px solid #fff; z-index: 5; }
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+        .tab-btn { padding: 12px 22px; border-radius: 30px; border: none; background: #fff; font-weight: bold; margin-right: 10px; cursor: pointer; }
+        .tab-btn.active { background: var(--gold); color: #fff; transform: scale(1.1); }
 
-<style>
-/* ===== CSS VARIABLES ===== */
-:root {
-  --gold: #D4AF37;
-  --gold-light: #F0D060;
-  --bg-deep: #0A0A0C;
-  --bg-card: #111115;
-  --bg-panel: #161619;
-  --text-primary: #F0E8D0;
-  --text-secondary: #A09070;
-  --green: #2ECC71;
-  --yellow: #F1C40F;
-  --red: #E74C3C;
-  --blue: #3498DB;
-  --border: rgba(212,175,55,0.2);
-  --font-body: "PingFang TC", "Noto Serif TC", serif;
-}
+        .modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 500px; background: #fff; border-radius: 45px; padding: 25px; z-index: 10005; max-height: 90vh; overflow-y: auto; }
+        .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10001; backdrop-filter: blur(10px); }
+        .btn { width: 100%; padding: 18px; margin-top: 10px; border-radius: 22px; border: none; font-weight: 900; cursor: pointer; font-size: 1.1rem; }
+        .btn-gold { background: linear-gradient(135deg, #D4AF37, #B8860B); color: #fff; }
+        .btn-dark { background: #000; color: #fff; border: 2px solid var(--gold); }
+        .btn-sm { padding: 8px 15px; border-radius: 15px; border: 1.5px solid var(--gold); background: transparent; color: var(--gold); font-size: 0.8rem; cursor: pointer; }
 
-/* ===== BASE ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-body { background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-body); overflow-x: hidden; min-height: 100vh; }
-
-/* 浮水印 */
-body::before {
-  content: '𝄞  🎹  🎻  ♫  𝄞  🎹  🎻';
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  font-size: 80px; color: rgba(212,175,55,0.03);
-  display: flex; align-items: center; justify-content: center;
-  pointer-events: none; z-index: 0; text-align: center;
-}
-
-/* ===== SCREENS ===== */
-.screen { display: none; width: 100%; min-height: 100vh; position: relative; z-index: 1; }
-.screen.active { display: block; }
-
-/* LOGIN SCREEN 特殊處理 */
-#loginScreen.active { display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #222 0%, #000 100%); }
-
-.login-box {
-  background: var(--bg-card); border: 2px solid var(--gold); border-radius: 30px;
-  padding: 40px; width: 400px; max-width: 90vw; text-align: center;
-  box-shadow: 0 20px 60px rgba(0,0,0,0.8);
-}
-
-.login-title { font-size: 24px; color: var(--gold); margin-bottom: 20px; letter-spacing: 2px; }
-
-/* 網格系統 - 滿版 1x3 */
-.grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 15px; width: 100%; }
-.student-card {
-  background: #fff; border-radius: 20px; padding: 15px 5px; text-align: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.2); position: relative; border: 1.5px solid rgba(212,175,55,0.3);
-}
-.s-dot {
-  aspect-ratio: 1/1; width: 80%; max-width: 60px; margin: 0 auto 10px;
-  border-radius: 18px; border: 3px solid #fff; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 1.4rem; font-weight: 900; color: #fff;
-}
-.s-name { font-weight: 900; font-size: 1.1rem; color: #000; }
-.s-points { position: absolute; top: -8px; right: -8px; background: #FF4500; color: #fff; font-size: 0.75rem; padding: 3px 8px; border-radius: 12px; font-weight: bold; border: 2px solid #fff; z-index: 5; }
-
-/* 頂部欄 */
-header { background: #000; color: var(--gold); padding: 25px 15px; text-align: center; border-radius: 0 0 40px 40px; position: sticky; top: 0; z-index: 1000; border-bottom: 2px solid var(--gold); }
-
-/* 通用按鈕 */
-.btn-primary { width: 100%; padding: 14px; background: linear-gradient(135deg, var(--gold), #B8860B); border: none; border-radius: 12px; color: #fff; font-size: 16px; font-weight: bold; cursor: pointer; }
-.btn-sm { padding: 6px 12px; border-radius: 10px; border: 1px solid var(--border); background: transparent; color: var(--gold); cursor: pointer; }
-
-/* 狀態顏色 */
-.bg-present { background: var(--green); }
-.bg-late { background: var(--yellow); }
-.bg-absent { background: var(--red); }
-.bg-leave { background: var(--blue); }
-
-/* 其他佈局 */
-.tab-btn { padding: 10px 20px; border-radius: 20px; border: none; background: #fff; font-weight: bold; margin-right: 8px; cursor: pointer; }
-.tab-btn.active { background: var(--gold); color: #fff; }
-
-.modal { display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 95%; max-width: 480px; background: #fff; border-radius: 40px; padding: 25px; z-index: 10005; box-shadow: 0 50px 150px rgba(0,0,0,0.9); max-height: 90vh; overflow-y: auto; color: #333; }
-.overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 10001; backdrop-filter: blur(8px); }
-
-/* 外出通行證 */
-#exitPass { display: none; position: fixed; inset: 0; background: var(--green); z-index: 99999; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; }
-</style>
+        .log-row { background: #f9f9f9; border-radius: 20px; padding: 15px; margin-bottom: 10px; font-size: 0.9rem; border-left: 6px solid var(--gold); color: #333; }
+        .slot { width: 36px; height: 36px; border-radius: 50%; background: #eee; display: inline-flex; align-items: center; justify-content: center; margin: 3px; border: 1px dashed #ccc; }
+        .slot-active { background: #fff; border: 2.5px solid var(--gold); }
+        
+        input { width: 100%; padding: 16px; border-radius: 18px; border: 1.5px solid #ddd; margin-bottom: 15px; font-size: 1.1rem; }
+        #exitPass { display: none; position: fixed; inset: 0; background: var(--safe); z-index: 20000; text-align: center; color: #fff; padding-top: 15vh; }
+        
+        .bg-present { background: var(--safe); } .bg-late { background: var(--late); } .bg-absent { background: var(--absent); } .bg-leave { background: var(--leave); }
+    </style>
 </head>
 <body>
 
-<div id="loginScreen" class="screen active">
-  <div class="login-box">
-    <div style="font-size: 50px;">🎼</div>
-    <div class="login-title">莊敬音樂科教務管理</div>
-    <div class="login-tabs" style="display:flex; margin-bottom:20px; border:1px solid var(--border); border-radius:10px; overflow:hidden;">
-      <button id="tabTeacher" style="flex:1; padding:10px; border:none; cursor:pointer; background:var(--gold); color:#000; font-weight:bold;" onclick="switchLogin('teacher')">教師</button>
-      <button id="tabStudent" style="flex:1; padding:10px; border:none; cursor:pointer; background:transparent; color:var(--text-secondary);" onclick="switchLogin('student')">學生</button>
+    <div id="exitPass" onclick="this.style.display='none'">
+        <div style="font-size: 7rem;">📜</div><h1 style="font-size: 3rem;">准予外出</h1>
+        <div style="background:#fff; color:#000; margin: 30px; padding: 50px 20px; border-radius: 50px;">
+            <h1 id="passName" style="font-size: 3rem; margin:0;">姓名</h1>
+            <p>第八節請假審核通過</p><hr>
+            <h2 id="passDate" style="color:red; font-size: 2.5rem;">2026-03-31</h2>
+            <p>核可師長：<span id="passAdmin" style="font-weight:bold;">蕭旭成老師</span></p>
+        </div><p>點擊螢幕關閉</p>
     </div>
-    <div id="loginFields">
-      <input type="text" id="loginAcc" placeholder="帳號 / 學生姓名" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:15px;">
-      <input type="password" id="loginPw" placeholder="密碼 (初始 0000)" style="width:100%; padding:12px; border-radius:10px; border:1px solid #ddd; margin-bottom:20px;">
-      <button class="btn-primary" onclick="doAuth()">登入系統</button>
+
+    <div id="loginScreen">
+        <div class="login-box">
+            <h1 style="margin:0; font-size:2.3rem; letter-spacing:2px;">莊敬音樂科</h1>
+            <p style="color:var(--gold); font-weight:bold; margin-bottom: 25px;">ROYAL ADMIN PORTAL</p>
+            <input type="text" id="loginAcc" placeholder="管理帳號 或 學生姓名">
+            <input type="password" id="loginPw" placeholder="密碼 (初始 0000)">
+            <button class="btn btn-gold" onclick="doAuth()">進入皇家管理系統</button>
+            <p style="font-size:0.7rem; color:#aaa; margin-top:20px;">V32.0 核心修復版</p>
+        </div>
     </div>
-  </div>
-</div>
 
-<div id="appScreen" class="screen">
-  <header>
-    <h2>🏛️ 莊敬音樂科行政總部</h2>
-    <div id="login-info" style="font-size:14px; margin-top:10px;">系統同步中...</div>
-    <div style="display:flex; justify-content:center; gap:10px; margin-top:15px;">
-      <button id="admin-setup-btn" class="btn-sm" style="display:none;" onclick="openSetup()">⚙️ 教師管理</button>
-      <button class="btn-sm" onclick="doLogout()">登出</button>
+    <div id="appScreen">
+        <header>
+            <h2 style="margin:0; letter-spacing: 2px;">🏛️ 音樂科教務總部</h2>
+            <div id="admin-info-display" style="font-size:0.9rem; margin-top:10px;">連線中...</div>
+            <div style="display:flex; justify-content:center; gap:12px; margin-top:20px;">
+                <button id="admin-setup-btn" class="btn-sm" style="display:none;" onclick="openSetup()">⚙️ 教師權限</button>
+                <button class="btn-sm" onclick="doLogout()">登出</button>
+            </div>
+        </header>
+        <div style="padding:15px;">
+            <div style="background:#fff; padding:15px; border-radius:30px; margin-bottom: 15px; text-align:center;">
+                📅 <input type="date" id="targetDate" onchange="loadData()" style="width: auto; border:none; background: #f0f0f0; padding: 10px; border-radius: 12px; font-weight:bold;">
+            </div>
+            <div id="classTabs" style="display:flex; overflow-x:auto; margin-bottom:15px; padding-bottom:10px;"></div>
+            <div id="studentGrid" class="grid"></div>
+            <button class="btn btn-gold" style="background:#000; border:2px solid var(--gold);" onclick="saveAttendance()">💾 儲存今日點名紀錄</button>
+            <div style="margin:30px 0 10px; border-left:6px solid var(--gold); padding-left:12px; color:#fff; font-weight:bold;">🚶 外出審核單</div>
+            <div id="applyList" style="background:#fff; padding:25px; border-radius:35px; color:#333;">目前無申請</div>
+        </div>
     </div>
-  </header>
-  
-  <div style="padding:15px;">
-    <div style="background:#fff; border-radius:20px; padding:15px; text-align:center; margin-bottom:15px;">
-      📅 <input type="date" id="targetDate" onchange="loadData()" style="border:none; font-weight:bold; font-size:16px;">
+
+    <div id="studentScreen">
+        <header><h2>🎼 我的個人看板</h2></header>
+        <div style="padding:30px; text-align:center;">
+            <div id="studentViewCard" style="background:#fff; border-radius:40px; padding:30px; margin-bottom:20px;">載入中...</div>
+            <button class="btn btn-gold" onclick="applyExit()">📝 申請第八節外出</button>
+            <div id="myPassArea" style="margin-top:20px;"></div>
+        </div>
     </div>
-    <div id="classTabs" style="display:flex; overflow-x:auto; margin-bottom:15px; padding-bottom:5px;"></div>
-    <div id="studentGrid" class="grid"></div>
-    <button class="btn-primary" style="margin-top:10px; background:#000; border:2px solid var(--gold);" onclick="saveAttendance()">💾 儲存點名紀錄</button>
-    
-    <div style="margin-top:25px; border-left:5px solid var(--gold); padding-left:10px; font-weight:bold;">🚶 外出申請審核</div>
-    <div id="applyList" style="background:#fff; border-radius:20px; padding:15px; margin-top:10px; color:#333;">尚無申請</div>
-  </div>
-</div>
 
-<div id="studentScreen" class="screen">
-  <header>
-    <h2>🎓 我的個人看板</h2>
-    <div id="s-info" style="margin-top:10px;">音樂生您好</div>
-    <button class="btn-sm" style="margin-top:10px;" onclick="doLogout()">登出</button>
-  </header>
-  <div style="padding:20px; text-align:center;">
-    <div id="studentViewCard" style="background:#fff; border-radius:30px; padding:30px; color:#333; margin-bottom:20px;">
-      載入個人資料中...
+    <div class="overlay" id="overlay" onclick="closeModal()"></div>
+    <div class="modal" id="modal">
+        <h2 id="m-name" style="text-align:center; font-size:2rem; color:#000;">姓名</h2>
+        <div id="admin-only-info" style="display:none; background:#FFFDE7; padding:12px; border-radius:20px; margin-bottom:20px; border: 2px solid var(--gold); text-align:center;">
+            🔐 學生密碼：<span id="m-pw" style="font-weight:bold; font-size:1.5rem;">----</span>
+        </div>
+        <div style="font-weight:bold;">⭐ 集點星蹤 (5星換1金)</div><div id="stamp-card" style="margin-bottom:10px;"></div>
+        <div id="pts-tools" style="display:none; text-align:center;">
+            <button class="btn-sm" style="width:60px;" onclick="adj('p', 1)">＋</button>
+            <button class="btn-sm" style="width:60px;" onclick="adj('p', -1)">－</button>
+            <button class="btn-sm" style="margin-left:10px;" onclick="redeem()">🎟️ 換金牌</button>
+        </div>
+        <div style="font-weight:bold; margin:20px 0 5px;">🏅 金牌庫存</div><div id="medal-box" style="font-size:30px;"></div>
+        <div style="font-weight:bold; margin:20px 0 5px;">📜 獎懲紀錄</div><div id="log-box" style="max-height:250px; overflow-y:auto; background:#f5f5f5; padding:15px; border-radius:20px; font-size:0.9rem;"></div>
+        <button class="btn btn-dark" style="margin-top:25px;" onclick="closeModal()">返回列表</button>
     </div>
-    <button class="btn-primary" onclick="applyExit()">📝 申請第八節外出</button>
-    <div id="myPassTrigger" style="margin-top:20px;"></div>
-  </div>
-</div>
 
-<div class="overlay" id="overlay" onclick="closeModal()"></div>
-<div class="modal" id="modal">
-  <h2 id="m-name" style="text-align:center; margin-bottom:15px;">學生姓名</h2>
-  <div id="admin-only-info" style="display:none; background:#FFFDE7; padding:10px; border-radius:15px; margin-bottom:15px; text-align:center;">
-    🔐 學生密碼：<span id="m-pw" style="font-weight:bold;">----</span>
-  </div>
-  <div style="font-weight:bold; margin-bottom:5px;">⭐ 集點卡 (5星換1金)</div>
-  <div id="stamp-card" style="display:flex; flex-wrap:wrap; gap:5px; justify-content:center; margin-bottom:10px;"></div>
-  <div id="pts-tools" style="display:none; text-align:center; margin-bottom:15px;">
-    <button class="btn-sm" style="width:50px;" onclick="adj('p',1)">＋</button>
-    <button class="btn-sm" style="width:50px;" onclick="adj('p',-1)">－</button>
-    <button class="btn-sm" style="margin-left:10px;" onclick="redeem()">🎟️ 兌換金牌</button>
-  </div>
-  <div style="font-weight:bold; margin-bottom:5px;">🏅 金牌庫存</div>
-  <div id="medal-box" style="margin-bottom:15px; font-size:24px;"></div>
-  <div style="font-weight:bold; margin-bottom:5px;">📜 獎懲紀錄</div>
-  <div id="log-box" style="max-height:200px; overflow-y:auto; background:#f5f5f5; padding:10px; border-radius:10px; font-size:13px;"></div>
-  <button class="btn-primary" style="margin-top:20px; background:#000;" onclick="closeModal()">關閉返回</button>
-</div>
+    <div id="setup-modal" class="modal">
+        <h2 style="text-align:center;">教師權限設定</h2>
+        <input type="text" id="new-t-name" placeholder="老師姓名">
+        <input type="text" id="new-t-acc" placeholder="帳號">
+        <input type="text" id="new-t-pw" placeholder="密碼">
+        <select id="new-t-class"><option value="ALL">全系</option><option value="音三莊">音三莊</option><option value="演三莊">演三莊</option><option value="音二莊">音二莊</option><option value="演二樸">演二樸</option><option value="音一莊">音一莊</option></select>
+        <button class="btn btn-gold" onclick="addTeacher()">新增教師帳號</button>
+        <div id="teacher-list" style="margin-top:20px;"></div>
+        <button class="btn btn-dark" onclick="closeModal()">關閉</button>
+    </div>
 
-<div id="exitPass" onclick="this.style.display='none'">
-  <div style="font-size:80px;">✅</div>
-  <h1 style="font-size:40px; letter-spacing:5px;">准予外出</h1>
-  <div style="background:white; color:black; padding:30px; border-radius:30px; margin:20px; width:80%;">
-    <h2 id="passName" style="font-size:30px;">學生姓名</h2>
-    <p style="font-size:18px; margin:10px 0;">第八節課後請假核可</p>
-    <hr>
-    <h2 id="passDate" style="color:red; font-size:24px; margin-top:10px;">2026-03-31</h2>
-    <p id="passTeacher">核可老師：蕭旭成</p>
-  </div>
-  <p>點擊螢幕關閉</p>
-</div>
+    <script>
+        const M_N = "蕭旭成"; const M_P = "0902"; 
+        const DB_ROOT = "jjvs_v_final_cloud";
+        const firebaseConfig = { apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw", authDomain: "jjvs-att.firebaseapp.com", databaseURL: "https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app", projectId: "jjvs-att", storageBucket: "jjvs-att.firebasestorage.app", messagingSenderId: "199163483355", appId: "1:199163483355:web:ac66bbb7407acede4ce8fe" };
+        firebase.initializeApp(firebaseConfig); const db = firebase.database();
 
-<script>
-// Firebase 初始化
-const MASTER_NAME = "蕭旭成"; const MASTER_PIN = "0902";
-firebase.initializeApp(FIREBASE_CONFIG);
-const db = firebase.database();
+        // 🟢 名單保險 (壓縮字串解析)
+        const RAW = "3A01,01毛語程,音三莊|3A02,02林叡成,音三莊|3A03,03田宇紘,音三莊|3A04,04吳昆達,音三莊|3A05,05吳宥良,音三莊|3A06,06黃崇恩,音三莊|3A07,07林宏澤,音三莊|3A08,08金品澔,音三莊|3A09,09劉宸昀,音三莊|3A10,10蔡呈樂,音三莊|3A11,11蘇瑞吾,音三莊|3A12,12梁之凡,音三莊|3A13,13蔡宗佑,音三莊|3A14,14黃穩達,音三莊|3A15,15馮康維,音三莊|3A16,16倪秉澤,音三莊|3A17,17廖敏君,音三莊|3A18,18劉慶霈,音三莊|3A19,19蔡慧琳,音三莊|3A20,20鄭淳融,音三莊|3A21,21魏宜宸,音三莊|3A22,22徐婉瑜,音三莊|3A23,23安𠸍臻,音三莊|3A24,24江岑君,音三莊|3A25,25池宛昕,音三莊|3A26,李曉萍,音三莊|3A27,周玄禮,音三莊|3A28,王以昕,音三莊|3A29,林祐立,音三莊|3A30,邱詩涵,音三莊|3A31,胡云珊,音三莊|3A32,蔡逸宣,音三莊|3A33,高慧君,音三莊|3A34,張路淇,音三莊|3A35,陳芃瑾,音三莊|3A36,陳雨彤,音三莊|3A37,陳宥安,音三莊|3A38,陳圓卿,音三莊|3A39,傅克諳,音三莊|3A40,40曾妘湘,音三莊|3D02,02王玟茜,演三莊|3D03,03王語舒,演三莊|3D04,04姚宥湘,演三莊|3D05,05陳思妤,演三莊|3D06,06楊鎔慈,演三莊|3D09,09王偉家,演三莊|3D10,10何建伸,演三莊|3D12,12姜榮紳,演三莊|3D13,13郭庭傑,演三莊|3D14,14陳泊源,演三莊|3D15,15陳軍任,演三莊|3D16,16黃治容,演三莊|3D17,17盧宥辰,演三莊|3D18,18謝行知,演三莊|2A01,01程冠中,音二莊|2A02,02李安恬,音二莊|2A03,03吳芊逸,音二莊|2A04,04林辰欣,音二莊|2A05,05林孟蓁,音二莊|2A06,06林採妮,音二莊|2A07,07林恩熙,音二莊|2A08,08翁閩彗,音二莊|2A09,09陳維妮,音二莊|2A10,10連妤婷,音二莊|2A11,11莊珈維,音二莊|2A12,12黎育彤,音二莊|2A13,13樊千菲,音二莊|2A14,14蔡佳穎,音二莊|2A15,15謝季秉,音二莊|2A16,16陳妍欣,音二莊|2A17,17羅筱涵,音二莊|2A18,蘇奕婷,音二莊|2A19,王璿凱,音二莊|2A20,吳承昊,音二莊|2A21,張治齊,音二莊|2A22,李秉軒,音二莊|2A23,林笠,音二莊|2A24,林允鋐,音二莊|2A25,徐國洲,音二莊|2A26,張定濂,音二莊|2A27,陳柏睿,音二莊|2A28,陳翌鈞,音二莊|2A29,黃偉宸,音二莊|2A30,黃宸約,音二莊|2A31,傅振瑜,音二莊|2A32,葉恒辰,音二莊|2A33,楊仁杉,音二莊|2A34,鄭元滿,音二莊|2A35,羅楷勳,音二莊|2A36,吳昕達,音二莊|2A37,沈榆恩,音二莊|2A38,紀柔帆,音二莊|2A39,盧宇杰,音二莊|2A40,江德凱,音二莊|2A41,李奕德,音二莊|2A42,林品傑,音二莊|2A43,陳元熙,音二莊|2A44,44丁婷婷,音二莊|2P02,02簡佳嫻,演二樸|2P03,03黃品妤,演二樸|1A01,01任恩予,音一莊|1A02,02李軟臻,音一莊|1A03,03潘縈汐,音一莊|1A04,04謝幸芙,音一莊|1A05,05李昕柔,音一莊|1A06,06盧丞菲,音一莊|1A07,07林欣霈,音一莊|1A08,08林耘瑄,音一莊|1A09,09林詩翡,音一莊|1A10,10姜妤捷,音一莊|1A11,11張筑笹,音一莊|1A12,12廖聿淓,音一莊|1A13,13曾彥瑄,音一莊|1A14,14盧瑗,音一莊|1A15,15鍾欣庭,音一莊|1A16,16黃郁晴,音一莊|1A17,17詹中愷,音一莊|1A18,18鄭誌浩,音一莊|1A19,19謝松煇,音一莊|1A20,20羅子超,音一莊|1A21,21羅笠準,音一莊|1A22,22蘇冠綸,音一莊|1A23,23蘇祺翔,音一莊|1A24,24劉軒豪,音一莊|1A25,25吳泓毅,音一莊|1A26,26李維璟,音一莊|1A27,27林孝廷,音一莊|1A28,28林紹謙,音一莊|1A29,29胡宇哲,音一莊|1A30,30楊順發,音一莊|1A31,31張又禾,音一莊|1A32,32張允磊,音一莊|1A33,33黃靖勛,音一莊";
+        const students = RAW.split('|').map(x=>{const a=x.split(',');return {id:a[0],name:a[1],group:a[2]}});
 
-// 133 位學生名單 (壓縮格式)
-const RAW = "3A01,毛語程,音三莊|3A02,林叡成,音三莊|3A03,田宇紘,音三莊|3A04,吳昆達,音三莊|3A05,吳宥良,音三莊|3A06,黃崇恩,音三莊|3A07,林宏澤,音三莊|3A08,金品澔,音三莊|3A09,劉宸昀,音三莊|3A10,蔡呈樂,音三莊|3A11,蘇瑞吾,音三莊|3A12,梁之凡,音三莊|3A13,蔡宗佑,音三莊|3A14,黃穩達,音三莊|3A15,馮康維,音三莊|3A16,倪秉澤,音三莊|3A17,廖敏君,音三莊|3A18,劉慶霈,音三莊|3A19,蔡慧琳,音三莊|3A20,鄭淳融,音三莊|3A21,魏宜宸,音三莊|3A22,徐婉瑜,音三莊|3A23,安𠸍臻,音三莊|3A24,江岑君,音三莊|3A25,池宛昕,音三莊|3A26,李曉萍,音三莊|3A27,周玄禮,音三莊|3A28,王以昕,音三莊|3A29,林祐立,音三莊|3A30,邱詩涵,音三莊|3A31,胡云珊,音三莊|3A32,蔡逸宣,音三莊|3A33,高慧君,音三莊|3A34,張路淇,音三莊|3A35,陳芃瑾,音三莊|3A36,陳雨彤,音三莊|3A37,陳宥安,音三莊|3A38,陳圓卿,音三莊|3A39,傅克諳,音三莊|3A40,曾妘湘,音三莊|3D02,王玟茜,演三莊|3D03,王語舒,演三莊|3D04,姚宥湘,演三莊|3D05,陳思妤,演三莊|3D06,楊鎔慈,演三莊|3D09,王偉家,演三莊|3D10,何建伸,演三莊|3D12,姜榮紳,演三莊|3D13,郭庭傑,演三莊|3D14,陳泊源,演三莊|3D15,陳軍任,演三莊|3D16,黃治容,演三莊|3D17,盧宥辰,演三莊|3D18,謝行知,演三莊|2A01,程冠中,音二莊|2A02,李安恬,音二莊|2A03,吳芊逸,音二莊|2A04,林辰欣,音二莊|2A05,林孟蓁,音二莊|2A06,林採妮,音二莊|2A07,林恩熙,音二莊|2A08,翁閩彗,音二莊|2A09,陳維妮,音二莊|2A10,連妤婷,音二莊|2A11,莊珈維,音二莊|2A12,黎育彤,音二莊|2A13,樊千菲,音二莊|2A14,蔡佳穎,音二莊|2A15,謝季秉,音二莊|2A16,陳妍欣,音二莊|2A17,羅筱涵,音二莊|2A18,蘇奕婷,音二莊|2A19,王璿凱,音二莊|2A20,吳承昊,音二莊|2A21,張治齊,音二莊|2A22,李秉軒,音二莊|2A23,林笠,音二莊|2A24,林允鋐,音二莊|2A25,徐國洲,音二莊|2A26,張定濂,音二莊|2A27,陳柏睿,音二莊|2A28,陳翌鈞,音二莊|2A29,黃偉宸,音二莊|2A30,黃宸約,音二莊|2A31,傅振瑜,音二莊|2A32,葉恒辰,音二莊|2A33,楊仁杉,音二莊|2A34,鄭元滿,音二莊|2A35,羅楷勳,音二莊|2A36,吳昕達,音二莊|2A37,沈榆恩,音二莊|2A38,紀柔帆,音二莊|2A39,盧宇杰,音二莊|2A40,江德凱,音二莊|2A41,李奕德,音二莊|2A42,林品傑,音二莊|2A43,陳元熙,音二莊|2A44,丁婷婷,音二莊|2P02,簡佳嫻,演二樸|2P03,黃品妤,演二樸|1A01,任恩予,音一莊|1A02,李軟臻,音一莊|1A03,潘縈汐,音一莊|1A04,謝幸芙,音一莊|1A05,李昕柔,音一莊|1A06,盧丞菲,音一莊|1A07,林欣霈,音一莊|1A08,林耘瑄,音一莊|1A09,林詩翡,音一莊|1A10,姜妤捷,音一莊|1A11,張筑笹,音一莊|1A12,廖聿淓,音一莊|1A13,曾彥瑄,音一莊|1A14,盧瑗,音一莊|1A15,鍾欣庭,音一莊|1A16,黃郁晴,音一莊|1A17,詹中愷,音一莊|1A18,鄭誌浩,音一莊|1A19,謝松煇,音一莊|1A20,羅子超,音一莊|1A21,羅笠準,音一莊|1A22,蘇冠綸,音一莊|1A23,蘇祺翔,音一莊|1A24,劉軒豪,音一莊|1A25,吳泓毅,音一莊|1A26,李維璟,音一莊|1A27,林孝廷,音一莊|1A28,林紹謙,音一莊|1A29,胡宇哲,音一莊|1A30,楊順發,音一莊|1A31,張又禾,音一莊|1A32,張允磊,音一莊|1A33,黃靖勛,音一莊";
-const students = RAW.split('|').map(s => { const a = s.split(','); return {id:a[0], name:a[1], group:a[2]} });
+        let role='', curStudent=null, curDetailSid=null, adminInfo={n:'',cls:'ALL'}, localAtt={}, currentGrp='音三莊';
 
-let role = '', curStudent = null, curDetailSid = null, adminInfo = { n: '', cls: 'ALL' }, localAtt = {};
-let loginType = 'teacher';
+        function doAuth() {
+            const acc = document.getElementById('loginAcc').value.trim();
+            const pw = document.getElementById('loginPw').value.trim();
 
-function switchLogin(type) {
-  loginType = type;
-  document.getElementById('tabTeacher').style.background = type==='teacher' ? 'var(--gold)' : 'transparent';
-  document.getElementById('tabStudent').style.background = type==='student' ? 'var(--gold)' : 'transparent';
-}
+            // 🔴 暴力優先權：蕭旭成 0902
+            if (acc === M_N && pw === M_P) {
+                role = 'admin'; adminInfo = { n: M_N, cls: 'ALL' };
+                saveS('admin', null, M_N, 'ALL'); start(); return;
+            }
 
-function showScreen(id) {
-  // 徹底切換：先隱藏所有畫面，再顯示目標畫面
-  document.querySelectorAll('.screen').forEach(s => {
-    s.classList.remove('active');
-    s.style.display = 'none';
-  });
-  const target = document.getElementById(id);
-  target.classList.add('active');
-  target.style.display = (id === 'loginScreen') ? 'flex' : 'block';
-  
-  // 如果切換走，清空登入畫面內容，防止背景殘留
-  if(id !== 'loginScreen') {
-    document.getElementById('loginAcc').value = '';
-    document.getElementById('loginPw').value = '';
-  }
-}
+            // 老師庫比對
+            const pwH = CryptoJS.SHA256(pw).toString();
+            db.ref(`${DB_ROOT}/admins/${acc}`).once('value', sn => {
+                const d = sn.val();
+                if(d && pwH === d.p) { role='admin'; adminInfo={n:d.n, cls:d.cls}; saveS('admin',null,d.n,d.cls); start(); }
+                else {
+                    const f = students.find(s=>s.name.includes(acc));
+                    if(f) {
+                        db.ref(`${DB_ROOT}/auth/${f.id}`).once('value', sn2 => {
+                            const authD = sn2.val() || {p:'0000'};
+                            if(pw === authD.p) {
+                                if(pw === '0000') { const np=prompt("請修改密碼："); if(np && np!=='0000') { db.ref(`${DB_ROOT}/auth/${f.id}`).set({p:np}); alert("已修改，請重登"); } }
+                                else { curStudent=f; role='student'; saveS('student',f.id); start(); }
+                            } else alert("密碼錯誤");
+                        });
+                    } else alert("查無此人或帳號");
+                }
+            });
+        }
 
-function doAuth() {
-  const acc = document.getElementById('loginAcc').value.trim();
-  const pw = document.getElementById('loginPw').value.trim();
+        function saveS(r,i,n,c) { localStorage.setItem('jr',r); localStorage.setItem('ji',i); localStorage.setItem('jn',n); localStorage.setItem('jc',c); }
+        window.onload=()=>{ const r=localStorage.getItem('jr'); if(r==='admin'){ role='admin'; adminInfo={n:localStorage.getItem('jn'), cls:localStorage.getItem('jc')}; start(); } else if(r==='student'){ curStudent=students.find(s=>s.id===localStorage.getItem('ji')); role='student'; start(); } };
+        function doLogout() { localStorage.clear(); location.reload(); }
 
-  // 最高權限蕭老師
-  if (acc === MASTER_NAME && pw === MASTER_PIN) {
-    role = 'admin'; adminInfo = { n: MASTER_NAME, cls: 'ALL' };
-    localStorage.setItem('jj_r', 'admin'); localStorage.setItem('jj_n', MASTER_NAME); localStorage.setItem('jj_c', 'ALL');
-    start(); return;
-  }
+        function start() {
+            document.getElementById('loginScreen').style.display='none';
+            if(role==='admin'){
+                document.getElementById('appScreen').style.display='block';
+                document.getElementById('admin-info-display').innerText = adminInfo.n + " 老師 (連線成功)";
+                document.getElementById('targetDate').value = new Date().toISOString().split('T')[0];
+                if(adminInfo.n === M_N) document.getElementById('admin-setup-btn').style.display='inline-block';
+                renderTabs();
+            } else {
+                document.getElementById('studentScreen').style.display='block';
+                loadStudentInfo();
+            }
+            loadCloud();
+        }
 
-  if (loginType === 'teacher') {
-    const pwH = CryptoJS.SHA256(pw).toString();
-    db.ref(`${DB_ROOT}/admins/${acc}`).once('value', sn => {
-      const d = sn.val();
-      if(d && pwH === d.p) {
-        role = 'admin'; adminInfo = { n: d.n, cls: d.cls };
-        localStorage.setItem('jj_r', 'admin'); localStorage.setItem('jj_n', d.n); localStorage.setItem('jj_c', d.cls);
-        start();
-      } else alert("教師帳密錯誤");
-    });
-  } else {
-    const f = students.find(s => s.name === acc);
-    if(f) {
-      db.ref(`${DB_ROOT}/auth/${f.id}`).once('value', sn => {
-        const ad = sn.val() || {p: '0000'};
-        if(pw === ad.p) {
-          if(pw === '0000') {
-            const np = prompt("請修改預設密碼：");
-            if(np && np !== '0000') { db.ref(`${DB_ROOT}/auth/${f.id}`).set({p: np}); alert("已修改，請重登"); }
-          } else {
-            curStudent = f; role = 'student';
-            localStorage.setItem('jj_r', 'student'); localStorage.setItem('jj_id', f.id);
-            start();
-          }
-        } else alert("學生密碼錯誤");
-      });
-    } else alert("找不到該學生姓名");
-  }
-}
+        function renderTabs() {
+            const tb = document.getElementById('classTabs'); tb.innerHTML = "";
+            const grps = adminInfo.cls === 'ALL' ? ["音三莊", "演三莊", "音二莊", "演二樸", "音一莊"] : [adminInfo.cls];
+            grps.forEach((g, i) => {
+                const b = document.createElement('button'); b.innerText = g; b.className = `tab-btn ${i===0?'active':''}`;
+                if(i===0) currentGrp = g;
+                b.onclick = () => { currentGrp = g; Array.from(tb.children).forEach(c=>c.classList.remove('active')); b.classList.add('active'); renderGrid(); };
+                tb.appendChild(b);
+            });
+            renderGrid();
+        }
 
-function start() {
-  showScreen(role === 'admin' ? 'appScreen' : 'studentScreen');
-  document.getElementById('targetDate').value = new Date().toISOString().split('T')[0];
-  if(role === 'admin') {
-    document.getElementById('login-info').innerText = adminInfo.n + " 老師 (連線成功)";
-    if(adminInfo.n === MASTER_NAME) document.getElementById('admin-setup-btn').style.display = 'inline-block';
-    renderTabs();
-  } else {
-    document.getElementById('s-info').innerText = curStudent.name + " 您好";
-    loadStudentInfo();
-  }
-  loadCloud();
-}
+        function loadCloud() {
+            db.ref(DB_ROOT).on('value', sn => {
+                window.master = sn.val() || {};
+                const sd = document.getElementById('targetDate').value;
+                localAtt = {...(window.master.attendance && window.master.attendance[sd])};
+                renderGrid(); renderLeaves();
+                if(curDetailSid) refreshDetail(curDetailSid);
+            });
+        }
 
-function renderTabs() {
-  const tb = document.getElementById('classTabs'); tb.innerHTML = "";
-  const grps = adminInfo.cls === 'ALL' ? ["音三莊", "演三莊", "音二莊", "演二樸", "音一莊"] : [adminInfo.cls];
-  grps.forEach((g, i) => {
-    const b = document.createElement('button'); b.innerText = g; b.className = `tab-btn ${i===0?'active':''}`;
-    if(i===0) currentGrp = g;
-    b.onclick = () => { currentGrp = g; Array.from(tb.children).forEach(c=>c.classList.remove('active')); b.classList.add('active'); renderGrid(); };
-    tb.appendChild(b);
-  });
-  renderGrid();
-}
+        function renderGrid() {
+            if (role !== 'admin') return;
+            const grid = document.getElementById('studentGrid'); grid.innerHTML = "";
+            const statusMap = { '未':'#666', '出':'var(--safe)', '遲':'var(--late)', '缺':'var(--absent)', '假':'var(--leave)' };
+            students.filter(s => s.group === currentGrp).forEach(s => {
+                const d = window.master.profiles?.[s.id] || {points:0};
+                const st = localAtt[s.id] || '未';
+                const div = document.createElement('div'); div.className = "s-box";
+                div.innerHTML = `<div class="s-points">${d.points}P</div><div class="s-dot" id="dot-${s.id}" style="background:${statusMap[st]}" onclick="toggleSt('${s.id}')">${st}</div><div class="s-name" onclick="openDetail('${s.id}')">${s.name}</div>`;
+                grid.appendChild(div);
+            });
+        }
 
-function loadCloud() {
-  db.ref(DB_ROOT).on('value', sn => {
-    window.master = sn.val() || {};
-    const sd = document.getElementById('targetDate').value;
-    localAtt = {...(window.master.attendance && window.master.attendance[sd])};
-    renderGrid(); renderApplyList();
-    if(curDetailSid) refreshDetail(curDetailSid);
-  });
-}
+        function toggleSt(sid) {
+            const cycle = ['出','遲','缺','假'];
+            let cur = localAtt[sid] || '出';
+            let next = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
+            localAtt[sid] = next;
+            renderGrid();
+            if(next === '遲') {
+                const cp = window.master.profiles?.[sid]?.points || 0;
+                db.ref(`${DB_ROOT}/profiles/${sid}/points`).set(Math.max(0, cp - 1));
+                addLog(sid, "💀 遲到扣 1 點", "系統自動處置");
+            }
+        }
 
-function renderGrid() {
-  if (role !== 'admin') return;
-  const grid = document.getElementById('studentGrid'); grid.innerHTML = "";
-  students.filter(s => s.group === currentGrp).forEach(s => {
-    const d = window.master.profiles?.[s.id] || {};
-    const st = localAtt[s.id] || '未';
-    const pts = d.points || 0;
-    const div = document.createElement('div'); div.className = "s-box";
-    const statusMap = { '未':'#666', '出':'var(--safe)', '遲':'var(--late)', '缺':'var(--danger)', '假':'var(--blue)' };
-    div.innerHTML = `<div class="s-points">${pts}P</div><div class="s-dot" id="dot-${s.id}" style="background:${statusMap[st]}" onclick="toggleSt('${s.id}')">${st}</div><div class="s-name" onclick="openDetail('${s.id}')">${s.name}</div>`;
-    grid.appendChild(div);
-  });
-}
+        function saveAttendance() {
+            db.ref(`${DB_ROOT}/attendance/${document.getElementById('targetDate').value}`).set(localAtt).then(()=>alert("已存檔"));
+        }
 
-function toggleSt(sid) {
-  const cycle = ['出','遲','缺','假'];
-  let cur = localAtt[sid] || '出';
-  let next = cycle[(cycle.indexOf(cur) + 1) % cycle.length];
-  localAtt[sid] = next;
-  renderGrid();
-  if(next === '遲') {
-    const cp = window.master.profiles?.[sid]?.points || 0;
-    db.ref(`${DB_ROOT}/profiles/${sid}/points`).set(Math.max(0, cp - 1));
-    addLog(sid, "💀 遲到自動扣點", `[${adminInfo.n}] 點名處置`);
-  }
-}
+        function openDetail(sid) {
+            curDetailSid = sid; document.getElementById('overlay').style.display='block'; document.getElementById('modal').style.display='block';
+            refreshDetail(sid);
+        }
 
-function saveAttendance() {
-  db.ref(`${DB_ROOT}/attendance/${document.getElementById('targetDate').value}`).set(localAtt).then(() => alert("點名已儲存"));
-}
+        function refreshDetail(sid) {
+            const s = students.find(x => x.id === sid);
+            const p = window.master.profiles?.[sid] || {points:0, medals:0, logs:[]};
+            document.getElementById('m-name').innerText = s.name;
+            const pts = p.points || 0; const sb = document.getElementById('stamp-card'); sb.innerHTML = "";
+            for(let i=0; i<10; i++) sb.innerHTML += `<div class="slot ${i<pts?'slot-active':''}">${i<pts?'⭐':''}</div>`;
+            document.getElementById('medal-box').innerText = "🏅".repeat(p.medals || 0);
+            const lb = document.getElementById('log-box'); lb.innerHTML = "";
+            (p.logs || []).reverse().forEach(l => { lb.innerHTML += `<div class="log-row">🕒 ${l.time}<br><b>${l.act}</b><br>原因：${l.reason} <span style="float:right;color:#999;">by ${l.admin||''}</span></div>`; });
+            if(role === 'admin') {
+                document.getElementById('pts-tools').style.display='block'; document.getElementById('admin-only-info').style.display='block';
+                db.ref(`${DB_ROOT}/auth/${sid}/p`).once('value', sn => document.getElementById('m-pw').innerText = sn.val() || '0000');
+            }
+        }
 
-function openDetail(sid) {
-  curDetailSid = sid; document.getElementById('overlay').style.display='block'; document.getElementById('modal').style.display='block';
-  refreshDetail(sid);
-}
+        function adj(t, v) {
+            const r = prompt("原因："); if(!r) return;
+            const path = t === 'p' ? 'points' : 'medals';
+            const cur = parseInt(window.master.profiles?.[curDetailSid]?.[path] || 0);
+            db.ref(`${DB_ROOT}/profiles/${curDetailSid}/${path}`).set(Math.max(0, cur + v));
+            addLog(curDetailSid, (t==='p'?'點':'金')+(v>0?'➕加':'➖扣')+Math.abs(v), r);
+        }
 
-function refreshDetail(sid) {
-  const s = students.find(x => x.id === sid);
-  const p = window.master.profiles?.[sid] || {points:0, medals:0, logs:[]};
-  document.getElementById('m-name').innerText = s.name;
-  const pts = p.points || 0;
-  const sb = document.getElementById('stamp-card'); sb.innerHTML = "";
-  for(let i=0; i<10; i++) sb.innerHTML += `<div class="slot ${i<pts?'slot-active':''}">${i<pts?'⭐':''}</div>`;
-  const mb = document.getElementById('medal-box'); mb.innerText = "🏅".repeat(p.medals || 0);
-  const lb = document.getElementById('log-box'); lb.innerHTML = "";
-  (p.logs || []).reverse().forEach(l => { lb.innerHTML += `<div class="log-row">🕒 ${l.time}<br><b>${l.act}</b><br>原因：${l.reason} <span style="float:right;color:#999;">by ${l.admin||''}</span></div>`; });
+        function addLog(sid, act, reason) {
+            const time = new Date().toLocaleString();
+            const logs = window.master.profiles?.[sid]?.logs || [];
+            logs.push({ time, act, reason, admin: adminInfo.n });
+            db.ref(`${DB_ROOT}/profiles/${sid}/logs`).set(logs);
+        }
 
-  if(role === 'admin') {
-    document.getElementById('pts-tools').style.display = 'block'; document.getElementById('admin-only-info').style.display = 'block';
-    db.ref(`${DB_ROOT}/auth/${sid}/p`).once('value', sn => document.getElementById('m-pw').innerText = sn.val() || '0000');
-  }
-}
+        function redeem() {
+            const p = window.master.profiles?.[curDetailSid]?.points || 0;
+            if(p >= 5) {
+                db.ref(`${DB_ROOT}/profiles/${curDetailSid}`).update({ points: p-5, medals: (window.master.profiles?.[curDetailSid]?.medals || 0)+1 });
+                addLog(curDetailSid, "🎟️ 星星換金牌", "手動兌換");
+            } else alert("不夠 5 點");
+        }
 
-function adj(type, v) {
-  const r = prompt("原因："); if(!r) return;
-  const path = type === 'p' ? 'points' : 'medals';
-  const cur = parseInt(window.master.profiles?.[curDetailSid]?.[path] || 0);
-  db.ref(`${DB_ROOT}/profiles/${curDetailSid}/${path}`).set(Math.max(0, cur + v));
-  addLog(curDetailSid, (type==='p'?'點數':'金牌')+(v>0?'➕加':'➖扣')+Math.abs(v), r);
-}
+        function closeModal() { curDetailSid = null; document.getElementById('overlay').style.display='none'; document.querySelectorAll('.modal').forEach(m=>m.style.display='none'); }
 
-function addLog(sid, act, reason) {
-  const time = new Date().toLocaleString();
-  const logs = window.master.profiles?.[sid]?.logs || [];
-  logs.push({ time, act, reason, admin: adminInfo.n });
-  db.ref(`${DB_ROOT}/profiles/${sid}/logs`).set(logs);
-}
+        function loadStudentInfo() {
+            db.ref(`${DB_ROOT}/profiles/${curStudent.id}`).on('value', sn => {
+                const d = sn.val() || {points:0, medals:0};
+                document.getElementById('studentViewCard').innerHTML = `<h2>${curStudent.name}</h2><p>${curStudent.group}</p><hr><div style="font-size:24px;">⭐ ${d.points} | 🏅 ${d.medals}</div>`;
+                const leave = window.master.leaves?.[new Date().toISOString().split('T')[0] + "_" + curStudent.id];
+                if(leave === 'approved') document.getElementById('myPassArea').innerHTML = `<button class="btn btn-gold" onclick="showPass()">🎟️ 出示准予外出證</button>`;
+            });
+        }
 
-function doLogout() { localStorage.clear(); location.reload(); }
-function closeModal() { curDetailSid = null; document.getElementById('overlay').style.display='none'; document.getElementById('modal').style.display='none'; }
+        function applyExit() {
+            const r = prompt("原因："); if(!r) return;
+            db.ref(`${DB_ROOT}/leaves/${new Date().toISOString().split('T')[0]}_${curStudent.id}`).set({ name: curStudent.name, reason: r, status: 'pending' });
+            alert("申請已送出");
+        }
 
-// 學生專用：加載看板
-function loadStudentInfo() {
-  const sid = curStudent.id;
-  db.ref(`${DB_ROOT}/profiles/${sid}`).on('value', sn => {
-    const p = sn.val() || {points:0, medals:0};
-    const card = document.getElementById('studentViewCard');
-    card.innerHTML = `<h2>${curStudent.name}</h2><p>${curStudent.group}</p><hr style="margin:10px 0;"><div style="font-size:24px;">⭐ ${p.points} | 🏅 ${p.medals}</div>`;
-  });
-}
+        function renderLeaves() {
+            const box = document.getElementById('applyList'); box.innerHTML = "";
+            const leaves = window.master.leaves || {}; const sd = document.getElementById('targetDate').value;
+            Object.keys(leaves).forEach(k => {
+                if(k.startsWith(sd) && leaves[k].status === 'pending') {
+                    box.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><b>${leaves[k].name}</b>: ${leaves[k].reason}</span><button class="btn-sm" onclick="apprL('${k}')">核可</button></div>`;
+                }
+            });
+        }
 
-function applyExit() {
-  const r = prompt("外出原因："); if(!r) return;
-  db.ref(`${DB_ROOT}/leaves/${document.getElementById('targetDate').value}_${curStudent.id}`).set({ name: curStudent.name, reason: r, status: 'pending' });
-  alert("申請已送出");
-}
+        function apprL(k) { db.ref(`${DB_ROOT}/leaves/${k}/status`).set('approved'); db.ref(`${DB_ROOT}/leaves/${k}/admin`).set(adminInfo.n); }
+        function showPass() {
+            const sd = new Date().toISOString().split('T')[0];
+            document.getElementById('passName').innerText = curStudent.name;
+            document.getElementById('passDate').innerText = sd;
+            document.getElementById('exitPass').style.display = 'block';
+        }
 
-function renderApplyList() {
-  const box = document.getElementById('applyList'); box.innerHTML = "";
-  const leaves = window.master.leaves || {};
-  const sd = document.getElementById('targetDate').value;
-  Object.keys(leaves).forEach(k => {
-    if(k.startsWith(sd) && leaves[k].status === 'pending') {
-      const sid = k.split('_')[1];
-      box.innerHTML += `<div style="display:flex; justify-content:space-between; margin-bottom:10px;"><span><b>${leaves[k].name}</b>: ${leaves[k].reason}</span><button class="btn-sm" onclick="apprL('${k}')">核可</button></div>`;
-    }
-  });
-}
-
-function apprL(key) {
-  db.ref(`${DB_ROOT}/leaves/${key}/status`).set('approved');
-  db.ref(`${DB_ROOT}/leaves/${key}/admin`).set(adminInfo.n);
-}
-
-window.onload = () => {
-  const r = localStorage.getItem('jj_r');
-  if(r) {
-    role = r; adminInfo = { n: localStorage.getItem('jj_n'), cls: localStorage.getItem('jj_c') };
-    curStudent = { id: localStorage.getItem('jj_id'), name: localStorage.getItem('jj_n') };
-    start();
-  }
-};
-</script>
+        function openSetup() { document.getElementById('overlay').style.display='block'; document.getElementById('setup-modal').style.display='block'; renderAL(); }
+        function addTeacher() {
+            const n = document.getElementById('new-t-name').value, a = document.getElementById('new-t-acc').value, p = document.getElementById('new-t-pw').value, c = document.getElementById('new-t-class').value;
+            if(!n || !a || !p) return alert("必填");
+            db.ref(`${DB_ROOT}/admins/${a}`).set({ n: n, p: CryptoJS.SHA256(p).toString(), cls: c }).then(() => { alert("已開通"); renderAL(); });
+        }
+        function renderAL() {
+            const box = document.getElementById('teacher-list'); box.innerHTML = "";
+            db.ref(`${DB_ROOT}/admins`).once('value', sn => {
+                const d = sn.val(); for(let a in d) box.innerHTML += `<div style="border-bottom:1px solid #ddd; padding:10px;"><b>${d[a].n}</b><br>管轄：${d[a].cls}</div>`;
+            });
+        }
+    </script>
 </body>
 </html>
