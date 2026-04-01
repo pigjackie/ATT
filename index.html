@@ -806,6 +806,8 @@ body.batch-mode .student-card:not(.batch-selected) .batch-check {
     <div class="topbar-user">學生：<span id="studentUserDisplay">—</span></div>
     <button class="btn-sm" onclick="doLogout()">登出</button>
   </div>
+  ```html
+  <div id="studentMsgBanner" style="display:none;background:rgba(231,76,60,0.12);border-bottom:1px solid rgba(231,76,60,0.3);padding:10px 20px;color:var(--red);text-align:center;font-weight:bold;">🔴 您有新的老師訊息！</div>
   <div class="content-area">
     <div class="student-view-card" id="studentViewCard">
       <div class="loading-spinner"></div>
@@ -813,6 +815,9 @@ body.batch-mode .student-card:not(.batch-selected) .batch-check {
     <div style="max-width:600px;margin:0 auto 20px;">
       <button class="btn-sm gold" onclick="openApplyExit()" style="width:100%;padding:14px;font-size:16px;">🚪 申請第八節外出</button>
     </div>
+    <div style="max-width:600px;margin:10px auto;">
+  <button class="btn-sm gold" onclick="openStudentSendMessage()" style="width:100%;padding:14px;font-size:16px;background:var(--blue);border-color:var(--blue);color:white;">✉️ 聯絡老師 / 回報問題</button>
+</div>
     <!-- Exit pass trigger -->
     <div style="max-width:600px;margin:0 auto 20px;" id="myExitPassArea" style="display:none"></div>
   </div>
@@ -1810,7 +1815,48 @@ function listenForMyApproval(studentName) {
     }
   });
 }
+// 💡 請將這兩段功能貼在 // TEACHER MANAGEMENT 的上方
 
+// 功能 1：載入老師傳給學生的訊息
+async function loadStudentMessages(studentId) {
+  const data = await dbGet(`studentMessages/${studentId}`) || {};
+  const entries = Object.entries(data).sort((a,b)=>b[0]-a[0]); // 新訊息在上
+  
+  const banner = document.getElementById('studentMsgBanner');
+  const list = document.getElementById('studentLogView'); // 借用記錄區顯示訊息內容
+  
+  if (!banner || !list) return;
+
+  // 1. 如果有「未讀」，顯示紅色橫幅提醒
+  const hasUnread = entries.some(([,m]) => !m.read);
+  banner.style.display = hasUnread ? 'block' : 'none';
+
+  // 2. 格式化訊息 HTML
+  const msgHtml = entries.map(([key, msg]) => `
+    <div class="log-item ${msg.type === 'punishment' ? 'sub' : 'add'}" style="margin-bottom:10px; border-left-width:4px;">
+      <div class="log-time">${msg.time} · 來自 ${msg.from}</div>
+      <div style="font-size:15px; margin:5px 0;">${msg.content}</div>
+      ${!msg.read ? `<button class="btn-sm gold" onclick="markMsgRead('${studentId}','${key}')" style="padding:2px 8px; font-size:11px;">確認已讀</button>` : '<span style="color:var(--text-muted); font-size:11px;">[已讀]</span>'}
+    </div>
+  `).join('');
+
+  // 3. 將訊息顯示在個人卡片的「最近記錄」上方
+  if (entries.length > 0) {
+    list.innerHTML = `<div class="detail-section-title">💬 老師的訊息</div>` + msgHtml + `<hr class="separator">` + list.innerHTML;
+  }
+}
+
+// 功能 2：學生點擊已讀
+async function markMsgRead(studentId, key) {
+  await dbUpdate(`studentMessages/${studentId}/${key}`, { read: true });
+  // 重新載入以更新介面
+  const stu = getStudent(studentId);
+  loadStudentView(stu);
+}
+
+// ==============================
+// TEACHER MANAGEMENT
+// ==============================
 // ==============================
 // TEACHER MANAGEMENT
 // ==============================
@@ -2373,16 +2419,31 @@ document.getElementById('dialogOverlay').addEventListener('click', e => {
 // ==============================
 // INIT
 // ==============================
-window.addEventListener('load', () => {
-  // Firebase 連線測試
-  db.ref('.info/connected').on('value', snap => {
-    if (snap.val() === true) {
-      console.log('✅ Firebase 已連線');
-    } else {
-      console.warn('⚠️ Firebase 未連線');
-    }
-  });
-});
+// 💡 這裡就是您要貼上的新位置 (學生傳送訊息功能)
+async function openStudentSendMessage() {
+  openDialog('✉️ 傳送訊息給老師',
+    `<div class="dialog-label">收件人</div>
+     <div style="color:var(--gold);margin-bottom:10px;">所有管理教師</div>
+     <div class="dialog-label">訊息內容</div>
+     <textarea class="dialog-input" id="stuMsgContent" rows="4" placeholder="請輸入您想對老師說的話..."></textarea>`,
+    [{label:'確認傳送', cls:'confirm', action: async () => {
+      const content = document.getElementById('stuMsgContent').value.trim();
+      if (!content) { showToast('內容不能為空','error'); return false; }
+
+      const key = Date.now().toString();
+      await dbSet(`teacherInbox/${key}`, {
+        from: currentUser.name,
+        studentId: currentUser.studentId,
+        content: content,
+        time: now(),
+        read: false
+      });
+      showToast('訊息已成功傳送給老師！', 'success');
+      return true;
+    }}, {label:'取消', cls:'', action:()=>true}]
+  );
+}
+
 </script>
 </body>
 </html>
