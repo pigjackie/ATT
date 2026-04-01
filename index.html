@@ -806,7 +806,7 @@ body.batch-mode .student-card:not(.batch-selected) .batch-check {
     <div class="topbar-user">學生：<span id="studentUserDisplay">—</span></div>
     <button class="btn-sm" onclick="doLogout()">登出</button>
   </div>
-  ```html
+  
   <div id="studentMsgBanner" style="display:none;background:rgba(231,76,60,0.12);border-bottom:1px solid rgba(231,76,60,0.3);padding:10px 20px;color:var(--red);text-align:center;font-weight:bold;">🔴 您有新的老師訊息！</div>
   <div class="content-area">
     <div class="student-view-card" id="studentViewCard">
@@ -1760,6 +1760,28 @@ async function loadStudentView(stu) {
   const today = new Date().toLocaleDateString('zh-TW');
   const todayStatus = data.attendance?.[today] || '未點名';
 
+  // 1. 產生任務清單 HTML (修正：原本截圖中漏掉這段)
+  const tasks = data.tasks || {};
+  const taskEntries = Object.entries(tasks);
+  let tasksHtml = '';
+  if (taskEntries.length > 0) {
+    tasksHtml = `<hr class="separator"><div class="detail-section-title">📝 我的處罰任務</div>`;
+    taskEntries.forEach(([key, t]) => {
+      const pct = Math.min(100, Math.round((t.done / t.total) * 100));
+      tasksHtml += `
+        <div class="task-item" style="background:rgba(255,255,255,0.05); margin-bottom:10px; padding:10px; border-radius:8px;">
+          <div class="task-header" style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;">
+            <span>${t.name}</span>
+            <span>${t.done}/${t.total}</span>
+          </div>
+          <div class="task-progress-bar" style="height:6px; background:#333; border-radius:3px; overflow:hidden;">
+            <div style="width:${pct}%; height:100%; background:var(--gold);"></div>
+          </div>
+        </div>`;
+    });
+  }
+
+  // 2. 渲染主卡片內容
   card.innerHTML = `
     <div style="text-align:center;margin-bottom:20px;">
       <div style="font-size:14px;color:var(--text-secondary);">${stu.cls}</div>
@@ -1776,11 +1798,13 @@ async function loadStudentView(stu) {
     <div class="detail-section-title">🎖️ 金牌庫存</div>
     <div style="font-size:28px;margin-bottom:4px;">${medals>0?'🎖️'.repeat(Math.min(medals,20)):'尚無金牌'}</div>
     <div style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">共 <span style="color:var(--gold)">${medals}</span> 枚</div>
+    ${tasksHtml} 
     <hr class="separator">
     <div class="detail-section-title">📜 最近記錄</div>
     <div id="studentLogView"></div>
   `;
 
+  // 3. 渲染日誌
   const logContainer = document.getElementById('studentLogView');
   const log = data.log || {};
   const entries = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,10);
@@ -1794,6 +1818,12 @@ async function loadStudentView(stu) {
       </div>
     `).join('');
   }
+
+  listenForMyApproval(stu.name);
+  
+  // 💡 重要修正：呼叫「載入老師訊息」的功能
+  loadStudentMessages(stu.id); 
+}
 
   // Listen for exit approval
   listenForMyApproval(stu.name);
@@ -1815,6 +1845,41 @@ function listenForMyApproval(studentName) {
     }
   });
 }
+  // === 這裡開始是新插入的訊息處理功能 ===
+
+// 功能：載入老師傳給學生的訊息並顯示
+async function loadStudentMessages(studentId) {
+  const data = await dbGet(`studentMessages/${studentId}`) || {};
+  const entries = Object.entries(data).sort((a,b)=>b[0]-a[0]);
+  const banner = document.getElementById('studentMsgBanner');
+  const logContainer = document.getElementById('studentLogView');
+  
+  if (!banner || !logContainer) return;
+
+  const hasUnread = entries.some(([,m]) => !m.read);
+  banner.style.display = hasUnread ? 'block' : 'none';
+
+  const msgHtml = entries.map(([key, msg]) => `
+    <div class="log-item ${msg.type === 'punishment' ? 'sub' : 'add'}" style="margin-bottom:10px; border-left:4px solid ${msg.type === 'punishment' ? 'var(--red)' : 'var(--blue)'}; background:rgba(255,255,255,0.02); padding:10px;">
+      <div class="log-time">${msg.time} · 來自 ${msg.from}</div>
+      <div style="font-size:15px; margin:5px 0; color:white;">${msg.content}</div>
+      ${!msg.read ? `<button class="btn-sm gold" onclick="markMsgRead('${studentId}','${key}')" style="padding:2px 8px; font-size:11px; cursor:pointer;">✓ 確認已讀</button>` : '<span style="color:var(--text-muted); font-size:11px;">[已讀]</span>'}
+    </div>
+  `).join('');
+
+  if (entries.length > 0) {
+    logContainer.innerHTML = `<div class="detail-section-title">💬 老師的叮嚀</div>` + msgHtml + `<hr class="separator">` + logContainer.innerHTML;
+  }
+}
+
+// 功能：學生確認已讀
+async function markMsgRead(studentId, key) {
+  await dbUpdate(`studentMessages/${studentId}/${key}`, { read: true });
+  const stu = getStudent(studentId);
+  loadStudentView(stu); // 刷新畫面
+}
+
+// === 訊息功能結束 ===
 // 💡 請將這兩段功能貼在 // TEACHER MANAGEMENT 的上方
 
 // 功能 1：載入老師傳給學生的訊息
