@@ -1207,6 +1207,8 @@ function enterApp() {
 
 function enterStudentView(stu) {
   document.getElementById('studentUserDisplay').textContent = stu.name;
+  // 關鍵修復：手動把登入畫面關掉，不然它會一直擋在最前面
+  document.getElementById('loginScreen').classList.add('hidden-after-login'); 
   showScreen('studentScreen');
   loadStudentView(stu);
 }
