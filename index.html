@@ -4,951 +4,488 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>莊敬音樂科教務管理系統</title>
-
-<!-- Firebase Compat SDK -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-
-<!-- SheetJS for Excel export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
-<!-- jsPDF for PDF export -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
-
 <style>
-/* ===== CSS VARIABLES ===== */
-:root {
-  --gold: #D4AF37;
-  --gold-light: #F0D060;
-  --gold-dark: #A8891C;
-  --bg-deep: #0A0A0C;
-  --bg-card: #111115;
-  --bg-panel: #161619;
-  --bg-hover: #1E1E24;
-  --text-primary: #F0E8D0;
-  --text-secondary: #A09070;
-  --text-muted: #604030;
-  --green: #2ECC71;
-  --yellow: #F1C40F;
-  --red: #E74C3C;
-  --blue: #3498DB;
-  --border: rgba(212,175,55,0.2);
-  --border-hover: rgba(212,175,55,0.5);
-  --shadow-gold: 0 0 20px rgba(212,175,55,0.15);
-  --shadow-deep: 0 4px 24px rgba(0,0,0,0.6);
-  --radius: 12px;
-  --radius-sm: 8px;
-  --font-title: 'Georgia', 'Times New Roman', serif;
-  --font-body: 'Noto Serif TC', 'Georgia', serif;
+:root{
+  --gold:#D4AF37;--gold-l:#F0D060;--gold-d:#A8891C;
+  --bg:#0A0A0C;--bg1:#111115;--bg2:#161619;
+  --tx:#F0E8D0;--tx2:#A09070;--tx3:#604030;
+  --green:#2ECC71;--yellow:#F1C40F;--red:#E74C3C;--blue:#3498DB;
+  --bdr:rgba(212,175,55,.2);--bdr2:rgba(212,175,55,.5);
+  --r:12px;--r2:8px;
 }
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Noto Serif TC',Georgia,serif;overflow-x:hidden}
+body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);z-index:1000;pointer-events:none}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:3px}
 
-/* ===== RESET & BASE ===== */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { width: 100%; min-height: 100vh; background: var(--bg-deep); color: var(--text-primary); font-family: var(--font-body); overflow-x: hidden; }
+/* ── SCREENS ── */
+.screen{display:none;min-height:100vh;flex-direction:column}
+#loginScreen{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,rgba(212,175,55,.08),transparent 60%)}
 
-/* ===== WATERMARK ===== */
-body::before {
-  content: '𝄞     𝄞  𝄢  𝄞     𝄞  𝄢  𝄞     𝄞  𝄢';
-  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-  font-size: 80px; color: rgba(212,175,55,0.03);
-  display: flex; align-items: center; justify-content: center;
-  word-break: break-all; line-height: 1.4; text-align: center;
-  pointer-events: none; z-index: 0; padding: 20px;
-  overflow: hidden;
-}
+/* ── LOGIN ── */
+.lbox{background:var(--bg1);border:1px solid var(--bdr);border-radius:20px;padding:48px 52px;width:420px;max-width:95vw;box-shadow:0 0 30px rgba(212,175,55,.12),0 8px 32px rgba(0,0,0,.6);position:relative}
+.lbox::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:20px 20px 0 0}
+.llogo{text-align:center;font-size:52px;margin-bottom:8px;filter:drop-shadow(0 0 14px rgba(212,175,55,.5))}
+.ltitle{text-align:center;font-size:22px;color:var(--gold);letter-spacing:2px;margin-bottom:4px}
+.lsub{text-align:center;font-size:13px;color:var(--tx2);margin-bottom:28px;letter-spacing:1px}
+.ltabs{display:flex;border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:24px}
+.ltab{flex:1;padding:10px;background:transparent;border:none;color:var(--tx2);cursor:pointer;font-size:14px;font-family:inherit;transition:.2s}
+.ltab.on{background:var(--gold);color:#000;font-weight:bold}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:11px;color:var(--tx2);margin-bottom:5px;letter-spacing:1px}
+.fg input{width:100%;padding:11px 14px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx);font-size:15px;font-family:inherit;outline:none;transition:.2s}
+.fg input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,175,55,.1)}
+.btn-pri{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-l));border:none;border-radius:var(--r2);color:#000;font-size:16px;font-weight:bold;cursor:pointer;letter-spacing:2px;font-family:inherit;transition:.2s;box-shadow:0 4px 15px rgba(212,175,55,.3)}
+.btn-pri:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,175,55,.4)}
 
-/* ===== GOLD LINES ===== */
-body::after {
-  content: '';
-  position: fixed; top: 0; left: 0; right: 0; height: 3px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  z-index: 1000;
-}
+/* ── TOPBAR ── */
+.topbar{position:sticky;top:0;z-index:200;background:rgba(10,10,12,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;align-items:center;gap:12px;height:58px;flex-shrink:0}
+.topbar-logo{font-size:22px}
+.topbar-title{font-size:17px;color:var(--gold);letter-spacing:1px;flex:1}
+.topbar-user{font-size:12px;color:var(--tx2)}
+.topbar-user b{color:var(--gold)}
 
-/* ===== SCROLLBAR ===== */
-::-webkit-scrollbar { width: 6px; }
-::-webkit-scrollbar-track { background: var(--bg-deep); }
-::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+/* ── BUTTONS ── */
+.btn{padding:6px 13px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx2);cursor:pointer;font-size:12px;font-family:inherit;transition:.2s;white-space:nowrap}
+.btn:hover{border-color:var(--gold);color:var(--gold)}
+.btn.g{background:var(--gold);color:#000;border-color:var(--gold);font-weight:bold}
+.btn.g:hover{background:var(--gold-l)}
+.btn.d{border-color:rgba(231,76,60,.5);color:var(--red)}
+.btn.d:hover{background:rgba(231,76,60,.1);border-color:var(--red)}
+.btn.s{border-color:rgba(46,204,113,.5);color:var(--green)}
+.btn.s:hover{background:rgba(46,204,113,.1)}
 
-/* ===== SCREENS ===== */
-.screen { display: none; position: relative; z-index: 1; }
-.screen.active { display: block; }
+/* ── NOTIF BELL ── */
+.notif-btn{position:relative;padding:6px 10px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx2);cursor:pointer;font-size:18px;transition:.2s}
+.notif-btn:hover{border-color:var(--gold);color:var(--gold)}
+.notif-dot{position:absolute;top:2px;right:2px;width:10px;height:10px;background:var(--red);border-radius:50%;display:none;border:2px solid var(--bg)}
+.notif-dot.on{display:block;animation:pulse 1.5s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
 
-/* ===== LOGIN SCREEN ===== */
-#loginScreen {
-  min-height: 100vh;
-  display: flex; align-items: center; justify-content: center;
-  background: radial-gradient(ellipse at 50% 30%, rgba(212,175,55,0.08) 0%, transparent 60%);
-}
-#loginScreen.active { display: flex; }
-#loginScreen.hidden-after-login { display: none !important; }
+/* ── NAVTABS ── */
+.navtabs{display:flex;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 16px;overflow-x:auto;flex-shrink:0}
+.navtab{padding:13px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--tx2);cursor:pointer;font-size:13px;white-space:nowrap;font-family:inherit;transition:.2s;position:relative}
+.navtab:hover{color:var(--gold)}
+.navtab.on{color:var(--gold);border-bottom-color:var(--gold)}
+.nbadge{display:inline-block;background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:10px;margin-left:4px;vertical-align:top;animation:pulse 1.5s infinite}
 
-.login-box {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: 20px;
-  padding: 48px 56px;
-  width: 420px;
-  max-width: 95vw;
-  box-shadow: var(--shadow-gold), var(--shadow-deep);
-  position: relative;
-  overflow: hidden;
-}
-.login-box::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-}
-.login-logo {
-  text-align: center;
-  font-size: 48px;
-  margin-bottom: 8px;
-  filter: drop-shadow(0 0 12px rgba(212,175,55,0.5));
-}
-.login-title {
-  text-align: center;
-  font-family: var(--font-title);
-  font-size: 22px;
-  color: var(--gold);
-  letter-spacing: 2px;
-  margin-bottom: 4px;
-}
-.login-subtitle {
-  text-align: center;
-  font-size: 13px;
-  color: var(--text-secondary);
-  margin-bottom: 36px;
-  letter-spacing: 1px;
-}
-.login-tabs {
-  display: flex; gap: 0;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  overflow: hidden;
-  margin-bottom: 28px;
-}
-.login-tab {
-  flex: 1; padding: 10px;
-  background: transparent; border: none;
-  color: var(--text-secondary); cursor: pointer;
-  font-size: 14px; transition: all 0.2s;
-  font-family: var(--font-body);
-}
-.login-tab.active { background: var(--gold); color: #000; font-weight: bold; }
+/* ── CONTENT ── */
+.content{flex:1;padding:16px}
 
-.form-group { margin-bottom: 18px; }
-.form-group label { display: block; font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 1px; }
-.form-group input {
-  width: 100%; padding: 12px 16px;
-  background: var(--bg-panel); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text-primary);
-  font-size: 15px; font-family: var(--font-body);
-  transition: border-color 0.2s, box-shadow 0.2s;
-  outline: none;
-}
-.form-group input:focus { border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.1); }
+/* ── CLASS SELECTOR ── */
+.clsbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.clsbtn{padding:7px 16px;background:var(--bg1);border:1px solid var(--bdr);border-radius:20px;color:var(--tx2);cursor:pointer;font-size:13px;font-family:inherit;transition:.2s}
+.clsbtn:hover{border-color:var(--gold);color:var(--gold)}
+.clsbtn.on{background:var(--gold);color:#000;border-color:var(--gold);font-weight:bold}
 
-.btn-primary {
-  width: 100%; padding: 14px;
-  background: linear-gradient(135deg, var(--gold-dark), var(--gold), var(--gold-light));
-  border: none; border-radius: var(--radius-sm);
-  color: #000; font-size: 16px; font-weight: bold;
-  cursor: pointer; letter-spacing: 2px;
-  font-family: var(--font-body);
-  transition: all 0.2s; box-shadow: 0 4px 15px rgba(212,175,55,0.3);
-}
-.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(212,175,55,0.4); }
-.btn-primary:active { transform: translateY(0); }
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:auto}
+.ldot{width:9px;height:9px;border-radius:50%}
+.litem{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)}
 
-/* ===== MAIN APP ===== */
-#appScreen { min-height: 100vh; }
-#appScreen.active { display: flex; flex-direction: column; }
+/* ── BATCH TOOLBAR ── */
+#batchBar{display:none;margin-bottom:12px;padding:10px 14px;background:var(--bg1);border:1px solid var(--gold-d);border-radius:var(--r);gap:8px;flex-wrap:wrap;align-items:center}
+#batchBar.on{display:flex}
 
-/* ===== TOP BAR ===== */
-.topbar {
-  position: sticky; top: 0; z-index: 100;
-  background: rgba(10,10,12,0.95);
-  backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  display: flex; align-items: center; gap: 16px;
-  height: 60px;
-}
-.topbar-logo { font-size: 24px; }
-.topbar-title {
-  font-family: var(--font-title);
-  font-size: 18px; color: var(--gold);
-  letter-spacing: 1px; flex: 1;
-}
-.topbar-user {
-  font-size: 13px; color: var(--text-secondary);
-  display: flex; align-items: center; gap: 8px;
-}
-.topbar-user span { color: var(--gold); }
+/* ── STUDENT GRID ── */
+.sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media(max-width:640px){.sgrid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:360px){.sgrid{grid-template-columns:1fr}}
 
-.btn-sm {
-  padding: 6px 14px;
-  background: transparent; border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text-secondary);
-  cursor: pointer; font-size: 13px; font-family: var(--font-body);
-  transition: all 0.2s;
-}
-.btn-sm:hover { border-color: var(--gold); color: var(--gold); }
-.btn-sm.gold { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
-.btn-sm.gold:hover { background: var(--gold-light); }
-.btn-sm.danger { border-color: rgba(231,76,60,0.5); color: var(--red); }
-.btn-sm.danger:hover { background: rgba(231,76,60,0.1); border-color: var(--red); }
-.btn-sm.success { border-color: rgba(46,204,113,0.5); color: var(--green); }
-.btn-sm.success:hover { background: rgba(46,204,113,0.1); border-color: var(--green); }
+.scard{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:12px;position:relative;overflow:hidden;transition:.2s}
+.scard:hover{border-color:var(--bdr2);box-shadow:0 0 16px rgba(212,175,55,.12)}
+.scard.sel{border-color:var(--gold)!important;background:rgba(212,175,55,.07);box-shadow:0 0 0 2px var(--gold-d)}
+.scard.sel::after{content:'✓';position:absolute;top:6px;right:6px;width:20px;height:20px;border-radius:50%;background:var(--gold);color:#000;font-size:12px;font-weight:bold;display:flex;align-items:center;justify-content:center;line-height:20px;text-align:center}
+.scard.s出{border-left:3px solid var(--green)}.scard.s遲{border-left:3px solid var(--yellow)}.scard.s缺{border-left:3px solid var(--red)}.scard.s假{border-left:3px solid var(--blue)}
+.sc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.sc-num{font-size:11px;color:var(--tx3)}
+.sbadge{font-size:11px;padding:2px 7px;border-radius:10px;font-weight:bold;cursor:pointer;transition:.15s}
+.sbadge:hover{transform:scale(1.12)}
+.sbadge.出{background:rgba(46,204,113,.2);color:var(--green)}.sbadge.遲{background:rgba(241,196,15,.2);color:var(--yellow)}.sbadge.缺{background:rgba(231,76,60,.2);color:var(--red)}.sbadge.假{background:rgba(52,152,219,.2);color:var(--blue)}.sbadge.未{background:rgba(100,100,100,.2);color:#777}
+.sc-name{font-size:19px;font-weight:bold;cursor:pointer;padding:3px 4px;border-radius:5px;border-bottom:2px solid transparent;transition:.18s;display:inline-block;margin-bottom:5px}
+.sc-name:hover{color:var(--gold);border-bottom-color:var(--gold)}
+.sc-pts{display:flex;align-items:center;justify-content:space-between}
+.sc-stars{font-size:12px;color:var(--gold);letter-spacing:-1px}
+.sc-medals{font-size:12px;color:var(--tx2)}
+.sc-hint{font-size:10px;color:var(--tx3);margin-top:3px}
 
-/* ===== NAV TABS ===== */
-.nav-tabs {
-  display: flex; gap: 0;
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border);
-  padding: 0 20px;
-  overflow-x: auto;
-}
-.nav-tab {
-  padding: 14px 20px;
-  background: transparent; border: none; border-bottom: 2px solid transparent;
-  color: var(--text-secondary); cursor: pointer;
-  font-size: 14px; white-space: nowrap;
-  font-family: var(--font-body);
-  transition: all 0.2s;
-}
-.nav-tab:hover { color: var(--gold); }
-.nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
-.badge {
-  display: inline-block; background: var(--red);
-  color: white; font-size: 10px; padding: 1px 5px;
-  border-radius: 10px; margin-left: 4px; vertical-align: top;
-}
+/* ── DETAIL PANEL ── */
+#detailPanel{position:fixed;top:0;right:-500px;width:480px;height:100vh;background:var(--bg2);border-left:1px solid var(--bdr);z-index:300;overflow-y:auto;padding:20px;box-shadow:-8px 0 32px rgba(0,0,0,.5);transition:right .3s ease}
+#detailPanel.open{right:0}
+@media(max-width:500px){#detailPanel{width:100%;right:-100%}}
+.dp-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.dp-name{font-size:26px;font-weight:bold;color:var(--gold)}
+.dp-cls{font-size:12px;color:var(--tx2);margin-bottom:4px}
+.dp-close{background:none;border:1px solid var(--bdr);border-radius:50%;width:34px;height:34px;color:var(--tx2);cursor:pointer;font-size:16px;transition:.2s}
+.dp-close:hover{border-color:var(--gold);color:var(--gold)}
+.dp-sec{margin-bottom:18px}
+.dp-sec-t{font-size:11px;color:var(--gold);letter-spacing:2px;border-bottom:1px solid var(--bdr);padding-bottom:5px;margin-bottom:10px}
 
-/* ===== CONTENT AREA ===== */
-.content-area { flex: 1; padding: 20px; }
+/* ── POINTS CARD ── */
+.pts-card{background:linear-gradient(135deg,#1a1608,#221c09,#1a1608);border:1px solid var(--gold-d);border-radius:13px;padding:13px 15px 10px;margin-bottom:8px;box-shadow:inset 0 1px 0 rgba(212,175,55,.15),0 4px 14px rgba(0,0,0,.5);position:relative}
+.pts-card::before{content:'⭐ 集點卡';position:absolute;top:7px;right:11px;font-size:10px;color:var(--gold-d);letter-spacing:1px}
+.pts-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
+.pc{aspect-ratio:1;border-radius:9px;border:1.5px solid rgba(212,175,55,.2);display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;overflow:hidden;transition:.25s}
+.pc.on{background:radial-gradient(circle at 38% 33%,#fff5a0,#D4AF37 55%,#a07c10 100%);border-color:#ffe066;box-shadow:0 0 10px rgba(212,175,55,.5),inset 0 1px 0 rgba(255,255,200,.4)}
+.pc.on::after{content:'';position:absolute;top:12%;left:14%;width:32%;height:20%;background:rgba(255,255,255,.28);border-radius:50%;transform:rotate(-32deg)}
+.pc.off{background:rgba(0,0,0,.3)}
+.pts-info{font-size:13px;color:var(--tx2);text-align:center;margin-top:8px}
+.pts-info b{color:var(--gold);font-size:17px}
 
-/* ===== CLASS SELECTOR ===== */
-.class-selector {
-  display: flex; gap: 10px; flex-wrap: wrap;
-  margin-bottom: 20px;
-}
-.class-btn {
-  padding: 8px 18px;
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 20px; color: var(--text-secondary);
-  cursor: pointer; font-size: 13px; font-family: var(--font-body);
-  transition: all 0.2s;
-}
-.class-btn:hover { border-color: var(--gold); color: var(--gold); }
-.class-btn.active { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
+/* ── MEDALS ── */
+.medals-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-end}
+.mcoin{width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff5a0,#F0C840 30%,#D4AF37 55%,#8B6914 80%,#5a4009 100%);box-shadow:0 4px 10px rgba(0,0,0,.6),0 1px 0 rgba(255,255,180,.5) inset,0 -2px 4px rgba(0,0,0,.4) inset;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;overflow:hidden;border:2px solid #a07a10;transition:.2s;cursor:default}
+.mcoin::before{content:'';position:absolute;top:10%;left:14%;width:33%;height:22%;background:rgba(255,255,255,.28);border-radius:50%;transform:rotate(-32deg)}
+.mcoin:hover{transform:translateY(-3px) rotate(8deg);box-shadow:0 8px 18px rgba(212,175,55,.45)}
 
-/* ===== ROLL CALL TOOLBAR ===== */
-.roll-toolbar {
-  display: flex; gap: 10px; flex-wrap: wrap;
-  align-items: center; margin-bottom: 16px;
-}
-.attendance-legend {
-  display: flex; gap: 10px; align-items: center; flex-wrap: wrap;
-}
-.legend-item {
-  display: flex; align-items: center; gap: 5px;
-  font-size: 12px; color: var(--text-secondary);
-}
-.legend-dot {
-  width: 10px; height: 10px; border-radius: 50%;
-}
+/* ── ATT HISTORY ── */
+.att-sum{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+.att-si{font-size:12px}
+.att-hgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
+.att-day{text-align:center;padding:3px 1px;border-radius:4px;font-size:10px;border:1px solid var(--bdr)}
+.att-day .dl{color:var(--tx3);margin-bottom:1px}
+.att-day .dv{font-weight:bold;font-size:11px}
+.att-day.s出{border-color:rgba(46,204,113,.4);background:rgba(46,204,113,.08)}.att-day.s出 .dv{color:var(--green)}
+.att-day.s遲{border-color:rgba(241,196,15,.4);background:rgba(241,196,15,.08)}.att-day.s遲 .dv{color:var(--yellow)}
+.att-day.s缺{border-color:rgba(231,76,60,.4);background:rgba(231,76,60,.08)}.att-day.s缺 .dv{color:var(--red)}
+.att-day.s假{border-color:rgba(52,152,219,.4);background:rgba(52,152,219,.08)}.att-day.s假 .dv{color:var(--blue)}
 
-/* ===== STUDENT GRID ===== */
-.student-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-}
+/* ── TASKS ── */
+.task-item{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 11px;margin-bottom:7px}
+.task-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.task-bar{height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+.task-fill{height:100%;background:var(--gold);transition:width .3s}
 
-.student-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  overflow: hidden;
-}
-.student-card:hover { border-color: var(--border-hover); transform: translateY(-2px); box-shadow: var(--shadow-gold); }
-.student-card::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 2px;
-  background: linear-gradient(90deg, transparent, var(--gold-dark), transparent);
-  opacity: 0; transition: opacity 0.2s;
-}
-.student-card:hover::before { opacity: 1; }
+/* ── LOG ── */
+.log-item{font-size:12px;padding:7px 9px;border-left:2px solid var(--bdr);margin-bottom:5px;color:var(--tx2)}
+.log-item.add{border-left-color:var(--green)}.log-item.sub{border-left-color:var(--red)}.log-item.med{border-left-color:var(--gold)}
+.log-t{color:var(--tx3);font-size:10px}
 
-/* Status colors */
-.student-card.status-出 { border-left: 3px solid var(--green); }
-.student-card.status-遲 { border-left: 3px solid var(--yellow); }
-.student-card.status-缺 { border-left: 3px solid var(--red); }
-.student-card.status-假 { border-left: 3px solid var(--blue); }
+/* ── PASSWORD ── */
+.pw-box{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 13px;font-family:monospace;font-size:16px;color:var(--gold);letter-spacing:2px}
 
-.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
-.student-num { font-size: 11px; color: var(--text-muted); }
-.status-badge {
-  font-size: 11px; padding: 2px 8px; border-radius: 10px;
-  font-weight: bold;
-}
-.status-badge.出 { background: rgba(46,204,113,0.2); color: var(--green); }
-.status-badge.遲 { background: rgba(241,196,15,0.2); color: var(--yellow); }
-.status-badge.缺 { background: rgba(231,76,60,0.2); color: var(--red); }
-.status-badge.假 { background: rgba(52,152,219,0.2); color: var(--blue); }
-.status-badge.未 { background: rgba(100,100,100,0.2); color: #666; }
+/* ── APPLY LIST ── */
+.apply-item{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.ai-info{flex:1}
+.ai-name{font-size:15px;font-weight:bold;margin-bottom:3px}
+.ai-reason{font-size:13px;color:var(--tx2)}
+.ai-time{font-size:11px;color:var(--tx3)}
 
-.student-name { font-size: 18px; font-weight: bold; color: var(--text-primary); margin-bottom: 6px; }
+/* ── MESSAGES ── */
+.msg-item{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 15px;margin-bottom:9px;position:relative}
+.msg-item.unread{border-left:3px solid var(--red)}
+.msg-item.punish{border-left:3px solid var(--yellow)}
+.msg-hd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;gap:8px}
+.msg-to{font-size:13px;color:var(--tx2)}.msg-to b{color:var(--gold)}
+.msg-time{font-size:11px;color:var(--tx3);white-space:nowrap}
+.msg-body{font-size:14px;color:var(--tx);margin-bottom:4px}
+.msg-tag{font-size:10px;padding:2px 7px;border-radius:10px;display:inline-block}
+.msg-tag.notice{background:rgba(52,152,219,.2);color:var(--blue)}
+.msg-tag.punish{background:rgba(241,196,15,.2);color:var(--yellow)}
+.msg-read{font-size:11px}
 
-.points-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
-.points-stars { font-size: 13px; color: var(--gold); letter-spacing: -1px; }
-.medals-count { font-size: 12px; color: var(--text-secondary); }
+/* ── STUDENT MSG BANNER ── */
+#stuBanner{display:none;background:rgba(231,76,60,.1);border-bottom:1px solid rgba(231,76,60,.25);padding:10px 16px}
+.stu-msg-item{background:rgba(231,76,60,.07);border-radius:7px;padding:8px 11px;margin-bottom:6px;font-size:13px}
+.stu-msg-from{font-size:10px;color:var(--tx3);margin-bottom:2px}
+.stu-msg-type-notice{color:var(--blue)}.stu-msg-type-punishment{color:var(--yellow)}
 
-/* ===== STUDENT DETAIL PANEL ===== */
-#detailPanel {
-  position: fixed; top: 0; right: -480px; width: 480px; height: 100vh;
-  background: var(--bg-panel);
-  border-left: 1px solid var(--border);
-  z-index: 500; transition: right 0.3s ease;
-  overflow-y: auto; padding: 24px;
-  box-shadow: -10px 0 40px rgba(0,0,0,0.5);
-}
-#detailPanel.open { right: 0; }
+/* ── STATS GRID ── */
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:480px){.statgrid{grid-template-columns:repeat(2,1fr)}}
+.statcard{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;text-align:center}
+.stat-n{font-size:30px;font-weight:bold;color:var(--gold)}
+.stat-l{font-size:12px;color:var(--tx2);margin-top:3px}
 
-.detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.detail-name { font-size: 28px; font-weight: bold; color: var(--gold); }
-.detail-close { background: none; border: 1px solid var(--border); border-radius: 50%; width: 36px; height: 36px; color: var(--text-secondary); cursor: pointer; font-size: 18px; transition: all 0.2s; }
-.detail-close:hover { border-color: var(--gold); color: var(--gold); }
+/* ── TEACHER LIST ── */
+.titem{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+.ti-name{font-size:15px;font-weight:bold;margin-bottom:2px}
+.ti-cls{font-size:12px;color:var(--tx2)}
+.ti-pw{font-size:11px;color:var(--tx3)}
 
-.detail-section { margin-bottom: 20px; }
-.detail-section-title {
-  font-size: 12px; color: var(--gold); letter-spacing: 2px;
-  text-transform: uppercase; margin-bottom: 10px;
-  border-bottom: 1px solid var(--border); padding-bottom: 6px;
-}
+/* ── EXIT PASS ── */
+#exitPass{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#1a9e50;z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center}
+#exitPass.on{display:flex}
+.ep-title{font-size:64px;font-weight:bold;letter-spacing:4px;margin-bottom:16px}
+.ep-name{font-size:44px;margin-bottom:10px}
+.ep-info{font-size:22px;opacity:.85;margin-bottom:5px}
+.ep-close{margin-top:36px;padding:13px 38px;background:#fff;color:#1a9e50;border:none;border-radius:30px;font-size:17px;font-weight:bold;cursor:pointer}
 
-/* Points grid — 具象集點卡 */
-.points-card-wrap {
-  background: linear-gradient(135deg, #1a1608 0%, #221c09 50%, #1a1608 100%);
-  border: 1px solid var(--gold-dark);
-  border-radius: 14px; padding: 14px 16px 10px;
-  margin-bottom: 10px;
-  box-shadow: inset 0 1px 0 rgba(212,175,55,0.15), 0 4px 16px rgba(0,0,0,0.5);
-  position: relative; overflow: hidden;
-}
-.points-card-wrap::before {
-  content: '⭐ 集點卡';
-  position: absolute; top: 8px; right: 12px;
-  font-size: 10px; color: var(--gold-dark); letter-spacing: 1px;
-}
-.points-grid {
-  display: grid; grid-template-columns: repeat(5, 1fr);
-  gap: 8px; margin-bottom: 0;
-}
-.point-cell {
-  aspect-ratio: 1; border-radius: 10px;
-  border: 1.5px solid rgba(212,175,55,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 22px; position: relative; overflow: hidden;
-  transition: all 0.25s;
-}
-.point-cell.filled {
-  background: radial-gradient(circle at 40% 35%, #ffe066, #D4AF37 55%, #a07c10 100%);
-  border-color: #ffe066;
-  box-shadow: 0 0 10px rgba(212,175,55,0.55), inset 0 1px 0 rgba(255,255,200,0.4);
-  animation: stamp-in 0.3s ease;
-}
-.point-cell.empty {
-  background: rgba(0,0,0,0.3);
-}
-.point-cell.filled::after {
-  content: '';
-  position: absolute; top: 20%; left: 20%; width: 30%; height: 18%;
-  background: rgba(255,255,255,0.25); border-radius: 50%;
-  transform: rotate(-30deg);
-}
-@keyframes stamp-in {
-  0%   { transform: scale(0.5); opacity:0; }
-  70%  { transform: scale(1.15); }
-  100% { transform: scale(1); opacity:1; }
-}
+/* ── DIALOG ── */
+#dlgOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center}
+#dlgOverlay.on{display:flex}
+.dlg{background:var(--bg2);border:1px solid var(--bdr);border-radius:15px;padding:28px;width:380px;max-width:92vw;box-shadow:0 0 20px rgba(212,175,55,.15),0 8px 30px rgba(0,0,0,.6);position:relative}
+.dlg::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:15px 15px 0 0}
+.dlg-title{font-size:17px;font-weight:bold;color:var(--gold);margin-bottom:18px}
+.dlg-label{font-size:11px;color:var(--tx2);margin-bottom:5px;letter-spacing:1px}
+.dlg-input{width:100%;padding:9px 12px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx);font-size:14px;font-family:inherit;margin-bottom:12px;outline:none;transition:.2s}
+.dlg-input:focus{border-color:var(--gold)}
+.dlg-msg{font-size:14px;color:var(--tx);margin-bottom:18px;line-height:1.6}
+.dlg-acts{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+.dlg-btn{padding:8px 20px;border-radius:var(--r2);border:1px solid var(--bdr);background:transparent;color:var(--tx2);cursor:pointer;font-size:13px;font-family:inherit;transition:.2s}
+.dlg-btn:hover{border-color:var(--gold);color:var(--gold)}
+.dlg-btn.ok{background:var(--gold);color:#000;border-color:var(--gold);font-weight:bold}
+.dlg-btn.ok:hover{background:var(--gold-l)}
+.dlg-btn.del{background:var(--red);color:#fff;border-color:var(--red);font-weight:bold}
 
-.action-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+/* ── TOAST ── */
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--bdr);border-radius:30px;padding:10px 22px;font-size:13px;color:var(--tx);box-shadow:0 4px 20px rgba(0,0,0,.6);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#toast.on{opacity:1}
+#toast.ok{border-color:var(--green);color:var(--green)}
+#toast.err{border-color:var(--red);color:var(--red)}
 
-/* Medal display — 真金牌感 */
-.medals-display { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; align-items: flex-end; }
-.medal-coin {
-  width: 52px; height: 52px; border-radius: 50%;
-  background: radial-gradient(circle at 35% 30%, #fff5a0, #F0C840 30%, #D4AF37 55%, #8B6914 80%, #5a4009 100%);
-  box-shadow:
-    0 4px 12px rgba(0,0,0,0.6),
-    0 1px 0 rgba(255,255,180,0.5) inset,
-    0 -2px 4px rgba(0,0,0,0.4) inset;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; position: relative; overflow: hidden;
-  transition: transform 0.2s, box-shadow 0.2s;
-  cursor: default;
-  border: 2px solid #a07a10;
-}
-.medal-coin::before {
-  content: '';
-  position: absolute; top: 10%; left: 15%; width: 35%; height: 25%;
-  background: rgba(255,255,255,0.3); border-radius: 50%;
-  transform: rotate(-35deg);
-}
-.medal-coin:hover {
-  transform: translateY(-3px) rotate(8deg);
-  box-shadow: 0 8px 20px rgba(212,175,55,0.5), 0 1px 0 rgba(255,255,180,0.5) inset;
-}
-.medals-empty { font-size:13px; color:var(--text-muted); font-style:italic; }
-
-/* Tasks */
-.task-item {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 10px 12px;
-  margin-bottom: 8px;
-}
-.task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-.task-name { font-size: 14px; }
-.task-progress-bar {
-  height: 4px; background: var(--bg-deep); border-radius: 2px; overflow: hidden;
-}
-.task-progress-fill { height: 100%; background: var(--gold); transition: width 0.3s; }
-
-/* Log */
-.log-item {
-  font-size: 12px; padding: 8px 10px;
-  border-left: 2px solid var(--border);
-  margin-bottom: 6px; color: var(--text-secondary);
-}
-.log-item.add { border-left-color: var(--green); }
-.log-item.sub { border-left-color: var(--red); }
-.log-item.medal { border-left-color: var(--gold); }
-.log-item .log-time { color: var(--text-muted); font-size: 11px; }
-
-/* Password display */
-.password-display {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); padding: 10px 14px;
-  font-family: monospace; font-size: 16px;
-  color: var(--gold); letter-spacing: 2px;
-}
-
-/* ===== APPLY LIST (出入申請) ===== */
-.apply-item {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px;
-  margin-bottom: 12px; display: flex;
-  align-items: center; justify-content: space-between; gap: 12px;
-}
-.apply-info { flex: 1; }
-.apply-name { font-size: 16px; font-weight: bold; margin-bottom: 4px; }
-.apply-reason { font-size: 13px; color: var(--text-secondary); }
-.apply-time { font-size: 11px; color: var(--text-muted); }
-
-/* ===== EXIT PASS (全螢幕出示) ===== */
-#exitPass {
-  display: none;
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background: #1a9e50; z-index: 9999;
-  flex-direction: column; align-items: center; justify-content: center;
-  color: white; text-align: center;
-}
-#exitPass.active { display: flex; }
-.exit-pass-title { font-size: 72px; font-weight: bold; letter-spacing: 4px; margin-bottom: 20px; }
-.exit-pass-name { font-size: 48px; margin-bottom: 12px; }
-.exit-pass-info { font-size: 24px; opacity: 0.85; margin-bottom: 6px; }
-.exit-pass-close {
-  margin-top: 40px; padding: 14px 40px;
-  background: white; color: #1a9e50;
-  border: none; border-radius: 30px;
-  font-size: 18px; font-weight: bold; cursor: pointer;
-}
-
-/* ===== TEACHER MANAGEMENT ===== */
-.teacher-item {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 14px 18px;
-  margin-bottom: 10px; display: flex;
-  align-items: center; justify-content: space-between;
-}
-.teacher-info { flex: 1; }
-.teacher-name { font-size: 16px; font-weight: bold; margin-bottom: 2px; }
-.teacher-classes { font-size: 12px; color: var(--text-secondary); }
-
-/* ===== DIALOG (自訂遮罩) ===== */
-#dialogOverlay {
-  display: none; position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.7); z-index: 10000;
-  align-items: center; justify-content: center;
-}
-#dialogOverlay.active { display: flex; }
-.dialog-box {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: 16px; padding: 32px;
-  width: 380px; max-width: 90vw;
-  box-shadow: var(--shadow-gold), var(--shadow-deep);
-  position: relative;
-}
-.dialog-box::before {
-  content: '';
-  position: absolute; top: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--gold), transparent);
-  border-radius: 16px 16px 0 0;
-}
-.dialog-title { font-size: 18px; font-weight: bold; color: var(--gold); margin-bottom: 20px; }
-.dialog-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: 1px; }
-.dialog-input {
-  width: 100%; padding: 10px 14px;
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text-primary);
-  font-size: 14px; font-family: var(--font-body);
-  margin-bottom: 14px; outline: none;
-  transition: border-color 0.2s;
-}
-.dialog-input:focus { border-color: var(--gold); }
-.dialog-message { font-size: 15px; color: var(--text-primary); margin-bottom: 20px; line-height: 1.6; }
-.dialog-actions { display: flex; gap: 10px; justify-content: flex-end; }
-.dialog-btn {
-  padding: 9px 22px; border-radius: var(--radius-sm);
-  border: 1px solid var(--border); background: transparent;
-  color: var(--text-secondary); cursor: pointer;
-  font-size: 14px; font-family: var(--font-body);
-  transition: all 0.2s;
-}
-.dialog-btn:hover { border-color: var(--gold); color: var(--gold); }
-.dialog-btn.confirm { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
-.dialog-btn.confirm:hover { background: var(--gold-light); }
-.dialog-btn.danger-confirm { background: var(--red); color: white; border-color: var(--red); font-weight: bold; }
-
-/* ===== STATS ===== */
-.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
-.stat-card {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius); padding: 16px; text-align: center;
-}
-.stat-num { font-size: 32px; font-weight: bold; color: var(--gold); }
-.stat-label { font-size: 12px; color: var(--text-secondary); margin-top: 4px; }
-
-/* ===== STUDENT VIEW ===== */
-#studentScreen { min-height: 100vh; }
-#studentScreen.active { display: flex; flex-direction: column; }
-
-.student-view-card {
-  max-width: 600px; margin: 40px auto;
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: 20px; padding: 32px;
-  box-shadow: var(--shadow-gold);
-}
-
-/* ===== RESPONSIVE ===== */
-@media (max-width: 768px) {
-  .student-grid { grid-template-columns: repeat(2, 1fr); }
-  .stats-grid { grid-template-columns: repeat(2, 1fr); }
-  #detailPanel { width: 100%; right: -100%; }
-}
-@media (max-width: 480px) {
-  .student-grid { grid-template-columns: 1fr; }
-}
-
-/* ===== MISC ===== */
-.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 16px; }
-.separator { border: none; border-top: 1px solid var(--border); margin: 16px 0; }
-.text-gold { color: var(--gold); }
-.text-muted { color: var(--text-muted); }
-.text-success { color: var(--green); }
-.text-danger { color: var(--red); }
-.flex-row { display: flex; align-items: center; gap: 8px; }
-.ml-auto { margin-left: auto; }
-input[type="text"], input[type="password"], select, textarea {
-  color-scheme: dark;
-}
-select {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text-primary);
-  padding: 8px 12px; font-family: var(--font-body);
-  font-size: 14px; outline: none; cursor: pointer;
-}
-select:focus { border-color: var(--gold); }
-textarea {
-  background: var(--bg-card); border: 1px solid var(--border);
-  border-radius: var(--radius-sm); color: var(--text-primary);
-  padding: 10px 14px; font-family: var(--font-body);
-  font-size: 14px; outline: none; width: 100%; resize: vertical;
-}
-textarea:focus { border-color: var(--gold); }
-
-.loading-spinner {
-  display: inline-block; width: 20px; height: 20px;
-  border: 2px solid var(--border); border-top-color: var(--gold);
-  border-radius: 50%; animation: spin 0.8s linear infinite;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.toast {
-  position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
-  background: var(--bg-panel); border: 1px solid var(--border);
-  border-radius: 30px; padding: 12px 24px;
-  font-size: 14px; color: var(--text-primary);
-  box-shadow: var(--shadow-deep); z-index: 99999;
-  opacity: 0; transition: opacity 0.3s;
-  pointer-events: none;
-}
-.toast.show { opacity: 1; }
-.toast.success { border-color: var(--green); color: var(--green); }
-.toast.error { border-color: var(--red); color: var(--red); }
-
-/* ===== CLICKABLE STUDENT NAME ===== */
-.student-name-btn {
-  font-size: 20px; font-weight: bold; color: var(--text-primary);
-  margin: 6px 0; cursor: pointer; padding: 4px 6px;
-  border-radius: 6px; transition: all 0.18s;
-  border-bottom: 2px solid transparent;
-  display: inline-block;
-}
-.student-name-btn:hover {
-  color: var(--gold);
-  border-bottom-color: var(--gold);
-  background: rgba(212,175,55,0.06);
-}
-.att-toggle {
-  cursor: pointer !important;
-  transition: transform 0.15s, box-shadow 0.15s;
-}
-.att-toggle:hover {
-  transform: scale(1.12);
-  box-shadow: 0 0 8px rgba(212,175,55,0.3);
-}
-.card-hint {
-  font-size: 10px; color: var(--text-muted);
-  margin-top: 4px; letter-spacing: 0.5px;
-}
-
-/* ===== ATTENDANCE HISTORY ===== */
-.att-history-grid {
-  display: grid; grid-template-columns: repeat(7, 1fr);
-  gap: 4px; margin-bottom: 10px;
-}
-.att-day {
-  text-align: center; padding: 4px 2px;
-  border-radius: 4px; font-size: 10px;
-  border: 1px solid var(--border);
-}
-.att-day .day-label { color: var(--text-muted); margin-bottom: 2px; }
-.att-day .day-status { font-weight: bold; font-size: 12px; }
-.att-day.s-出 { border-color: rgba(46,204,113,0.4); background: rgba(46,204,113,0.08); }
-.att-day.s-出 .day-status { color: var(--green); }
-.att-day.s-遲 { border-color: rgba(241,196,15,0.4); background: rgba(241,196,15,0.08); }
-.att-day.s-遲 .day-status { color: var(--yellow); }
-.att-day.s-缺 { border-color: rgba(231,76,60,0.4); background: rgba(231,76,60,0.08); }
-.att-day.s-缺 .day-status { color: var(--red); }
-.att-day.s-假 { border-color: rgba(52,152,219,0.4); background: rgba(52,152,219,0.08); }
-.att-day.s-假 .day-status { color: var(--blue); }
-
-.att-summary { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:8px; }
-.att-summary-item { font-size:12px; }
-
-/* ===== DETAIL PANEL WIDER ===== */
-#detailPanel { width: 520px; right: -520px; }
-@media(max-width:600px){ #detailPanel { width:100%; right:-100%; } }
-
-
-/* ===== BATCH MODE ===== */
-.student-card.batch-selected {
-  border-color: var(--gold) !important;
-  background: rgba(212,175,55,0.08);
-  box-shadow: 0 0 0 2px rgba(212,175,55,0.4);
-}
-.student-card.batch-selected::before { opacity: 1; }
-.batch-check {
-  position: absolute; top: 8px; left: 8px;
-  width: 20px; height: 20px; border-radius: 50%;
-  background: var(--gold); color: #000;
-  display: none; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: bold; z-index: 2;
-}
-body.batch-mode .batch-check { display: flex; }
-body.batch-mode .student-card.batch-selected .batch-check { background: var(--gold); }
-body.batch-mode .student-card:not(.batch-selected) .batch-check {
-  background: rgba(100,80,20,0.3); color: transparent;
-  border: 1.5px solid var(--gold-dark);
-}
-
+/* ── MISC ── */
+.empty{text-align:center;padding:50px 20px;color:var(--tx3);font-size:15px}
+.sep{border:none;border-top:1px solid var(--bdr);margin:14px 0}
+.row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+textarea{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx);padding:9px 12px;font-family:inherit;font-size:14px;outline:none;width:100%;resize:vertical}
+textarea:focus{border-color:var(--gold)}
+select{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx);padding:7px 11px;font-family:inherit;font-size:13px;outline:none;cursor:pointer}
+select:focus{border-color:var(--gold)}
+.spin{display:inline-block;width:18px;height:18px;border:2px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<!-- ===== LOGIN SCREEN ===== -->
-<div id="loginScreen" class="screen active">
-  <div class="login-box">
-    <div class="login-logo">🎼</div>
-    <div class="login-title">莊敬高職音樂科</div>
-    <div class="login-subtitle">教務管理系統 · Royal Edition</div>
-
-    <div class="login-tabs">
-      <button class="login-tab active" onclick="switchLoginTab('teacher')">教師登入</button>
-      <button class="login-tab" onclick="switchLoginTab('student')">學生登入</button>
+<!-- ══ LOGIN ══ -->
+<div id="loginScreen" class="screen">
+  <div class="lbox">
+    <div class="llogo">🎼</div>
+    <div class="ltitle">莊敬高職音樂科</div>
+    <div class="lsub">教務管理系統 · Royal Edition</div>
+    <div class="ltabs">
+      <button class="ltab on" onclick="switchLTab('teacher')">教師登入</button>
+      <button class="ltab" onclick="switchLTab('student')">學生登入</button>
     </div>
-
-    <div id="teacherLoginForm">
-      <div class="form-group">
-        <label>教師帳號（姓名）</label>
-        <input type="text" id="loginName" placeholder="請輸入帳號" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label>密碼</label>
-        <input type="password" id="loginPass" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doLogin()">
-      </div>
-      <button class="btn-primary" onclick="doLogin()">登 入</button>
+    <div id="teacherForm">
+      <div class="fg"><label>教師帳號（姓名）</label><input id="lName" type="text" placeholder="帳號" autocomplete="off"></div>
+      <div class="fg"><label>密碼</label><input id="lPass" type="password" placeholder="密碼" onkeydown="if(event.key==='Enter')doLogin()"></div>
+      <button class="btn-pri" onclick="doLogin()">登 入</button>
     </div>
-
-    <div id="studentLoginForm" style="display:none">
-      <div class="form-group">
-        <label>學生姓名</label>
-        <input type="text" id="sLoginName" placeholder="請輸入姓名" autocomplete="off">
-      </div>
-      <div class="form-group">
-        <label>密碼（初始：0000）</label>
-        <input type="password" id="sLoginPass" placeholder="請輸入密碼" onkeydown="if(event.key==='Enter')doStudentLogin()">
-      </div>
-      <button class="btn-primary" onclick="doStudentLogin()">登 入</button>
+    <div id="studentForm" style="display:none">
+      <div class="fg"><label>學生姓名</label><input id="sName" type="text" placeholder="姓名" autocomplete="off"></div>
+      <div class="fg"><label>密碼（初始：0000）</label><input id="sPass" type="password" placeholder="密碼" onkeydown="if(event.key==='Enter')doStudentLogin()"></div>
+      <button class="btn-pri" onclick="doStudentLogin()">登 入</button>
     </div>
   </div>
 </div>
 
-<!-- ===== TEACHER APP SCREEN ===== -->
+<!-- ══ TEACHER APP ══ -->
 <div id="appScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
-    <div class="topbar-title">莊敬音樂科教務管理系統</div>
-    <div class="topbar-user">登入身份：<span id="currentUserDisplay">—</span></div>
-    <button class="btn-sm" onclick="doLogout()">登出</button>
+    <div class="topbar-title">莊敬音樂科教務系統</div>
+    <div class="topbar-user">身份：<b id="curUser">—</b></div>
+    <button class="notif-btn" onclick="switchTab('inbox')" title="訊息中心">💬<span class="notif-dot" id="teacherNotifDot"></span></button>
+    <button class="btn" onclick="doLogout()">登出</button>
   </div>
-
-  <div class="nav-tabs">
-    <button class="nav-tab active" onclick="switchTab('attendance')" id="tab-attendance">📋 點名</button>
-    <button class="nav-tab" onclick="switchTab('apply')" id="tab-apply">🚪 外出申請 <span class="badge" id="applyBadge" style="display:none">0</span></button>
-    <button class="nav-tab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
-    <button class="nav-tab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
+  <div class="navtabs">
+    <button class="navtab on" onclick="switchTab('att')" id="tab-att">📋 點名</button>
+    <button class="navtab" onclick="switchTab('apply')" id="tab-apply">🚪 外出申請<span class="nbadge" id="applyBadge" style="display:none">0</span></button>
+    <button class="navtab" onclick="switchTab('inbox')" id="tab-inbox">💬 訊息<span class="nbadge" id="inboxBadge" style="display:none">0</span></button>
+    <button class="navtab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
+    <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
   </div>
-
-  <div class="content-area">
-    <!-- ====== ATTENDANCE TAB ====== -->
-    <div id="tabAttendance" class="tab-content">
-      <div class="class-selector" id="classSelectorTeacher"></div>
-      <div class="roll-toolbar">
-        <button class="btn-sm gold" onclick="saveAttendance()">💾 儲存點名</button>
-        <button class="btn-sm" onclick="setAllStatus('出')">全部出席</button>
-        <button class="btn-sm" onclick="toggleBatchMode()" id="batchModeBtn">☑️ 批次加點</button>
-        <div style="margin-left:auto;" class="attendance-legend">
-          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>出席</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--yellow)"></div>遲到</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div>缺席</div>
-          <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>請假</div>
+  <div class="content">
+    <!-- 點名 -->
+    <div id="tabAtt">
+      <div class="clsbtns" id="clsBtns"></div>
+      <div class="toolbar">
+        <button class="btn g" onclick="saveAtt()">💾 儲存點名</button>
+        <button class="btn" onclick="setAllAtt('出')">全部出席</button>
+        <button class="btn" id="batchBtn" onclick="toggleBatch()">☑️ 批次加點</button>
+        <div class="legend">
+          <div class="litem"><div class="ldot" style="background:var(--green)"></div>出席</div>
+          <div class="litem"><div class="ldot" style="background:var(--yellow)"></div>遲到</div>
+          <div class="litem"><div class="ldot" style="background:var(--red)"></div>缺席</div>
+          <div class="litem"><div class="ldot" style="background:var(--blue)"></div>請假</div>
         </div>
       </div>
-      <!-- 批次操作工具列（預設隱藏） -->
-      <div id="batchToolbar" style="display:none;margin-bottom:12px;padding:12px 16px;background:var(--bg-card);border:1px solid var(--gold-dark);border-radius:var(--radius);gap:10px;flex-wrap:wrap;" class="flex-row">
-        <span style="color:var(--gold);font-size:13px;font-weight:bold;">批次模式</span>
-        <span style="color:var(--text-secondary);font-size:13px;">已選 <span id="batchCount" style="color:var(--gold);font-weight:bold;">0</span> 人</span>
-        <button class="btn-sm success" onclick="batchAddPoints(1)">⭐ 批次加 1 點</button>
-        <button class="btn-sm danger" onclick="batchAddPoints(-1)">－ 批次扣 1 點</button>
-        <button class="btn-sm gold" onclick="batchAddMedal()">🎖️ 批次加金牌</button>
-        <button class="btn-sm" onclick="selectAllBatch()">全選</button>
-        <button class="btn-sm" onclick="clearBatchSelection()">清除選擇</button>
-        <button class="btn-sm danger" onclick="toggleBatchMode()" style="margin-left:auto;">✕ 結束批次</button>
+      <div id="batchBar">
+        <span style="color:var(--gold);font-weight:bold;font-size:13px">批次模式</span>
+        <span style="color:var(--tx2);font-size:13px">已選 <b id="batchCnt" style="color:var(--gold)">0</b> 人</span>
+        <button class="btn s" onclick="batchPts(1)">⭐ +1點</button>
+        <button class="btn d" onclick="batchPts(-1)">－ 扣1點</button>
+        <button class="btn g" onclick="batchMedal()">🎖️ +金牌</button>
+        <button class="btn" onclick="selectAll()">全選</button>
+        <button class="btn" onclick="clearSel()">清除</button>
+        <button class="btn d" onclick="toggleBatch()" style="margin-left:auto">✕ 結束</button>
       </div>
-      <div class="student-grid" id="studentGrid"></div>
+      <div class="sgrid" id="stuGrid"></div>
     </div>
-
-    <!-- ====== APPLY TAB ====== -->
-    <div id="tabApply" class="tab-content" style="display:none">
-      <h3 class="text-gold" style="margin-bottom:16px;">第八節外出申請審核</h3>
-      <div id="applyList"><div class="empty-state">目前無待審核申請</div></div>
+    <!-- 外出申請 -->
+    <div id="tabApply" style="display:none">
+      <h3 style="color:var(--gold);margin-bottom:14px">🚪 第八節外出申請審核</h3>
+      <div id="applyList"><div class="empty">目前無待審核申請</div></div>
     </div>
-
-    <!-- ====== REPORT TAB ====== -->
-    <div id="tabReport" class="tab-content" style="display:none">
-      <div class="stats-grid" id="statsGrid"></div>
-      <div class="flex-row" style="gap:10px;margin-bottom:20px;flex-wrap:wrap;">
-        <button class="btn-sm gold" onclick="exportExcel()">📥 匯出 Excel 總表</button>
-        <button class="btn-sm" onclick="exportPDF()">📄 匯出 PDF 報表</button>
-        <button class="btn-sm danger" onclick="resetAllStudents()" style="margin-left:auto;">⚠️ 全班資料重置</button>
+    <!-- 訊息中心 -->
+    <div id="tabInbox" style="display:none">
+      <div class="row" style="margin-bottom:14px">
+        <h3 style="color:var(--gold)">💬 訊息中心</h3>
+        <button class="btn g" style="margin-left:auto" onclick="openSendMsg()">✉️ 發送訊息</button>
       </div>
-      <div class="class-selector" id="classSelectorReport"></div>
-      <div class="student-grid" id="reportGrid"></div>
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:10px">點名字可查看詳細 · 訊息狀態即時同步</div>
+      <div id="inboxList"><div class="empty">尚無已發出訊息</div></div>
     </div>
-
-    <!-- ====== TEACHERS TAB ====== -->
-    <div id="tabTeachers" class="tab-content" style="display:none">
-      <div class="flex-row" style="margin-bottom:16px;">
-        <h3 class="text-gold">教師帳號管理</h3>
-        <button class="btn-sm gold ml-auto" onclick="openAddTeacher()">＋ 新增教師</button>
+    <!-- 報表 -->
+    <div id="tabReport" style="display:none">
+      <div class="statgrid" id="statGrid"></div>
+      <div class="row" style="margin-bottom:14px;flex-wrap:wrap">
+        <button class="btn g" onclick="exportXlsx()">📥 Excel</button>
+        <button class="btn" onclick="exportPdf()">📄 PDF</button>
+        <button class="btn d" onclick="resetAllDlg()" style="margin-left:auto">⚠️ 全班重置</button>
+      </div>
+      <div class="clsbtns" id="clsBtnsR"></div>
+      <div class="sgrid" id="rptGrid"></div>
+    </div>
+    <!-- 教師管理 -->
+    <div id="tabTeachers" style="display:none">
+      <div class="row" style="margin-bottom:14px">
+        <h3 style="color:var(--gold)">⚙️ 教師帳號管理</h3>
+        <button class="btn g" style="margin-left:auto" onclick="openAddTeacher()">＋ 新增</button>
       </div>
       <div id="teacherList"></div>
     </div>
   </div>
 </div>
 
-<!-- ===== STUDENT SCREEN ===== -->
+<!-- ══ STUDENT SCREEN ══ -->
 <div id="studentScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
     <div class="topbar-title">學生個人資料</div>
-    <div class="topbar-user">學生：<span id="studentUserDisplay">—</span></div>
-    <button class="btn-sm" onclick="doLogout()">登出</button>
+    <div class="topbar-user">學生：<b id="stuUserName">—</b></div>
+    <button class="notif-btn" id="stuNotifBtn" onclick="toggleStuBanner()" title="訊息通知">🔔<span class="notif-dot" id="stuNotifDot"></span></button>
+    <button class="btn" onclick="doLogout()">登出</button>
   </div>
-  
-  <div id="studentMsgBanner" style="display:none;background:rgba(231,76,60,0.12);border-bottom:1px solid rgba(231,76,60,0.3);padding:10px 20px;color:var(--red);text-align:center;font-weight:bold;">🔴 您有新的老師訊息！</div>
-  <div class="content-area">
-    <div class="student-view-card" id="studentViewCard">
-      <div class="loading-spinner"></div>
+  <!-- 訊息橫幅 -->
+  <div id="stuBanner">
+    <div style="font-size:13px;color:var(--red);font-weight:bold;margin-bottom:8px">🔴 未讀訊息</div>
+    <div id="stuBannerList"></div>
+  </div>
+  <div class="content">
+    <div id="stuCard" style="max-width:600px;margin:0 auto"></div>
+    <div style="max-width:600px;margin:16px auto 0">
+      <button class="btn g" onclick="openApplyExit()" style="width:100%;padding:13px;font-size:15px">🚪 申請第八節外出</button>
     </div>
-    <div style="max-width:600px;margin:0 auto 20px;">
-      <button class="btn-sm gold" onclick="openApplyExit()" style="width:100%;padding:14px;font-size:16px;">🚪 申請第八節外出</button>
-    </div>
-    <div style="max-width:600px;margin:10px auto;">
-  <button class="btn-sm gold" onclick="openStudentSendMessage()" style="width:100%;padding:14px;font-size:16px;background:var(--blue);border-color:var(--blue);color:white;">✉️ 聯絡老師 / 回報問題</button>
-</div>
-    <!-- Exit pass trigger -->
-    <div style="max-width:600px;margin:0 auto 20px;" id="myExitPassArea" style="display:none"></div>
+    <div id="stuPassArea" style="max-width:600px;margin:10px auto 0"></div>
   </div>
 </div>
 
-<!-- ===== DETAIL PANEL ===== -->
+<!-- ══ DETAIL PANEL ══ -->
 <div id="detailPanel">
-  <div class="detail-header">
+  <div class="dp-hd">
     <div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-bottom:4px;" id="detailClass">—</div>
-      <div class="detail-name" id="detailName">—</div>
+      <div class="dp-cls" id="dpCls"></div>
+      <div class="dp-name" id="dpName"></div>
     </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <button class="btn-sm danger" onclick="openResetStudent()" style="font-size:11px;padding:4px 10px;">🔄 重置</button>
-      <button class="detail-close" onclick="closeDetail()">✕</button>
+    <button class="dp-close" onclick="closeDetail()">✕</button>
+  </div>
+  <div class="dp-sec">
+    <div class="dp-sec-t">🔑 密碼</div>
+    <div class="pw-box" id="dpPw">—</div>
+  </div>
+  <div class="dp-sec">
+    <div class="dp-sec-t">📋 今日出勤</div>
+    <div id="dpStatus" style="font-size:20px;font-weight:bold;margin-bottom:10px"></div>
+    <div class="dp-sec-t" style="margin-top:4px">📅 出勤歷史（近21天）</div>
+    <div id="dpAttHist"></div>
+  </div>
+  <div class="dp-sec">
+    <div class="dp-sec-t">⭐ 點數集點卡</div>
+    <div class="pts-card">
+      <div class="pts-grid" id="dpPtsGrid"></div>
+      <div class="pts-info">目前：<b id="dpPtsNum">0</b> 點 <span style="font-size:11px;color:var(--tx3);margin-left:8px">集滿5點換金牌</span></div>
     </div>
-  </div>
-
-  <!-- Password -->
-  <div class="detail-section">
-    <div class="detail-section-title">🔑 密碼（明文）</div>
-    <div class="password-display" id="detailPassword">—</div>
-  </div>
-
-  <!-- Attendance today + history -->
-  <div class="detail-section">
-    <div class="detail-section-title">📋 今日出勤狀態</div>
-    <div id="detailStatus" style="font-size:18px;font-weight:bold;margin-bottom:12px;"></div>
-    <div class="detail-section-title" style="margin-top:4px;">📅 出勤歷史（近21天）</div>
-    <div id="detailAttHistory"></div>
-  </div>
-
-  <!-- Points -->
-  <div class="detail-section">
-    <div class="detail-section-title">⭐ 點數集點卡</div>
-    <div class="points-card-wrap">
-      <div class="points-grid" id="detailPointsGrid"></div>
-      <div style="font-size:13px;color:var(--text-secondary);margin-top:10px;text-align:center;">
-        目前：<span class="text-gold" style="font-size:18px;font-weight:bold;" id="detailPointsNum">0</span> 點
-        <span style="margin-left:12px;color:var(--text-muted);font-size:11px;">集滿 5 點可換金牌</span>
-      </div>
-    </div>
-    <div class="action-row">
-      <button class="btn-sm success" onclick="changePoints(1)">＋ 加 1 點</button>
-      <button class="btn-sm danger" onclick="changePoints(-1)">－ 扣 1 點</button>
-      <button class="btn-sm gold" onclick="redeemMedal()" id="redeemBtn">🎖️ 兌換金牌</button>
+    <div class="row">
+      <button class="btn s" onclick="chgPts(1)">＋ 加1點</button>
+      <button class="btn d" onclick="chgPts(-1)">－ 扣1點</button>
+      <button class="btn g" onclick="redeemMedal()" id="redeemBtn">🎖️ 兌換金牌</button>
     </div>
   </div>
-
-  <!-- Medals -->
-  <div class="detail-section">
-    <div class="detail-section-title">🎖️ 金牌庫存</div>
-    <div class="medals-display" id="detailMedals"></div>
-    <div style="font-size:14px;color:var(--text-secondary);margin-bottom:8px;">
-      共 <span class="text-gold" id="detailMedalsNum">0</span> 枚
-    </div>
-    <div class="action-row">
-      <button class="btn-sm success" onclick="changeMedal(1)">＋ 加金牌</button>
-      <button class="btn-sm danger" onclick="changeMedal(-1)">－ 扣金牌</button>
+  <div class="dp-sec">
+    <div class="dp-sec-t">🎖️ 金牌庫存</div>
+    <div class="medals-row" id="dpMedals"></div>
+    <div style="font-size:13px;color:var(--tx2);margin-bottom:7px">共 <b style="color:var(--gold)" id="dpMedalsN">0</b> 枚</div>
+    <div class="row">
+      <button class="btn s" onclick="chgMedal(1)">＋ 加金牌</button>
+      <button class="btn d" onclick="chgMedal(-1)">－ 扣金牌</button>
     </div>
   </div>
-
-  <!-- Tasks -->
-  <div class="detail-section">
-    <div class="detail-section-title">📝 處罰任務</div>
-    <div id="detailTasks"></div>
-    <button class="btn-sm" style="margin-top:8px;width:100%;" onclick="openAddTask()">＋ 新增任務</button>
+  <div class="dp-sec">
+    <div class="dp-sec-t">📝 處罰任務</div>
+    <div id="dpTasks"></div>
+    <button class="btn" style="width:100%;margin-top:7px" onclick="openAddTask()">＋ 新增任務</button>
   </div>
-
-  <!-- Log -->
-  <div class="detail-section">
-    <div class="detail-section-title">📜 異動日誌</div>
-    <div id="detailLog" style="max-height:300px;overflow-y:auto;"></div>
+  <div class="dp-sec">
+    <div class="dp-sec-t">📜 異動日誌</div>
+    <div id="dpLog" style="max-height:260px;overflow-y:auto"></div>
   </div>
-
-  <!-- Reset -->
-  <div class="detail-section">
-    <div class="detail-section-title">⚠️ 個人資料重置</div>
-    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-      <button class="btn-sm danger" onclick="resetStudentPoints()">重置點數</button>
-      <button class="btn-sm danger" onclick="resetStudentMedals()">重置金牌</button>
-      <button class="btn-sm danger" onclick="resetStudentAll()" style="background:rgba(231,76,60,0.15);">🗑️ 清除全部資料</button>
+  <div class="dp-sec">
+    <div class="dp-sec-t">⚠️ 重置</div>
+    <div class="row">
+      <button class="btn d" onclick="resetPts()">重置點數</button>
+      <button class="btn d" onclick="resetMedals()">重置金牌</button>
+      <button class="btn d" onclick="resetAll()" style="background:rgba(231,76,60,.15)">🗑️ 清除全部</button>
     </div>
   </div>
 </div>
 
-<!-- ===== EXIT PASS ===== -->
+<!-- ══ EXIT PASS ══ -->
 <div id="exitPass">
-  <div class="exit-pass-title">✅ 准予外出</div>
-  <div class="exit-pass-name" id="exitPassName">—</div>
-  <div class="exit-pass-info" id="exitPassDate">—</div>
-  <div class="exit-pass-info" id="exitPassTeacher">核可老師：—</div>
-  <button class="exit-pass-close" onclick="document.getElementById('exitPass').classList.remove('active')">關閉</button>
+  <div class="ep-title">✅ 准予外出</div>
+  <div class="ep-name" id="epName">—</div>
+  <div class="ep-info" id="epDate">—</div>
+  <div class="ep-info" id="epTeacher">核可老師：—</div>
+  <button class="ep-close" onclick="document.getElementById('exitPass').classList.remove('on')">關閉</button>
 </div>
 
-<!-- ===== DIALOG ===== -->
-<div id="dialogOverlay">
-  <div class="dialog-box">
-    <div class="dialog-title" id="dialogTitle">提示</div>
-    <div id="dialogBody"></div>
-    <div class="dialog-actions" id="dialogActions"></div>
+<!-- ══ DIALOG ══ -->
+<div id="dlgOverlay" onclick="if(event.target===this)closeDlg()">
+  <div class="dlg">
+    <div class="dlg-title" id="dlgTitle"></div>
+    <div id="dlgBody"></div>
+    <div class="dlg-acts" id="dlgActs"></div>
   </div>
 </div>
 
-<!-- ===== TOAST ===== -->
-<div class="toast" id="toast"></div>
+<!-- ══ TOAST ══ -->
+<div id="toast"></div>
 
-<!-- ===== JAVASCRIPT ===== -->
 <script>
-// ==============================
-// FIREBASE CONFIG (填入您的設定)
-// ==============================
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
-  authDomain: "jjvs-att.firebaseapp.com",
-  databaseURL: "https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "jjvs-att",
-  storageBucket: "jjvs-att.firebasestorage.app",
-  messagingSenderId: "199163483355",
-  appId: "1:199163483355:web:ac66bbb7407acede4ce8fe"
+// ══════════════════════════════════════════
+// FIREBASE
+// ══════════════════════════════════════════
+const FBC = {
+  apiKey:"AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
+  authDomain:"jjvs-att.firebaseapp.com",
+  databaseURL:"https://jjvs-att-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"jjvs-att",
+  storageBucket:"jjvs-att.firebasestorage.app",
+  messagingSenderId:"199163483355",
+  appId:"1:199163483355:web:ac66bbb7407acede4ce8fe"
 };
-const DB_ROOT = "jjvs_v_final_cloud";
-
-firebase.initializeApp(FIREBASE_CONFIG);
+const ROOT = "jjvs_v2";
+firebase.initializeApp(FBC);
 const db = firebase.database();
+const ref = p => db.ref(`${ROOT}/${p}`);
+const dbGet = p => ref(p).once('value').then(s=>s.val());
+const dbSet = (p,v) => ref(p).set(v);
+const dbUpd = (p,v) => ref(p).update(v);
 
-// ==============================
-// STUDENT DATA (133人完整名單)
-// ==============================
-const STUDENT_DATA = [
-  // 音三莊 (40人)
+// ══════════════════════════════════════════
+// STUDENT DATA
+// ══════════════════════════════════════════
+const CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
+const STUDENTS = [
+  // 音三莊 40人
   {id:"M3-01",name:"毛語程",cls:"音三莊"},{id:"M3-02",name:"林叡成",cls:"音三莊"},
   {id:"M3-03",name:"田宇紘",cls:"音三莊"},{id:"M3-04",name:"吳昆達",cls:"音三莊"},
   {id:"M3-05",name:"吳宥良",cls:"音三莊"},{id:"M3-06",name:"黃崇恩",cls:"音三莊"},
@@ -969,7 +506,7 @@ const STUDENT_DATA = [
   {id:"M3-35",name:"陳芃瑾",cls:"音三莊"},{id:"M3-36",name:"陳雨彤",cls:"音三莊"},
   {id:"M3-37",name:"陳宥安",cls:"音三莊"},{id:"M3-38",name:"陳圓卿",cls:"音三莊"},
   {id:"M3-39",name:"傅克諳",cls:"音三莊"},{id:"M3-40",name:"曾妘湘",cls:"音三莊"},
-  // 演三莊 (14人)
+  // 演三莊 14人
   {id:"P3-02",name:"王玟茜",cls:"演三莊"},{id:"P3-03",name:"王語舒",cls:"演三莊"},
   {id:"P3-04",name:"姚宥湘",cls:"演三莊"},{id:"P3-05",name:"陳思妤",cls:"演三莊"},
   {id:"P3-06",name:"楊鎔慈",cls:"演三莊"},{id:"P3-09",name:"王偉家",cls:"演三莊"},
@@ -977,7 +514,7 @@ const STUDENT_DATA = [
   {id:"P3-13",name:"郭庭傑",cls:"演三莊"},{id:"P3-14",name:"陳泊源",cls:"演三莊"},
   {id:"P3-15",name:"陳軍任",cls:"演三莊"},{id:"P3-16",name:"黃治容",cls:"演三莊"},
   {id:"P3-17",name:"盧宥辰",cls:"演三莊"},{id:"P3-18",name:"謝行知",cls:"演三莊"},
-  // 音二莊 (44人)
+  // 音二莊 44人
   {id:"M2-01",name:"程冠中",cls:"音二莊"},{id:"M2-02",name:"李安恬",cls:"音二莊"},
   {id:"M2-03",name:"吳芊逸",cls:"音二莊"},{id:"M2-04",name:"林辰欣",cls:"音二莊"},
   {id:"M2-05",name:"林孟蓁",cls:"音二莊"},{id:"M2-06",name:"林采妮",cls:"音二莊"},
@@ -1000,9 +537,9 @@ const STUDENT_DATA = [
   {id:"M2-39",name:"盧宇杰",cls:"音二莊"},{id:"M2-40",name:"江德凱",cls:"音二莊"},
   {id:"M2-41",name:"李奕德",cls:"音二莊"},{id:"M2-42",name:"林品傑",cls:"音二莊"},
   {id:"M2-43",name:"陳元熙",cls:"音二莊"},{id:"M2-44",name:"丁婷婷",cls:"音二莊"},
-  // 演二樸 (2人)
+  // 演二樸 2人
   {id:"P2-02",name:"簡佳嫻",cls:"演二樸"},{id:"P2-03",name:"黃品妤",cls:"演二樸"},
-  // 音一莊 (33人)
+  // 音一莊 33人
   {id:"M1-01",name:"任恩予",cls:"音一莊"},{id:"M1-02",name:"李孟臻",cls:"音一莊"},
   {id:"M1-03",name:"潘縈汐",cls:"音一莊"},{id:"M1-04",name:"謝幸芙",cls:"音一莊"},
   {id:"M1-05",name:"李昕柔",cls:"音一莊"},{id:"M1-06",name:"盧丞菲",cls:"音一莊"},
@@ -1021,1494 +558,934 @@ const STUDENT_DATA = [
   {id:"M1-31",name:"張又禾",cls:"音一莊"},{id:"M1-32",name:"張允磊",cls:"音一莊"},
   {id:"M1-33",name:"黃靖勛",cls:"音一莊"}
 ];
+const MASTER = {name:"蕭旭成", pass:"0902"};
+const STATUS = ['未','出','遲','缺','假'];
 
-const CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
+// ══════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════
+let me = null;         // current user
+let curCls = null;     // current class
+let curStu = null;     // detail panel student
+let pendAtt = {};      // unsaved attendance
+let batchMode = false;
+let batchSel = new Set();
+let stuBannerOpen = false;
 
-// ==============================
-// MASTER ACCOUNT
-// ==============================
-const MASTER = { name:"蕭旭成", pass:"0902" };
+// ══════════════════════════════════════════
+// UTILS
+// ══════════════════════════════════════════
+const now = () => new Date().toLocaleString('zh-TW',{hour12:false});
+const today = () => new Date().toLocaleDateString('zh-TW');
+const byName = n => STUDENTS.find(s=>s.name===n);
+const byId = id => STUDENTS.find(s=>s.id===id);
+const byCls = c => STUDENTS.filter(s=>s.cls===c);
 
-// ==============================
-// APP STATE
-// ==============================
-let currentUser = null;       // {name, role:'master'|'teacher'|'student', classes:[]}
-let currentStudent = null;    // student object for detail panel
-let currentClass = null;      // currently viewed class
-let firebaseData = {};        // local cache
-let pendingAttendance = {};   // unsaved attendance changes
-
-// ==============================
-// UTILITY
-// ==============================
-function showToast(msg, type='') {
+function toast(msg, type='') {
   const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + type;
-  clearTimeout(t._timer);
-  t._timer = setTimeout(()=>{ t.className='toast'; }, 2800);
+  t.textContent = msg; t.className = 'on' + (type?' '+type:'');
+  clearTimeout(t._t); t._t = setTimeout(()=>t.className='', 3000);
 }
 
-function now() {
-  const d = new Date();
-  return d.toLocaleDateString('zh-TW') + ' ' + d.toLocaleTimeString('zh-TW', {hour:'2-digit',minute:'2-digit'});
+// ══════════════════════════════════════════
+// SCREEN MANAGEMENT
+// ══════════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
+  const el = document.getElementById(id);
+  if (id === 'loginScreen') {
+    el.style.display = 'flex';
+    el.style.alignItems = 'center';
+    el.style.justifyContent = 'center';
+  } else {
+    el.style.display = 'flex';
+    el.style.flexDirection = 'column';
+  }
+  window.scrollTo(0,0);
 }
 
-function safeKey(name) {
-  return name.replace(/[.#$\[\]]/g, '_');
-}
-
-function getStudentsByClass(cls) {
-  return STUDENT_DATA.filter(s => s.cls === cls);
-}
-
-function getStudent(id) {
-  return STUDENT_DATA.find(s => s.id === id);
-}
-
-function getStudentByName(name) {
-  return STUDENT_DATA.find(s => s.name === name);
-}
-
-// ==============================
-// FIREBASE HELPERS
-// ==============================
-function dbRef(path) {
-  return db.ref(`${DB_ROOT}/${path}`);
-}
-
-function dbGet(path) {
-  return dbRef(path).once('value').then(s => s.val());
-}
-
-function dbUpdate(path, data) {
-  return dbRef(path).update(data);
-}
-
-function dbSet(path, data) {
-  return dbRef(path).set(data);
-}
-
-// ==============================
-// AUTH
-// ==============================
-function switchLoginTab(tab) {
-  document.querySelectorAll('.login-tab').forEach((t,i) => t.classList.toggle('active', (tab==='teacher'&&i===0)||(tab==='student'&&i===1)));
-  document.getElementById('teacherLoginForm').style.display = tab==='teacher'?'block':'none';
-  document.getElementById('studentLoginForm').style.display = tab==='student'?'block':'none';
+// ══════════════════════════════════════════
+// LOGIN
+// ══════════════════════════════════════════
+function switchLTab(t) {
+  document.querySelectorAll('.ltab').forEach((b,i)=>b.classList.toggle('on',(t==='teacher'&&i===0)||(t==='student'&&i===1)));
+  document.getElementById('teacherForm').style.display = t==='teacher'?'':'none';
+  document.getElementById('studentForm').style.display = t==='student'?'':'none';
 }
 
 async function doLogin() {
-  const name = document.getElementById('loginName').value.trim();
-  const pass = document.getElementById('loginPass').value.trim();
-  if (!name||!pass) { showToast('請填寫帳號和密碼','error'); return; }
-
-  // Master check（最高權限，不需連線 Firebase）
-  if (name === MASTER.name && pass === MASTER.pass) {
-    currentUser = { name, role:'master', classes: CLASSES };
-    enterApp();
-    return;
+  const name = document.getElementById('lName').value.trim();
+  const pass = document.getElementById('lPass').value.trim();
+  if (!name||!pass) { toast('請填寫帳號和密碼','err'); return; }
+  if (name===MASTER.name && pass===MASTER.pass) {
+    me = {name, role:'master', classes:CLASSES};
+    enterApp(); return;
   }
-
-  // Teacher check via Firebase
-  showToast('驗證中…');
+  toast('驗證中…');
   try {
     const teachers = await Promise.race([
       dbGet('teachers'),
-      new Promise((_,rej) => setTimeout(()=>rej(new Error('timeout')), 8000))
+      new Promise((_,r)=>setTimeout(()=>r(new Error('timeout')),8000))
     ]);
     if (teachers) {
-      for (const key of Object.keys(teachers)) {
-        const t = teachers[key];
-        if (t.name === name && t.pass === pass) {
-          currentUser = { name, role:'teacher', classes: t.classes||[] };
-          enterApp();
-          return;
+      for (const k of Object.keys(teachers)) {
+        const t = teachers[k];
+        if (t.name===name && t.pass===pass) {
+          me = {name, role:'teacher', classes:t.classes||[]};
+          enterApp(); return;
         }
       }
     }
-    showToast('帳號或密碼錯誤','error');
+    toast('帳號或密碼錯誤','err');
   } catch(e) {
-    if (e.message === 'timeout') {
-      showToast('⚠️ Firebase 連線逾時，請確認資料庫規則已設為公開讀取','error');
-    } else {
-      showToast('連線失敗：' + e.message, 'error');
-    }
-    console.error('Login error:', e);
+    toast(e.message==='timeout'?'連線逾時，請確認Firebase規則':'連線失敗：'+e.message,'err');
   }
 }
 
 async function doStudentLogin() {
-  const name = document.getElementById('sLoginName').value.trim();
-  const pass = document.getElementById('sLoginPass').value.trim();
-  if (!name||!pass) { showToast('請填寫姓名和密碼','error'); return; }
-
-  const stu = getStudentByName(name);
-  if (!stu) { showToast('查無此學生','error'); return; }
-
+  const name = document.getElementById('sName').value.trim();
+  const pass = document.getElementById('sPass').value.trim();
+  if (!name||!pass) { toast('請填寫姓名和密碼','err'); return; }
+  const stu = byName(name);
+  if (!stu) { toast('查無此學生','err'); return; }
   try {
     const data = await dbGet(`students/${stu.id}`);
-    const storedPass = data?.password || '0000';
-
-    if (pass !== storedPass) { showToast('密碼錯誤','error'); return; }
-
-    currentUser = { name, role:'student', studentId: stu.id };
-    if (!data?.password || data.password === '0000') {
-      // Force change password
-      showChangePasswordDialog(stu.id, () => enterStudentView(stu));
-    } else {
-      enterStudentView(stu);
-    }
-  } catch(e) {
-    showToast('連線失敗','error');
-  }
+    const stored = data?.password || '0000';
+    if (pass !== stored) { toast('密碼錯誤','err'); return; }
+    me = {name, role:'student', stuId:stu.id};
+    if (!data?.password || data.password==='0000') {
+      openDlg('⚠️ 首次登入，請修改密碼',
+        `<div class="dlg-label">新密碼</div><input class="dlg-input" type="password" id="np1" placeholder="新密碼">
+         <div class="dlg-label">確認密碼</div><input class="dlg-input" type="password" id="np2" placeholder="再次輸入">`,
+        [{label:'確認修改',cls:'ok',fn:async()=>{
+          const p1=document.getElementById('np1').value;
+          const p2=document.getElementById('np2').value;
+          if(!p1){toast('密碼不能為空','err');return false}
+          if(p1!==p2){toast('兩次不一致','err');return false}
+          await dbUpd(`students/${stu.id}`,{password:p1});
+          toast('密碼已更新','ok');
+          enterStudentView(stu); return true;
+        }}]);
+    } else { enterStudentView(stu); }
+  } catch(e) { toast('連線失敗','err'); }
 }
 
-function showChangePasswordDialog(studentId, cb) {
-  openDialog('⚠️ 首次登入，請修改密碼',
-    `<div class="dialog-label">新密碼</div>
-     <input class="dialog-input" type="password" id="newPass1" placeholder="請輸入新密碼">
-     <div class="dialog-label">確認新密碼</div>
-     <input class="dialog-input" type="password" id="newPass2" placeholder="再次輸入">`,
-    [{label:'確認修改', cls:'confirm', action: async ()=>{
-      const p1 = document.getElementById('newPass1').value;
-      const p2 = document.getElementById('newPass2').value;
-      if (!p1) { showToast('密碼不能為空','error'); return false; }
-      if (p1 !== p2) { showToast('兩次密碼不一致','error'); return false; }
-      await dbUpdate(`students/${studentId}`, {password: p1});
-      showToast('密碼已更新');
-      cb && cb();
-      return true;
-    }}]
-  );
-}
+function doLogout() { location.reload(); }
 
-function doLogout() {
-  currentUser = null; currentStudent = null; pendingAttendance = {};
-  // 直接重新載入，登入畫面不保留在背景
-  window.location.reload();
-}
-
-// ==============================
-// SCREENS
-// ==============================
-function showScreen(id) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  window.scrollTo({top:0, behavior:'instant'});
-  document.documentElement.scrollTop = 0;
-  document.body.scrollTop = 0;
-}
-
+// ══════════════════════════════════════════
+// ENTER APP
+// ══════════════════════════════════════════
 function enterApp() {
-  document.getElementById('currentUserDisplay').textContent = currentUser.name;
-  document.getElementById('tab-teachers').style.display = currentUser.role==='master' ? '' : 'none';
+  document.getElementById('curUser').textContent = me.name;
+  document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
   showScreen('appScreen');
-  document.getElementById('loginScreen').classList.add('hidden-after-login');
-  buildClassSelector();
-  switchTab('attendance');
+  buildClsBtns('clsBtns', switchCls);
+  switchCls(me.classes[0]);
   startApplyListener();
+  startMsgListener();
 }
 
 function enterStudentView(stu) {
-  document.getElementById('studentUserDisplay').textContent = stu.name;
-  // 關鍵修復：手動把登入畫面關掉，不然它會一直擋在最前面
-  document.getElementById('loginScreen').classList.add('hidden-after-login'); 
+  document.getElementById('stuUserName').textContent = stu.name;
   showScreen('studentScreen');
-  loadStudentView(stu);
+  loadStuView(stu);
+  loadStuMsgs(stu.id);
 }
 
-// ==============================
+// ══════════════════════════════════════════
 // TABS
-// ==============================
-function switchTab(tab) {
-  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.tab-content').forEach(t => t.style.display='none');
-  document.getElementById('tab-'+tab).classList.add('active');
-  document.getElementById('tab'+tab.charAt(0).toUpperCase()+tab.slice(1)).style.display='';
-
-  if (tab==='attendance') renderStudentGrid();
-  if (tab==='report') { buildReportClassSelector(); renderReportGrid(); renderStats(); }
-  if (tab==='teachers') renderTeacherList();
+// ══════════════════════════════════════════
+function switchTab(t) {
+  document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
+  ['att','apply','inbox','report','teachers'].forEach(id=>{
+    const el = document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));
+    if (el) el.style.display = 'none';
+  });
+  document.getElementById('tab-'+t).classList.add('on');
+  // map tab id to content div
+  const map = {att:'tabAtt',apply:'tabApply',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers'};
+  document.getElementById(map[t]).style.display = '';
+  if (t==='att') renderGrid();
+  if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); }
+  if (t==='teachers') renderTeachers();
+  if (t==='inbox') renderInbox();
+  if (t==='apply') {} // already live
 }
 
-// ==============================
+// ══════════════════════════════════════════
 // CLASS SELECTOR
-// ==============================
-function buildClassSelector() {
-  const classes = currentUser.classes;
-  const container = document.getElementById('classSelectorTeacher');
-  container.innerHTML = '';
-  classes.forEach((cls, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'class-btn' + (i===0?' active':'');
-    btn.textContent = cls;
-    btn.onclick = () => {
-      document.querySelectorAll('#classSelectorTeacher .class-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      currentClass = cls;
-      renderStudentGrid();
+// ══════════════════════════════════════════
+function buildClsBtns(containerId, clickFn) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '';
+  me.classes.forEach((cls,i) => {
+    const b = document.createElement('button');
+    b.className = 'clsbtn'+(i===0?' on':'');
+    b.textContent = cls;
+    b.onclick = () => {
+      c.querySelectorAll('.clsbtn').forEach(x=>x.classList.remove('on'));
+      b.classList.add('on');
+      clickFn(cls);
     };
-    container.appendChild(btn);
-  });
-  currentClass = classes[0] || null;
-}
-
-function buildReportClassSelector() {
-  const classes = currentUser.classes;
-  const container = document.getElementById('classSelectorReport');
-  container.innerHTML = '';
-  classes.forEach((cls, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'class-btn' + (i===0?' active':'');
-    btn.textContent = cls;
-    btn.onclick = () => {
-      document.querySelectorAll('#classSelectorReport .class-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      currentClass = cls;
-      renderReportGrid();
-    };
-    container.appendChild(btn);
+    c.appendChild(b);
   });
 }
 
-// ==============================
-// STUDENT GRID (ATTENDANCE)
-// ==============================
-async function renderStudentGrid() {
-  if (!currentClass) return;
-  const grid = document.getElementById('studentGrid');
-  grid.innerHTML = '<div style="padding:20px;color:var(--text-muted);"><div class="loading-spinner"></div></div>';
+function switchCls(cls) { curCls = cls; renderGrid(); }
+function switchClsR(cls) { curCls = cls; renderRpt(); }
 
-  const students = getStudentsByClass(currentClass);
-  const today = new Date().toLocaleDateString('zh-TW');
-
-  // Fetch all student data for this class
-  const promises = students.map(s => dbGet(`students/${s.id}`));
-  const results = await Promise.all(promises);
-  const dataMap = {};
-  students.forEach((s,i) => { dataMap[s.id] = results[i] || {}; });
-
+// ══════════════════════════════════════════
+// STUDENT GRID
+// ══════════════════════════════════════════
+async function renderGrid() {
+  if (!curCls) return;
+  const grid = document.getElementById('stuGrid');
+  grid.innerHTML = '<div style="padding:20px"><div class="spin"></div></div>';
+  const stus = byCls(curCls);
+  const td = today();
+  const res = await Promise.all(stus.map(s=>dbGet(`students/${s.id}`)));
+  const dm = {}; stus.forEach((s,i)=>dm[s.id]=res[i]||{});
   grid.innerHTML = '';
-  students.forEach(s => {
-    const d = dataMap[s.id];
-    const todayAtt = pendingAttendance[s.id] || d.attendance?.[today] || '未';
-    const points = d.points || 0;
-    const medals = d.medals || 0;
-    const stars = Math.min(points, 10);
-
+  stus.forEach(s => {
+    const d = dm[s.id];
+    const att = pendAtt[s.id] || d.attendance?.[td] || '未';
+    const pts = d.points||0;
+    const medals = d.medals||0;
+    const stars = Math.min(pts,10);
+    const sel = batchSel.has(s.id);
     const card = document.createElement('div');
-    card.className = `student-card status-${todayAtt}`;
-    card.id = `card-${s.id}`;
+    card.className = `scard s${att}${sel?' sel':''}`;
+    card.id = `sc-${s.id}`;
     card.innerHTML = `
-      <div class="batch-check">✓</div>
-      <div class="card-header">
-        <div class="student-num">${s.id}</div>
-        <div class="status-badge ${todayAtt} att-toggle" id="badge-${s.id}" title="點擊切換出勤">${todayAtt}</div>
+      <div class="sc-top">
+        <div class="sc-num">${s.id}</div>
+        <div class="sbadge ${att}" onclick="cycleAtt(event,'${s.id}')">${att}</div>
       </div>
-      <div class="student-name-btn" title="點擊查看詳細資料">${s.name}</div>
-      <div class="points-row">
-        <div class="points-stars">${'★'.repeat(stars)}${'☆'.repeat(10-stars)}</div>
-        <div class="medals-count">${medals>0?'🎖️×'+medals:''}</div>
+      <div class="sc-name" onclick="handleCardClick(event,'${s.id}')">${s.name}</div>
+      <div class="sc-pts">
+        <div class="sc-stars">${'★'.repeat(stars)}${'☆'.repeat(10-stars)}</div>
+        <div class="sc-medals">${medals>0?'🎖️×'+medals:''}</div>
       </div>
-      <div class="card-hint">👆名字查詳情 · 狀態改出勤</div>
-    `;
-
-    // 點名字 → 開詳細面板 or 批次選取
-    card.querySelector('.student-name-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (document.body.classList.contains('batch-mode')) {
-        toggleBatchSelect(s.id, card);
-      } else {
-        openDetail(s, dataMap[s.id]);
-      }
-    });
-
-    // 點狀態徽章 → 切換出勤（批次模式下也選取）
-    card.querySelector('.att-toggle').addEventListener('click', (e) => {
-      e.stopPropagation();
-      if (document.body.classList.contains('batch-mode')) {
-        toggleBatchSelect(s.id, card);
-      } else {
-        cycleAttendance(s, card);
-      }
-    });
-
-    // 批次模式下點整張卡
-    card.addEventListener('click', () => {
-      if (document.body.classList.contains('batch-mode')) {
-        toggleBatchSelect(s.id, card);
-      }
-    });
-
+      <div class="sc-hint">${batchMode?'👆點擊勾選':'👆名字查詳情'}</div>`;
+    // restore sel visual
+    if (sel) card.classList.add('sel');
     grid.appendChild(card);
   });
 }
 
-const STATUS_CYCLE = ['未','出','遲','缺','假'];
-function cycleAttendance(student, card) {
-  const current = pendingAttendance[student.id] || '未';
-  const idx = STATUS_CYCLE.indexOf(current);
-  const next = STATUS_CYCLE[(idx+1) % STATUS_CYCLE.length];
-  pendingAttendance[student.id] = next;
-
-  // 更新卡片 UI（純前端，不寫入 Firebase）
-  card.className = `student-card status-${next}`;
-  const badge = card.querySelector('.status-badge');
-  badge.className = `status-badge ${next} att-toggle`;
-  badge.textContent = next;
-  if (next === '遲') showToast(`${student.name} 標記遲到，儲存後將自動扣 1 點`);
+function handleCardClick(e, id) {
+  e.stopPropagation();
+  if (batchMode) { toggleSel(id); return; }
+  const stu = byId(id);
+  if (stu) openDetail(stu);
 }
 
-async function saveAttendance() {
-  if (!currentClass) return;
-  const today = new Date().toLocaleDateString('zh-TW');
-  const updates = {};
-  const lateStudents = [];
-
-  for (const [id, status] of Object.entries(pendingAttendance)) {
-    const stu = getStudent(id);
-    if (!stu || stu.cls !== currentClass) continue;
-    updates[`${DB_ROOT}/students/${id}/attendance/${today}`] = status;
-    if (status === '遲') lateStudents.push(id);
+function cycleAtt(e, id) {
+  e.stopPropagation();
+  const cur = pendAtt[id] || '未';
+  const next = STATUS[(STATUS.indexOf(cur)+1)%STATUS.length];
+  pendAtt[id] = next;
+  const card = document.getElementById(`sc-${id}`);
+  if (card) {
+    card.className = `scard s${next}${batchSel.has(id)?' sel':''}`;
+    const badge = card.querySelector('.sbadge');
+    badge.className = `sbadge ${next}`;
+    badge.textContent = next;
   }
+  if (next==='遲') autoDeductLate(id);
+}
 
-  if (Object.keys(updates).length === 0) { showToast('無變更需儲存'); return; }
+async function autoDeductLate(id) {
+  const d = await dbGet(`students/${id}`);
+  const pts = Math.max(0,(d?.points||0)-1);
+  const lk = Date.now()+'';
+  const stu = byId(id);
+  await dbUpd(`students/${id}`,{
+    points:pts,
+    [`log/${lk}`]:{time:now(),action:'遲到自動扣點',reason:'遲到扣1點',teacher:me.name,delta:-1}
+  });
+  // 發送記點通知給學生
+  await sendNotifToStudent(id, stu?.name||id, '遲到自動扣1點', 'notice');
+  toast(`${byId(id)?.name} 遲到，自動扣1點`);
+}
 
-  try {
-    await db.ref('/').update(updates);
-
-    // 儲存完成後，對遲到學生扣 1 點
-    for (const id of lateStudents) {
-      const data = await dbGet(`students/${id}`);
-      const pts = Math.max(0, (data?.points||0) - 1);
-      const logKey = Date.now().toString();
-      await dbUpdate(`students/${id}`, {
-        points: pts,
-        [`log/${logKey}`]: {
-          time: now(), action:'遲到自動扣點',
-          reason:'點名遲到自動扣除 1 點',
-          teacher: currentUser.name, delta:-1
-        }
-      });
-    }
-
-    pendingAttendance = {};
-    const lateMsg = lateStudents.length > 0 ? `，${lateStudents.length} 人遲到已自動扣點` : '';
-    showToast(`點名已儲存 ✓${lateMsg}`, 'success');
-  } catch(e) {
-    showToast('儲存失敗','error');
+async function saveAtt() {
+  if (!curCls||!Object.keys(pendAtt).length) { toast('無變更'); return; }
+  const td = today();
+  const upd = {};
+  for (const [id,att] of Object.entries(pendAtt)) {
+    if (byId(id)?.cls!==curCls) continue;
+    upd[`${ROOT}/students/${id}/attendance/${td}`] = att;
   }
+  await db.ref('/').update(upd);
+  pendAtt = {};
+  toast('點名已儲存','ok');
 }
 
-function setAllStatus(status) {
-  if (!currentClass) return;
-  const students = getStudentsByClass(currentClass);
-  students.forEach(s => { pendingAttendance[s.id] = status; });
-  renderStudentGrid();
+function setAllAtt(att) {
+  byCls(curCls).forEach(s=>{ pendAtt[s.id]=att; });
+  renderGrid();
 }
 
-// ==============================
+// ══════════════════════════════════════════
+// BATCH MODE
+// ══════════════════════════════════════════
+function toggleBatch() {
+  batchMode = !batchMode;
+  batchSel.clear();
+  const btn = document.getElementById('batchBtn');
+  const bar = document.getElementById('batchBar');
+  btn.textContent = batchMode?'✕ 退出批次':'☑️ 批次加點';
+  btn.className = batchMode?'btn g':'btn';
+  bar.classList.toggle('on', batchMode);
+  if (batchMode) toast('批次模式：點名字勾選學生');
+  updBatchCnt();
+  renderGrid();
+}
+
+function toggleSel(id) {
+  if (batchSel.has(id)) batchSel.delete(id); else batchSel.add(id);
+  updBatchCnt();
+  const card = document.getElementById(`sc-${id}`);
+  if (card) card.classList.toggle('sel', batchSel.has(id));
+}
+
+function updBatchCnt() { document.getElementById('batchCnt').textContent = batchSel.size; }
+function selectAll() { byCls(curCls).forEach(s=>batchSel.add(s.id)); updBatchCnt(); renderGrid(); }
+function clearSel() { batchSel.clear(); updBatchCnt(); renderGrid(); }
+
+async function batchPts(delta) {
+  if (!batchSel.size) { toast('請先勾選學生','err'); return; }
+  openDlg(delta>0?`⭐ 批次+1點（${batchSel.size}人）`:`－ 批次扣1點（${batchSel.size}人）`,
+    `<div class="dlg-label">原因</div><input class="dlg-input" type="text" id="bReason" placeholder="請輸入原因">`,
+    [{label:'確認',cls:'ok',fn:async()=>{
+      const reason = document.getElementById('bReason').value.trim();
+      if (!reason){toast('請填寫原因','err');return false}
+      const upd = {};
+      for (const id of batchSel) {
+        const d = await dbGet(`students/${id}`);
+        const pts = Math.max(0,(d?.points||0)+delta);
+        const lk = Date.now()+'_'+id;
+        upd[`${ROOT}/students/${id}/points`] = pts;
+        upd[`${ROOT}/students/${id}/log/${lk}`] = {time:now(),action:delta>0?'批次加點':'批次扣點',reason,teacher:me.name,delta};
+        // 發通知
+        const stu = byId(id);
+        if (stu) upd[`${ROOT}/stuMsgs/${id}/${lk}`] = {from:me.name,content:`${delta>0?'獲得':'扣除'}1點 — ${reason}`,type:'notice',time:now(),read:false};
+      }
+      await db.ref('/').update(upd);
+      toast(`${batchSel.size}人${delta>0?'加':'扣'}點完成`,'ok');
+      renderGrid(); return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+async function batchMedal() {
+  if (!batchSel.size) { toast('請先勾選學生','err'); return; }
+  openDlg(`🎖️ 批次發金牌（${batchSel.size}人）`,
+    `<div class="dlg-label">原因</div><input class="dlg-input" type="text" id="bmR" placeholder="請輸入原因">`,
+    [{label:'確認',cls:'ok',fn:async()=>{
+      const reason = document.getElementById('bmR').value.trim();
+      if (!reason){toast('請填寫原因','err');return false}
+      const upd = {};
+      for (const id of batchSel) {
+        const d = await dbGet(`students/${id}`);
+        const medals = (d?.medals||0)+1;
+        const lk = Date.now()+'_'+id;
+        upd[`${ROOT}/students/${id}/medals`] = medals;
+        upd[`${ROOT}/students/${id}/log/${lk}`] = {time:now(),action:'批次加金牌',reason,teacher:me.name,delta:0};
+        upd[`${ROOT}/stuMsgs/${id}/${lk}`] = {from:me.name,content:`獲得金牌🎖️ — ${reason}`,type:'notice',time:now(),read:false};
+      }
+      await db.ref('/').update(upd);
+      toast(`已發${batchSel.size}枚金牌`,'ok'); renderGrid(); return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+// ══════════════════════════════════════════
 // DETAIL PANEL
-// ==============================
-async function openDetail(student, data) {
-  currentStudent = student;
-  const d = data || (await dbGet(`students/${student.id}`)) || {};
-  const today = new Date().toLocaleDateString('zh-TW');
-
-  document.getElementById('detailName').textContent = student.name;
-  document.getElementById('detailClass').textContent = student.cls + ' · ' + student.id;
-  document.getElementById('detailPassword').textContent = d.password || '0000';
-
+// ══════════════════════════════════════════
+async function openDetail(stu) {
+  curStu = stu;
+  const d = (await dbGet(`students/${stu.id}`))||{};
+  const td = today();
+  document.getElementById('dpName').textContent = stu.name;
+  document.getElementById('dpCls').textContent = stu.cls+' · '+stu.id;
+  document.getElementById('dpPw').textContent = d.password||'0000';
   // 今日狀態
-  const todayStatus = d.attendance?.[today] || '未點名';
-  const statusEl = document.getElementById('detailStatus');
-  const statusColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[todayStatus]||'var(--text-muted)';
-  statusEl.innerHTML = `<span style="color:${statusColor};font-size:22px;">${todayStatus}</span>`;
-
-  // 出勤歷史（最近 21 天）
-  const attHistory = d.attendance || {};
-  const histDays = Object.keys(attHistory).sort().slice(-21);
-  const attSummary = {出:0,遲:0,缺:0,假:0};
-  histDays.forEach(day => { const v = attHistory[day]; if(attSummary[v]!==undefined) attSummary[v]++; });
-  const histEl = document.getElementById('detailAttHistory');
-  if(histEl){
-    histEl.innerHTML = `
-      <div class="att-summary">
-        <div class="att-summary-item" style="color:var(--green)">出席 ${attSummary['出']} 天</div>
-        <div class="att-summary-item" style="color:var(--yellow)">遲到 ${attSummary['遲']} 次</div>
-        <div class="att-summary-item" style="color:var(--red)">缺席 ${attSummary['缺']} 次</div>
-        <div class="att-summary-item" style="color:var(--blue)">請假 ${attSummary['假']} 次</div>
-      </div>
-      <div class="att-history-grid">
-        ${histDays.map(day=>{
-          const v = attHistory[day]||'未';
-          const shortDay = day.replace(/\d+\//,'').replace(/\//,'/');
-          return `<div class="att-day s-${v}"><div class="day-label">${shortDay}</div><div class="day-status">${v}</div></div>`;
-        }).join('')}
-      </div>
-    `;
+  const att = d.attendance?.[td]||'未';
+  const attColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[att]||'var(--tx2)';
+  document.getElementById('dpStatus').innerHTML = `<span style="color:${attColor}">${att}</span>`;
+  // 出勤歷史
+  const attH = d.attendance||{};
+  const days = Object.keys(attH).sort().slice(-21);
+  const sum = {出:0,遲:0,缺:0,假:0};
+  days.forEach(day=>{ if(sum[attH[day]]!==undefined) sum[attH[day]]++; });
+  document.getElementById('dpAttHist').innerHTML = `
+    <div class="att-sum">
+      <div class="att-si" style="color:var(--green)">出席 ${sum['出']}</div>
+      <div class="att-si" style="color:var(--yellow)">遲到 ${sum['遲']}</div>
+      <div class="att-si" style="color:var(--red)">缺席 ${sum['缺']}</div>
+      <div class="att-si" style="color:var(--blue)">請假 ${sum['假']}</div>
+    </div>
+    <div class="att-hgrid">${days.map(day=>{
+      const v=attH[day]||'未';
+      const sd=day.replace(/^\d+\//,'').replace('/','/');
+      return `<div class="att-day s${v}"><div class="dl">${sd}</div><div class="dv">${v}</div></div>`;
+    }).join('')}</div>`;
+  // 點數
+  const pts = d.points||0;
+  document.getElementById('dpPtsNum').textContent = pts;
+  document.getElementById('redeemBtn').disabled = pts<5;
+  const pg = document.getElementById('dpPtsGrid');
+  pg.innerHTML = '';
+  for(let i=0;i<10;i++){
+    const c=document.createElement('div');
+    c.className='pc '+(i<pts?'on':'off');
+    c.textContent=i<pts?'⭐':'';
+    pg.appendChild(c);
   }
-
-  // Points grid
-  const pts = d.points || 0;
-  document.getElementById('detailPointsNum').textContent = pts;
-  const grid = document.getElementById('detailPointsGrid');
-  grid.innerHTML = '';
-  for (let i=0; i<10; i++) {
-    const cell = document.createElement('div');
-    cell.className = 'point-cell ' + (i<pts?'filled':'empty');
-    cell.textContent = i<pts ? '⭐' : '';
-    grid.appendChild(cell);
-  }
-  document.getElementById('redeemBtn').disabled = pts < 5;
-
-  // Medals
-  const medals = d.medals || 0;
-  document.getElementById('detailMedalsNum').textContent = medals;
-  const medalsDiv = document.getElementById('detailMedals');
-  if (medals > 0) {
-    medalsDiv.innerHTML = Array(Math.min(medals,12)).fill(0).map(()=>
-      `<div class="medal-coin">🏅</div>`
-    ).join('') + (medals>12?`<span style="font-size:20px;color:var(--gold);font-weight:bold;align-self:center;"> +${medals-12}</span>`:'');
-  } else {
-    medalsDiv.innerHTML = '<span class="medals-empty">尚無金牌</span>';
-  }
-
-  // Tasks
-  renderDetailTasks(d.tasks || {});
-
-  // Log
-  renderDetailLog(d.log || {});
-
+  // 金牌
+  const medals = d.medals||0;
+  document.getElementById('dpMedalsN').textContent = medals;
+  const mr = document.getElementById('dpMedals');
+  mr.innerHTML = medals>0
+    ? Array(Math.min(medals,12)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>12?`<span style="color:var(--gold);font-size:18px;align-self:center">+${medals-12}</span>`:'')
+    : '<span style="color:var(--tx3);font-size:13px;font-style:italic">尚無金牌</span>';
+  // 任務
+  renderTasks(d.tasks||{});
+  // 日誌
+  renderLog(d.log||{});
   document.getElementById('detailPanel').classList.add('open');
 }
 
 function closeDetail() {
   document.getElementById('detailPanel').classList.remove('open');
-  currentStudent = null;
+  curStu = null;
 }
 
-function renderDetailTasks(tasks) {
-  const container = document.getElementById('detailTasks');
-  container.innerHTML = '';
-  const entries = Object.entries(tasks);
-  if (entries.length === 0) {
-    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">暫無任務</div>';
-    return;
-  }
-  entries.forEach(([key, task]) => {
-    const pct = Math.min(100, Math.round((task.done/task.total)*100));
-    const div = document.createElement('div');
-    div.className = 'task-item';
-    div.innerHTML = `
-      <div class="task-header">
-        <div class="task-name">${task.name}</div>
-        <div style="display:flex;gap:6px;align-items:center;">
-          <span style="font-size:12px;color:var(--text-secondary);">${task.done}/${task.total}</span>
-          <button class="btn-sm" onclick="incrementTask('${key}')" style="padding:3px 8px;font-size:12px;">+1</button>
-          <button class="btn-sm danger" onclick="deleteTask('${key}')" style="padding:3px 8px;font-size:12px;">✕</button>
+function renderTasks(tasks) {
+  const c = document.getElementById('dpTasks');
+  const ents = Object.entries(tasks);
+  if (!ents.length) { c.innerHTML='<div style="color:var(--tx3);font-size:13px">暫無任務</div>'; return; }
+  c.innerHTML = ents.map(([k,t])=>{
+    const pct = Math.min(100,Math.round((t.done/t.total)*100));
+    return `<div class="task-item">
+      <div class="task-hd">
+        <div style="font-size:14px">${t.name}</div>
+        <div class="row"><span style="font-size:12px;color:var(--tx2)">${t.done}/${t.total}</span>
+          <button class="btn s" onclick="incrTask('${k}')" style="padding:2px 7px;font-size:11px">+1</button>
+          <button class="btn d" onclick="delTask('${k}')" style="padding:2px 7px;font-size:11px">✕</button>
         </div>
       </div>
-      <div class="task-progress-bar">
-        <div class="task-progress-fill" style="width:${pct}%"></div>
-      </div>
-    `;
-    container.appendChild(div);
-  });
+      <div class="task-bar"><div class="task-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
 }
 
-function renderDetailLog(log) {
-  const container = document.getElementById('detailLog');
-  container.innerHTML = '';
-  const entries = Object.entries(log).sort((a,b) => b[0]-a[0]).slice(0,30);
-  if (entries.length === 0) {
-    container.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">尚無記錄</div>';
-    return;
-  }
-  entries.forEach(([key, entry]) => {
-    const div = document.createElement('div');
-    const cls = entry.delta > 0 ? 'add' : entry.delta < 0 ? 'sub' : (entry.action.includes('牌')?'medal':'');
-    div.className = `log-item ${cls}`;
-    div.innerHTML = `
-      <div class="log-time">${entry.time} · ${entry.teacher||''}</div>
-      <div>${entry.action}${entry.reason?' — '+entry.reason:''}</div>
-    `;
-    container.appendChild(div);
-  });
+function renderLog(log) {
+  const c = document.getElementById('dpLog');
+  const ents = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,40);
+  if (!ents.length) { c.innerHTML='<div style="color:var(--tx3);font-size:13px">尚無記錄</div>'; return; }
+  c.innerHTML = ents.map(([,e])=>{
+    const cls = e.delta>0?'add':e.delta<0?'sub':e.action?.includes('牌')?'med':'';
+    return `<div class="log-item ${cls}"><div class="log-t">${e.time||''} · ${e.teacher||''}</div><div>${e.action||''}${e.reason?' — '+e.reason:''}</div></div>`;
+  }).join('');
 }
 
-// ==============================
-// POINTS ACTIONS
-// ==============================
-async function changePoints(delta) {
-  if (!currentStudent) return;
-  openDialog(delta>0?'＋ 加點':'－ 扣點',
-    `<div class="dialog-label">原因</div>
-     <input class="dialog-input" type="text" id="pointReason" placeholder="請輸入原因">`,
-    [{label:'確認', cls:'confirm', action: async ()=>{
-      const reason = document.getElementById('pointReason').value.trim();
-      if (!reason) { showToast('請填寫原因','error'); return false; }
-      const data = await dbGet(`students/${currentStudent.id}`);
-      const pts = Math.max(0, (data?.points||0) + delta);
-      const logKey = Date.now().toString();
-      await dbUpdate(`students/${currentStudent.id}`, {
-        points: pts,
-        [`log/${logKey}`]: { time:now(), action: delta>0?'加點':'扣點', reason, teacher:currentUser.name, delta }
-      });
-      showToast(`已${delta>0?'加':'扣'} 1 點`,'success');
-      openDetail(currentStudent);
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
+// ── POINTS ──
+async function chgPts(delta) {
+  if (!curStu) return;
+  openDlg(delta>0?'＋ 加點':'－ 扣點',
+    `<div class="dlg-label">原因</div><input class="dlg-input" type="text" id="pR" placeholder="原因">`,
+    [{label:'確認',cls:'ok',fn:async()=>{
+      const reason=document.getElementById('pR').value.trim();
+      if(!reason){toast('請填寫原因','err');return false}
+      const d=await dbGet(`students/${curStu.id}`);
+      const pts=Math.max(0,(d?.points||0)+delta);
+      const lk=Date.now()+'';
+      await dbUpd(`students/${curStu.id}`,{points:pts,[`log/${lk}`]:{time:now(),action:delta>0?'加點':'扣點',reason,teacher:me.name,delta}});
+      await sendNotifToStudent(curStu.id, curStu.name, `${delta>0?'獲得':'扣除'}1點 — ${reason}`, 'notice');
+      toast(`已${delta>0?'加':'扣'}1點`,'ok');
+      openDetail(curStu); return true;
+    }},{label:'取消',fn:()=>true}]);
 }
 
 async function redeemMedal() {
-  if (!currentStudent) return;
-  const data = await dbGet(`students/${currentStudent.id}`);
-  if ((data?.points||0) < 5) { showToast('點數不足 5 點','error'); return; }
-  openDialog('🎖️ 兌換金牌',
-    `<div class="dialog-message">確認扣除 5 點，兌換 1 枚金牌？<br>剩餘點數：${(data.points||0)-5} 點</div>`,
-    [{label:'確認兌換', cls:'confirm', action: async ()=>{
-      const pts = (data.points||0) - 5;
-      const medals = (data.medals||0) + 1;
-      const logKey = Date.now().toString();
-      await dbUpdate(`students/${currentStudent.id}`, {
-        points: pts, medals,
-        [`log/${logKey}`]: { time:now(), action:'兌換金牌', reason:'集滿5點兌換', teacher:currentUser.name, delta:-5 }
-      });
-      showToast('金牌兌換成功 🎖️','success');
-      openDetail(currentStudent);
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
+  if (!curStu) return;
+  const d=await dbGet(`students/${curStu.id}`);
+  if ((d?.points||0)<5){toast('點數不足5點','err');return}
+  openDlg('🎖️ 兌換金牌',
+    `<div class="dlg-msg">確認扣除5點，兌換1枚金牌？<br>剩餘點數：${(d.points||0)-5}點</div>`,
+    [{label:'確認兌換',cls:'ok',fn:async()=>{
+      const pts=(d.points||0)-5, medals=(d.medals||0)+1, lk=Date.now()+'';
+      await dbUpd(`students/${curStu.id}`,{points:pts,medals,[`log/${lk}`]:{time:now(),action:'兌換金牌',reason:'集滿5點兌換',teacher:me.name,delta:-5}});
+      toast('金牌兌換成功🎖️','ok'); openDetail(curStu); return true;
+    }},{label:'取消',fn:()=>true}]);
 }
 
-async function changeMedal(delta) {
-  if (!currentStudent) return;
-  openDialog(delta>0?'＋ 加金牌':'－ 扣金牌',
-    `<div class="dialog-label">原因</div>
-     <input class="dialog-input" type="text" id="medalReason" placeholder="請輸入原因">`,
-    [{label:'確認', cls:'confirm', action: async ()=>{
-      const reason = document.getElementById('medalReason').value.trim();
-      if (!reason) { showToast('請填寫原因','error'); return false; }
-      const data = await dbGet(`students/${currentStudent.id}`);
-      const medals = Math.max(0, (data?.medals||0) + delta);
-      const logKey = Date.now().toString();
-      await dbUpdate(`students/${currentStudent.id}`, {
-        medals,
-        [`log/${logKey}`]: { time:now(), action: delta>0?'加金牌':'扣金牌', reason, teacher:currentUser.name, delta }
-      });
-      showToast(`已${delta>0?'新增':'扣除'}金牌`,'success');
-      openDetail(currentStudent);
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
+async function chgMedal(delta) {
+  if (!curStu) return;
+  openDlg(delta>0?'＋ 加金牌':'－ 扣金牌',
+    `<div class="dlg-label">原因</div><input class="dlg-input" type="text" id="mR" placeholder="原因">`,
+    [{label:'確認',cls:'ok',fn:async()=>{
+      const reason=document.getElementById('mR').value.trim();
+      if(!reason){toast('請填寫原因','err');return false}
+      const d=await dbGet(`students/${curStu.id}`);
+      const medals=Math.max(0,(d?.medals||0)+delta), lk=Date.now()+'';
+      await dbUpd(`students/${curStu.id}`,{medals,[`log/${lk}`]:{time:now(),action:delta>0?'加金牌':'扣金牌',reason,teacher:me.name,delta}});
+      toast(`已${delta>0?'新增':'扣除'}金牌`,'ok'); openDetail(curStu); return true;
+    }},{label:'取消',fn:()=>true}]);
 }
 
-// ==============================
-// TASKS
-// ==============================
+// ── TASKS ──
 function openAddTask() {
-  if (!currentStudent) return;
-  openDialog('📝 新增處罰任務',
-    `<div class="dialog-label">任務名稱</div>
-     <input class="dialog-input" type="text" id="taskName" placeholder="例：抄寫樂理50題">
-     <div class="dialog-label">總次數</div>
-     <input class="dialog-input" type="number" id="taskTotal" placeholder="例：50" min="1">`,
-    [{label:'新增', cls:'confirm', action: async ()=>{
-      const name = document.getElementById('taskName').value.trim();
-      const total = parseInt(document.getElementById('taskTotal').value);
-      if (!name||!total||total<1) { showToast('請填寫完整','error'); return false; }
-      const logKey = Date.now().toString();
-      await dbUpdate(`students/${currentStudent.id}`, {
-        [`tasks/${logKey}`]: { name, total, done:0 }
-      });
-      showToast('任務已新增');
-      openDetail(currentStudent);
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
+  if (!curStu) return;
+  openDlg('📝 新增處罰任務',
+    `<div class="dlg-label">任務名稱</div><input class="dlg-input" type="text" id="tName" placeholder="例：抄寫樂理50題">
+     <div class="dlg-label">總次數</div><input class="dlg-input" type="number" id="tTotal" placeholder="例：50" min="1">`,
+    [{label:'新增',cls:'ok',fn:async()=>{
+      const name=document.getElementById('tName').value.trim();
+      const total=parseInt(document.getElementById('tTotal').value);
+      if(!name||!total||total<1){toast('請填寫完整','err');return false}
+      const k=Date.now()+'';
+      await dbUpd(`students/${curStu.id}`,{[`tasks/${k}`]:{name,total,done:0}});
+      toast('任務已新增'); openDetail(curStu); return true;
+    }},{label:'取消',fn:()=>true}]);
 }
 
-async function incrementTask(taskKey) {
-  if (!currentStudent) return;
-  const data = await dbGet(`students/${currentStudent.id}/tasks/${taskKey}`);
-  if (!data) return;
-  const done = Math.min(data.total, (data.done||0) + 1);
-  await dbUpdate(`students/${currentStudent.id}/tasks/${taskKey}`, { done });
-  if (done >= data.total) showToast('任務完成！🎉','success');
-  openDetail(currentStudent);
+async function incrTask(k) {
+  if (!curStu) return;
+  const d=await dbGet(`students/${curStu.id}/tasks/${k}`);
+  if(!d) return;
+  const done=Math.min(d.total,(d.done||0)+1);
+  await dbUpd(`students/${curStu.id}/tasks/${k}`,{done});
+  if(done>=d.total) toast('任務完成！🎉','ok');
+  openDetail(curStu);
 }
 
-async function deleteTask(taskKey) {
-  if (!currentStudent) return;
-  openDialog('⚠️ 確認刪除任務', '<div class="dialog-message">確認要刪除此任務？</div>',
-    [{label:'刪除', cls:'danger-confirm', action: async ()=>{
-      await db.ref(`${DB_ROOT}/students/${currentStudent.id}/tasks/${taskKey}`).remove();
-      showToast('任務已刪除');
-      openDetail(currentStudent);
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
+async function delTask(k) {
+  if (!curStu) return;
+  openDlg('⚠️ 確認刪除任務','<div class="dlg-msg">確認要刪除此任務？</div>',
+    [{label:'刪除',cls:'del',fn:async()=>{
+      await db.ref(`${ROOT}/students/${curStu.id}/tasks/${k}`).remove();
+      toast('已刪除'); openDetail(curStu); return true;
+    }},{label:'取消',fn:()=>true}]);
 }
 
-// ==============================
-// EXIT APPLY SYSTEM
-// ==============================
+// ── RESET ──
+async function resetPts() {
+  if (!curStu) return;
+  openDlg('⚠️ 重置點數',`<div class="dlg-msg">確認將「${curStu.name}」點數歸零？</div>`,
+    [{label:'確認',cls:'del',fn:async()=>{ await dbUpd(`students/${curStu.id}`,{points:0}); toast('點數已重置'); openDetail(curStu); return true; }},{label:'取消',fn:()=>true}]);
+}
+async function resetMedals() {
+  if (!curStu) return;
+  openDlg('⚠️ 重置金牌',`<div class="dlg-msg">確認將「${curStu.name}」金牌歸零？</div>`,
+    [{label:'確認',cls:'del',fn:async()=>{ await dbUpd(`students/${curStu.id}`,{medals:0}); toast('金牌已重置'); openDetail(curStu); return true; }},{label:'取消',fn:()=>true}]);
+}
+async function resetAll() {
+  if (!curStu) return;
+  openDlg('🗑️ 清除全部資料',`<div class="dlg-msg" style="color:var(--red)">確認清除「${curStu.name}」所有資料？<br><b>此操作不可復原！</b></div>`,
+    [{label:'確認清除',cls:'del',fn:async()=>{ await dbSet(`students/${curStu.id}`,{password:(await dbGet(`students/${curStu.id}`))?.password||'0000'}); toast('已清除'); openDetail(curStu); renderGrid(); return true; }},{label:'取消',fn:()=>true}]);
+}
+async function resetAllDlg() {
+  openDlg('⚠️ 全班資料重置',`<div class="dlg-msg" style="color:var(--red)">確認重置所有學生的點數、金牌、任務、日誌？<br><b>此操作不可復原！</b></div>`,
+    [{label:'確認重置',cls:'del',fn:async()=>{
+      const upd={};
+      STUDENTS.forEach(s=>{ upd[`${ROOT}/students/${s.id}/points`]=0; upd[`${ROOT}/students/${s.id}/medals`]=0; upd[`${ROOT}/students/${s.id}/tasks`]=null; upd[`${ROOT}/students/${s.id}/log`]=null; });
+      await db.ref('/').update(upd);
+      toast('全班資料已重置','ok'); renderGrid(); return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+// ══════════════════════════════════════════
+// EXIT APPLY
+// ══════════════════════════════════════════
 function startApplyListener() {
-  db.ref(`${DB_ROOT}/exitApply`).on('value', snap => {
-    const data = snap.val() || {};
-    const pending = Object.values(data).filter(a => a.status === 'pending');
+  ref('exitApply').on('value', snap => {
+    const data = snap.val()||{};
+    const pend = Object.values(data).filter(a=>a.status==='pending');
     const badge = document.getElementById('applyBadge');
-    badge.textContent = pending.length;
-    badge.style.display = pending.length > 0 ? '' : 'none';
+    badge.textContent = pend.length;
+    badge.style.display = pend.length?'':'none';
+    document.getElementById('teacherNotifDot').classList.toggle('on', pend.length>0 || document.getElementById('inboxBadge').style.display!=='none');
     renderApplyList(data);
   });
 }
 
 function renderApplyList(data) {
-  const container = document.getElementById('applyList');
-  const pending = Object.entries(data).filter(([,a]) => a.status==='pending');
-  if (pending.length === 0) {
-    container.innerHTML = '<div class="empty-state">目前無待審核申請 ✓</div>';
-    return;
-  }
-  container.innerHTML = '';
-  pending.forEach(([key, apply]) => {
-    const div = document.createElement('div');
-    div.className = 'apply-item';
-    div.innerHTML = `
-      <div class="apply-info">
-        <div class="apply-name">${apply.studentName} <span style="font-size:12px;color:var(--text-secondary);">${apply.studentClass}</span></div>
-        <div class="apply-reason">原因：${apply.reason}</div>
-        <div class="apply-time">${apply.time}</div>
+  const c = document.getElementById('applyList');
+  const pend = Object.entries(data).filter(([,a])=>a.status==='pending');
+  if (!pend.length) { c.innerHTML='<div class="empty">目前無待審核申請 ✓</div>'; return; }
+  c.innerHTML = pend.map(([k,a])=>`
+    <div class="apply-item">
+      <div class="ai-info">
+        <div class="ai-name">${a.studentName} <span style="font-size:12px;color:var(--tx2)">${a.studentClass}</span></div>
+        <div class="ai-reason">原因：${a.reason}</div>
+        <div class="ai-time">${a.time}</div>
       </div>
-      <button class="btn-sm success" onclick="approveExit('${key}', '${apply.studentName}')">✅ 核可</button>
-      <button class="btn-sm danger" onclick="rejectExit('${key}')">✕ 拒絕</button>
-    `;
-    container.appendChild(div);
-  });
+      <button class="btn s" onclick="approveExit('${k}','${a.studentName}')">✅ 核可</button>
+      <button class="btn d" onclick="rejectExit('${k}')">✕ 拒絕</button>
+    </div>`).join('');
 }
 
-async function approveExit(key, studentName) {
-  await dbUpdate(`exitApply/${key}`, {
-    status: 'approved',
-    approvedBy: currentUser.name,
-    approvedTime: now()
-  });
-  showToast(`已核可 ${studentName} 外出`,'success');
+async function approveExit(k, name) {
+  await dbUpd(`exitApply/${k}`,{status:'approved',approvedBy:me.name,approvedTime:now()});
+  // 發通知給學生
+  const stu = byName(name);
+  if (stu) await sendNotifToStudent(stu.id, name, '第八節外出申請已核可 ✅', 'notice');
+  toast(`已核可 ${name} 外出`,'ok');
 }
 
-async function rejectExit(key) {
-  await dbUpdate(`exitApply/${key}`, { status:'rejected' });
-  showToast('已拒絕申請');
+async function rejectExit(k) {
+  await dbUpd(`exitApply/${k}`,{status:'rejected'});
+  toast('已拒絕申請');
 }
 
-// Student: apply exit
 function openApplyExit() {
-  openDialog('🚪 申請第八節外出',
-    `<div class="dialog-label">外出原因</div>
-     <textarea class="dialog-input" id="exitReason" rows="3" placeholder="請填寫外出原因"></textarea>`,
-    [{label:'送出申請', cls:'confirm', action: async ()=>{
-      const reason = document.getElementById('exitReason').value.trim();
-      if (!reason) { showToast('請填寫原因','error'); return false; }
-      const stu = getStudentByName(currentUser.name);
-      const key = Date.now().toString();
-      await dbSet(`exitApply/${key}`, {
-        studentName: currentUser.name,
-        studentId: stu?.id||'',
-        studentClass: stu?.cls||'',
-        reason, time: now(), status:'pending'
-      });
-      showToast('申請已送出，請等待老師審核');
-      // Start listening for approval
-      listenForApproval(key, currentUser.name);
+  openDlg('🚪 申請第八節外出',
+    `<div class="dlg-label">外出原因</div><textarea class="dlg-input" id="exitR" rows="3" placeholder="請填寫原因"></textarea>`,
+    [{label:'送出申請',cls:'ok',fn:async()=>{
+      const reason=document.getElementById('exitR').value.trim();
+      if(!reason){toast('請填寫原因','err');return false}
+      const stu=byName(me.name);
+      const k=Date.now()+'';
+      await dbSet(`exitApply/${k}`,{studentName:me.name,studentId:stu?.id||'',studentClass:stu?.cls||'',reason,time:now(),status:'pending'});
+      toast('申請已送出，請等待審核');
+      listenMyApproval(k,me.name);
       return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
+    }},{label:'取消',fn:()=>true}]);
 }
 
-function listenForApproval(key, studentName) {
-  const ref = db.ref(`${DB_ROOT}/exitApply/${key}`);
-  const handler = ref.on('value', snap => {
-    const data = snap.val();
-    if (data?.status === 'approved') {
-      ref.off('value', handler);
-      showExitPass(studentName, data.approvedBy, data.approvedTime);
+function listenMyApproval(k, name) {
+  ref(`exitApply/${k}`).on('value', snap => {
+    const d=snap.val();
+    if (d?.status==='approved') {
+      ref(`exitApply/${k}`).off();
+      showExitPass(name,d.approvedBy,d.approvedTime);
     }
   });
 }
 
 function showExitPass(name, teacher, time) {
-  document.getElementById('exitPassName').textContent = name;
-  document.getElementById('exitPassDate').textContent = time;
-  document.getElementById('exitPassTeacher').textContent = '核可老師：' + teacher;
-  document.getElementById('exitPass').classList.add('active');
+  document.getElementById('epName').textContent = name;
+  document.getElementById('epDate').textContent = time;
+  document.getElementById('epTeacher').textContent = '核可老師：'+teacher;
+  document.getElementById('exitPass').classList.add('on');
 }
 
-// ==============================
-// STUDENT VIEW (SELF)
-// ==============================
-async function loadStudentView(stu) {
-  const card = document.getElementById('studentViewCard');
-  card.innerHTML = '<div class="loading-spinner"></div>';
+// ══════════════════════════════════════════
+// MESSAGE SYSTEM
+// ══════════════════════════════════════════
+async function sendNotifToStudent(stuId, stuName, content, type='notice') {
+  const k = Date.now()+'_auto';
+  await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).set({
+    from: me?.name||'系統', content, type, time: now(), read: false
+  });
+}
 
-  const data = await dbGet(`students/${stu.id}`) || {};
-  const pts = data.points || 0;
-  const medals = data.medals || 0;
-  const today = new Date().toLocaleDateString('zh-TW');
-  const todayStatus = data.attendance?.[today] || '未點名';
+function startMsgListener() {
+  // 監聽老師端發出的訊息未讀數
+  ref('messages').on('value', snap => {
+    renderInbox(snap.val()||{});
+  });
+}
 
-  // 1. 產生任務清單 HTML (修正：原本截圖中漏掉這段)
-  const tasks = data.tasks || {};
-  const taskEntries = Object.entries(tasks);
-  let tasksHtml = '';
-  if (taskEntries.length > 0) {
-    tasksHtml = `<hr class="separator"><div class="detail-section-title">📝 我的處罰任務</div>`;
-    taskEntries.forEach(([key, t]) => {
-      const pct = Math.min(100, Math.round((t.done / t.total) * 100));
-      tasksHtml += `
-        <div class="task-item" style="background:rgba(255,255,255,0.05); margin-bottom:10px; padding:10px; border-radius:8px;">
-          <div class="task-header" style="display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px;">
-            <span>${t.name}</span>
-            <span>${t.done}/${t.total}</span>
-          </div>
-          <div class="task-progress-bar" style="height:6px; background:#333; border-radius:3px; overflow:hidden;">
-            <div style="width:${pct}%; height:100%; background:var(--gold);"></div>
-          </div>
-        </div>`;
-    });
-  }
-
-  // 2. 渲染主卡片內容
-  card.innerHTML = `
-    <div style="text-align:center;margin-bottom:20px;">
-      <div style="font-size:14px;color:var(--text-secondary);">${stu.cls}</div>
-      <div style="font-size:36px;font-weight:bold;color:var(--gold);margin:8px 0;">${stu.name}</div>
-      <div style="font-size:14px;color:var(--text-secondary);">今日狀態：<span style="color:var(--text-primary);font-weight:bold;">${todayStatus}</span></div>
-    </div>
-    <hr class="separator">
-    <div class="detail-section-title">⭐ 點數集點卡</div>
-    <div class="points-grid" style="margin-bottom:8px;">
-      ${Array(10).fill(0).map((_,i)=>`<div class="point-cell ${i<pts?'filled':'empty'}">${i<pts?'★':'☆'}</div>`).join('')}
-    </div>
-    <div style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">目前點數：<span style="color:var(--gold);font-weight:bold;">${pts}</span> 點</div>
-    <hr class="separator">
-    <div class="detail-section-title">🎖️ 金牌庫存</div>
-    <div style="font-size:28px;margin-bottom:4px;">${medals>0?'🎖️'.repeat(Math.min(medals,20)):'尚無金牌'}</div>
-    <div style="font-size:14px;color:var(--text-secondary);margin-bottom:16px;">共 <span style="color:var(--gold)">${medals}</span> 枚</div>
-    ${tasksHtml} 
-    <hr class="separator">
-    <div class="detail-section-title">📜 最近記錄</div>
-    <div id="studentLogView"></div>
-  `;
-
-  // 3. 渲染日誌
-  const logContainer = document.getElementById('studentLogView');
-  const log = data.log || {};
-  const entries = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,10);
-  if (entries.length === 0) {
-    logContainer.innerHTML = '<div style="color:var(--text-muted);font-size:13px;">尚無記錄</div>';
-  } else {
-    logContainer.innerHTML = entries.map(([,e])=>`
-      <div class="log-item ${e.delta>0?'add':e.delta<0?'sub':''}">
-        <div class="log-time">${e.time}</div>
-        <div>${e.action}${e.reason?' — '+e.reason:''}</div>
+async function renderInbox(data) {
+  if (!data) data = await dbGet('messages')||{};
+  const c = document.getElementById('inboxList');
+  if (!c) return;
+  const ents = Object.entries(data).sort((a,b)=>b[0]-a[0]);
+  if (!ents.length) { c.innerHTML='<div class="empty">尚無已發出訊息</div>'; return; }
+  // 計算未讀（學生端有沒有讀）
+  let unread = 0;
+  c.innerHTML = ents.map(([k,m])=>{
+    if (!m.read) unread++;
+    return `<div class="msg-item ${m.type==='punishment'?'punish':''}">
+      <div class="msg-hd">
+        <div class="msg-to">發給：<b>${m.to}</b> <span class="msg-tag ${m.type==='punishment'?'punish':'notice'}">${m.type==='punishment'?'⚠️處罰':'📢通知'}</span></div>
+        <div style="display:flex;gap:6px;align-items:center">
+          <div class="msg-time">${m.time} · ${m.from}</div>
+          <button class="btn d" onclick="delMsg('${k}')" style="padding:2px 7px;font-size:11px">刪除</button>
+        </div>
       </div>
-    `).join('');
-  }
-
-  listenForMyApproval(stu.name);
-  
-  // 💡 重要修正：呼叫「載入老師訊息」的功能
-  loadStudentMessages(stu.id); 
+      <div class="msg-body">${m.content}</div>
+      <div class="msg-read" style="color:${m.read?'var(--green)':'var(--red)'}">${m.read?'✅ 已讀':'🔴 未讀'}</div>
+    </div>`;
+  }).join('');
+  const ib = document.getElementById('inboxBadge');
+  ib.textContent = unread; ib.style.display = unread?'':'none';
+  document.getElementById('teacherNotifDot')?.classList.toggle('on', unread>0 || document.getElementById('applyBadge').style.display!=='none');
 }
 
-  // Listen for exit approval
-  listenForMyApproval(stu.name);
+async function delMsg(k) {
+  await db.ref(`${ROOT}/messages/${k}`).remove();
+  toast('訊息已刪除');
 }
 
-function listenForMyApproval(studentName) {
-  db.ref(`${DB_ROOT}/exitApply`).on('value', snap => {
-    const data = snap.val() || {};
-    const today = new Date().toLocaleDateString('zh-TW');
-    const approved = Object.values(data).find(a =>
-      a.studentName === studentName &&
-      a.status === 'approved' &&
-      a.approvedTime?.startsWith(today)
-    );
-    const area = document.getElementById('myExitPassArea');
-    if (approved && area) {
-      area.style.display = '';
-      area.innerHTML = `<button class="btn-sm gold" style="width:100%;padding:14px;font-size:16px;" onclick="showExitPass('${studentName}','${approved.approvedBy}','${approved.approvedTime}')">📋 顯示外出憑證</button>`;
+function openSendMsg() {
+  const stuOpts = CLASSES.map(cls=>
+    `<optgroup label="${cls}">`+
+    byCls(cls).map(s=>`<option value="${s.id}:${s.name}">${s.name}</option>`).join('')+
+    `</optgroup>`
+  ).join('');
+  openDlg('✉️ 發送訊息 / 處罰通知',
+    `<div class="dlg-label">發送對象</div>
+     <select class="dlg-input" id="msgTo" style="width:100%;margin-bottom:12px">
+       <option value="">── 全班廣播 ──</option>${stuOpts}
+     </select>
+     <div class="dlg-label">類型</div>
+     <select class="dlg-input" id="msgType" style="width:100%;margin-bottom:12px">
+       <option value="notice">📢 一般通知</option>
+       <option value="punishment">⚠️ 處罰通知</option>
+     </select>
+     <div class="dlg-label">訊息內容</div>
+     <textarea class="dlg-input" id="msgContent" rows="4" placeholder="請輸入訊息內容..."></textarea>`,
+    [{label:'發送',cls:'ok',fn:async()=>{
+      const target = document.getElementById('msgTo').value;
+      const type = document.getElementById('msgType').value;
+      const content = document.getElementById('msgContent').value.trim();
+      if (!content){toast('請填寫內容','err');return false}
+      const k = Date.now()+'';
+      let toName='全班', toIds=STUDENTS.map(s=>s.id);
+      if (target) { const [id,name]=target.split(':'); toName=name; toIds=[id]; }
+      const upd = {};
+      // 存到 messages（老師端記錄）
+      upd[`${ROOT}/messages/${k}`] = {from:me.name, to:toName, content, type, time:now(), read:false};
+      // 每個學生的 stuMsgs
+      toIds.forEach(id=>{
+        upd[`${ROOT}/stuMsgs/${id}/${k}`] = {from:me.name, content, type, time:now(), read:false};
+      });
+      await db.ref('/').update(upd);
+      toast(`訊息已發送給 ${toName}`,'ok');
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+// ── 學生端訊息 ──
+async function loadStuMsgs(stuId) {
+  ref(`stuMsgs/${stuId}`).on('value', snap => {
+    const data = snap.val()||{};
+    const unread = Object.entries(data).filter(([,m])=>!m.read);
+    const dot = document.getElementById('stuNotifDot');
+    if (dot) dot.classList.toggle('on', unread.length>0);
+    const banner = document.getElementById('stuBanner');
+    const list = document.getElementById('stuBannerList');
+    if (!banner||!list) return;
+    if (!unread.length) {
+      banner.style.display='none';
+      stuBannerOpen = false;
+      return;
+    }
+    list.innerHTML = unread.map(([k,m])=>`
+      <div class="stu-msg-item">
+        <div class="stu-msg-from">${m.type==='punishment'?'⚠️ 處罰通知':'📢 通知'} · 來自 ${m.from} · ${m.time}</div>
+        <div class="${m.type==='punishment'?'stu-msg-type-punishment':'stu-msg-type-notice'}">${m.content}</div>
+        <button class="btn" onclick="markRead('${stuId}','${k}')" style="margin-top:5px;font-size:11px;padding:2px 9px">✓ 已讀</button>
+      </div>`).join('');
+    if (stuBannerOpen) banner.style.display='';
+    // 讓鈴鐺知道有未讀
+    dot.classList.add('on');
+  });
+}
+
+function toggleStuBanner() {
+  stuBannerOpen = !stuBannerOpen;
+  document.getElementById('stuBanner').style.display = stuBannerOpen?'':'none';
+}
+
+async function markRead(stuId, k) {
+  await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).update({read:true});
+  // 如果老師那邊只有這一人的訊息，更新已讀
+  await db.ref(`${ROOT}/messages/${k}`).update({read:true});
+}
+
+// ══════════════════════════════════════════
+// STUDENT VIEW (self)
+// ══════════════════════════════════════════
+async function loadStuView(stu) {
+  const c = document.getElementById('stuCard');
+  c.innerHTML = '<div class="spin"></div>';
+  const d = (await dbGet(`students/${stu.id}`))||{};
+  const td = today();
+  const att = d.attendance?.[td]||'未點名';
+  const pts = d.points||0, medals = d.medals||0;
+  const attColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[att]||'var(--tx2)';
+  c.innerHTML = `
+    <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:18px;padding:28px;box-shadow:0 0 20px rgba(212,175,55,.1)">
+      <div style="text-align:center;margin-bottom:18px">
+        <div style="font-size:13px;color:var(--tx2)">${stu.cls}</div>
+        <div style="font-size:34px;font-weight:bold;color:var(--gold);margin:6px 0">${stu.name}</div>
+        <div style="font-size:14px;color:var(--tx2)">今日：<span style="color:${attColor};font-weight:bold">${att}</span></div>
+      </div>
+      <hr class="sep">
+      <div class="dp-sec-t">⭐ 點數集點卡</div>
+      <div class="pts-card">
+        <div class="pts-grid">${Array(10).fill(0).map((_,i)=>`<div class="pc ${i<pts?'on':'off'}">${i<pts?'⭐':''}</div>`).join('')}</div>
+        <div class="pts-info">目前：<b>${pts}</b> 點</div>
+      </div>
+      <hr class="sep">
+      <div class="dp-sec-t">🎖️ 金牌庫存</div>
+      <div class="medals-row">${medals>0?Array(Math.min(medals,10)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>10?`<span style="color:var(--gold);font-size:16px;align-self:center">+${medals-10}</span>`:''): '<span style="color:var(--tx3);font-size:13px">尚無金牌</span>'}</div>
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:14px">共 <b style="color:var(--gold)">${medals}</b> 枚</div>
+      <hr class="sep">
+      <div class="dp-sec-t">📜 最近記錄</div>
+      <div>${Object.entries(d.log||{}).sort((a,b)=>b[0]-a[0]).slice(0,8).map(([,e])=>`
+        <div class="log-item ${e.delta>0?'add':e.delta<0?'sub':''}">
+          <div class="log-t">${e.time||''}</div>
+          <div>${e.action||''}${e.reason?' — '+e.reason:''}</div>
+        </div>`).join('')||'<div style="color:var(--tx3);font-size:13px">尚無記錄</div>'}</div>
+    </div>`;
+  // 監聽外出審核
+  listenMyApprovalStu(stu.name);
+}
+
+function listenMyApprovalStu(name) {
+  ref('exitApply').on('value', snap=>{
+    const data=snap.val()||{};
+    const td=today();
+    const approved=Object.values(data).find(a=>a.studentName===name&&a.status==='approved'&&a.approvedTime?.includes(td.replace(/\//g,'/')));
+    const area=document.getElementById('stuPassArea');
+    if (approved&&area) {
+      area.innerHTML=`<button class="btn g" onclick="showExitPass('${name}','${approved.approvedBy}','${approved.approvedTime}')" style="width:100%;padding:12px;font-size:14px">📋 顯示外出憑證</button>`;
     }
   });
 }
-  // === 這裡開始是新插入的訊息處理功能 ===
 
-// 功能：載入老師傳給學生的訊息並顯示
-async function loadStudentMessages(studentId) {
-  const data = await dbGet(`studentMessages/${studentId}`) || {};
-  const entries = Object.entries(data).sort((a,b)=>b[0]-a[0]);
-  const banner = document.getElementById('studentMsgBanner');
-  const logContainer = document.getElementById('studentLogView');
-  
-  if (!banner || !logContainer) return;
-
-  const hasUnread = entries.some(([,m]) => !m.read);
-  banner.style.display = hasUnread ? 'block' : 'none';
-
-  const msgHtml = entries.map(([key, msg]) => `
-    <div class="log-item ${msg.type === 'punishment' ? 'sub' : 'add'}" style="margin-bottom:10px; border-left:4px solid ${msg.type === 'punishment' ? 'var(--red)' : 'var(--blue)'}; background:rgba(255,255,255,0.02); padding:10px;">
-      <div class="log-time">${msg.time} · 來自 ${msg.from}</div>
-      <div style="font-size:15px; margin:5px 0; color:white;">${msg.content}</div>
-      ${!msg.read ? `<button class="btn-sm gold" onclick="markMsgRead('${studentId}','${key}')" style="padding:2px 8px; font-size:11px; cursor:pointer;">✓ 確認已讀</button>` : '<span style="color:var(--text-muted); font-size:11px;">[已讀]</span>'}
-    </div>
-  `).join('');
-
-  if (entries.length > 0) {
-    logContainer.innerHTML = `<div class="detail-section-title">💬 老師的叮嚀</div>` + msgHtml + `<hr class="separator">` + logContainer.innerHTML;
-  }
-}
-
-// 功能：學生確認已讀
-async function markMsgRead(studentId, key) {
-  await dbUpdate(`studentMessages/${studentId}/${key}`, { read: true });
-  const stu = getStudent(studentId);
-  loadStudentView(stu); // 刷新畫面
-}
-
-// === 訊息功能結束 ===
-// 💡 請將這兩段功能貼在 // TEACHER MANAGEMENT 的上方
-
-// 功能 1：載入老師傳給學生的訊息
-async function loadStudentMessages(studentId) {
-  const data = await dbGet(`studentMessages/${studentId}`) || {};
-  const entries = Object.entries(data).sort((a,b)=>b[0]-a[0]); // 新訊息在上
-  
-  const banner = document.getElementById('studentMsgBanner');
-  const list = document.getElementById('studentLogView'); // 借用記錄區顯示訊息內容
-  
-  if (!banner || !list) return;
-
-  // 1. 如果有「未讀」，顯示紅色橫幅提醒
-  const hasUnread = entries.some(([,m]) => !m.read);
-  banner.style.display = hasUnread ? 'block' : 'none';
-
-  // 2. 格式化訊息 HTML
-  const msgHtml = entries.map(([key, msg]) => `
-    <div class="log-item ${msg.type === 'punishment' ? 'sub' : 'add'}" style="margin-bottom:10px; border-left-width:4px;">
-      <div class="log-time">${msg.time} · 來自 ${msg.from}</div>
-      <div style="font-size:15px; margin:5px 0;">${msg.content}</div>
-      ${!msg.read ? `<button class="btn-sm gold" onclick="markMsgRead('${studentId}','${key}')" style="padding:2px 8px; font-size:11px;">確認已讀</button>` : '<span style="color:var(--text-muted); font-size:11px;">[已讀]</span>'}
-    </div>
-  `).join('');
-
-  // 3. 將訊息顯示在個人卡片的「最近記錄」上方
-  if (entries.length > 0) {
-    list.innerHTML = `<div class="detail-section-title">💬 老師的訊息</div>` + msgHtml + `<hr class="separator">` + list.innerHTML;
-  }
-}
-
-// 功能 2：學生點擊已讀
-async function markMsgRead(studentId, key) {
-  await dbUpdate(`studentMessages/${studentId}/${key}`, { read: true });
-  // 重新載入以更新介面
-  const stu = getStudent(studentId);
-  loadStudentView(stu);
-}
-
-// ==============================
+// ══════════════════════════════════════════
 // TEACHER MANAGEMENT
-// ==============================
-// ==============================
-// TEACHER MANAGEMENT
-// ==============================
-async function renderTeacherList() {
-  const container = document.getElementById('teacherList');
-  container.innerHTML = '<div class="loading-spinner"></div>';
-  const teachers = await dbGet('teachers') || {};
-  container.innerHTML = '';
-
-  // Show master
-  const masterDiv = document.createElement('div');
-  masterDiv.className = 'teacher-item';
-  masterDiv.innerHTML = `
-    <div class="teacher-info">
-      <div class="teacher-name">${MASTER.name} <span style="background:var(--gold);color:#000;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px;">最高權限</span></div>
-      <div class="teacher-classes">管轄所有班級</div>
-    </div>
-  `;
-  container.appendChild(masterDiv);
-
-  Object.entries(teachers).forEach(([key, t]) => {
-    const div = document.createElement('div');
-    div.className = 'teacher-item';
-    div.innerHTML = `
-      <div class="teacher-info">
-        <div class="teacher-name">${t.name}</div>
-        <div class="teacher-classes">管轄：${(t.classes||[]).join('、') || '無'}</div>
-        <div style="font-size:11px;color:var(--text-muted);">帳號：${t.name} | 密碼：${t.pass}</div>
-      </div>
-      <button class="btn-sm danger" onclick="deleteTeacher('${key}','${t.name}')">刪除</button>
-    `;
-    container.appendChild(div);
+// ══════════════════════════════════════════
+async function renderTeachers() {
+  const c = document.getElementById('teacherList');
+  c.innerHTML = '<div class="spin"></div>';
+  const teachers = await dbGet('teachers')||{};
+  c.innerHTML = `<div class="titem"><div class="ti-name">${MASTER.name} <span style="background:var(--gold);color:#000;font-size:11px;padding:2px 8px;border-radius:10px;margin-left:6px">最高權限</span></div><div class="ti-cls">管轄所有班級</div></div>`;
+  Object.entries(teachers).forEach(([k,t])=>{
+    const d=document.createElement('div');
+    d.className='titem';
+    d.innerHTML=`<div><div class="ti-name">${t.name}</div><div class="ti-cls">班級：${(t.classes||[]).join('、')||'無'}</div><div class="ti-pw">密碼：${t.pass}</div></div><button class="btn d" onclick="delTeacher('${k}','${t.name}')">刪除</button>`;
+    c.appendChild(d);
   });
 }
 
 function openAddTeacher() {
-  openDialog('⚙️ 新增教師帳號',
-    `<div class="dialog-label">教師姓名（即帳號）</div>
-     <input class="dialog-input" type="text" id="tName" placeholder="例：王小明">
-     <div class="dialog-label">密碼</div>
-     <input class="dialog-input" type="password" id="tPass" placeholder="請設定密碼">
-     <div class="dialog-label">管轄班級（可複選）</div>
-     ${CLASSES.map(c=>`<label style="display:block;margin-bottom:6px;font-size:14px;cursor:pointer;"><input type="checkbox" value="${c}" style="margin-right:6px;"> ${c}</label>`).join('')}`,
-    [{label:'新增', cls:'confirm', action: async ()=>{
-      const name = document.getElementById('tName').value.trim();
-      const pass = document.getElementById('tPass').value.trim();
-      const classes = [...document.querySelectorAll('#dialogBody input[type=checkbox]:checked')].map(c=>c.value);
-      if (!name||!pass) { showToast('請填寫完整','error'); return false; }
-      const key = Date.now().toString();
-      await dbSet(`teachers/${key}`, { name, pass, classes });
-      showToast('教師帳號已新增','success');
-      renderTeacherList();
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
+  openDlg('⚙️ 新增教師帳號',
+    `<div class="dlg-label">姓名（即帳號）</div><input class="dlg-input" type="text" id="tN" placeholder="教師姓名">
+     <div class="dlg-label">密碼</div><input class="dlg-input" type="password" id="tP" placeholder="密碼">
+     <div class="dlg-label">管轄班級</div>${CLASSES.map(c=>`<label style="display:block;margin-bottom:6px;font-size:14px;cursor:pointer"><input type="checkbox" value="${c}" style="margin-right:6px"> ${c}</label>`).join('')}`,
+    [{label:'新增',cls:'ok',fn:async()=>{
+      const name=document.getElementById('tN').value.trim();
+      const pass=document.getElementById('tP').value.trim();
+      const classes=[...document.querySelectorAll('#dlgBody input[type=checkbox]:checked')].map(c=>c.value);
+      if(!name||!pass){toast('請填寫完整','err');return false}
+      await dbSet(`teachers/${Date.now()}`,{name,pass,classes});
+      toast('教師帳號已新增','ok'); renderTeachers(); return true;
+    }},{label:'取消',fn:()=>true}]);
 }
 
-async function deleteTeacher(key, name) {
-  openDialog('⚠️ 確認刪除', `<div class="dialog-message">確認要刪除教師「${name}」的帳號？</div>`,
-    [{label:'刪除', cls:'danger-confirm', action: async ()=>{
-      await db.ref(`${DB_ROOT}/teachers/${key}`).remove();
-      showToast('已刪除教師帳號');
-      renderTeacherList();
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
+async function delTeacher(k, name) {
+  openDlg('⚠️ 確認刪除',`<div class="dlg-msg">確認要刪除「${name}」的帳號？</div>`,
+    [{label:'刪除',cls:'del',fn:async()=>{ await db.ref(`${ROOT}/teachers/${k}`).remove(); toast('已刪除'); renderTeachers(); return true; }},{label:'取消',fn:()=>true}]);
 }
 
-// ==============================
-// REPORT & STATS
-// ==============================
+// ══════════════════════════════════════════
+// REPORT & EXPORT
+// ══════════════════════════════════════════
 async function renderStats() {
-  const grid = document.getElementById('statsGrid');
-  const today = new Date().toLocaleDateString('zh-TW');
-  const students = currentUser.classes.flatMap(c => getStudentsByClass(c));
-
-  // Count today's attendance
-  let present=0, late=0, absent=0, leave=0;
-  const promises = students.map(s => dbGet(`students/${s.id}/attendance/${today}`));
-  const results = await Promise.all(promises);
-  results.forEach(r => {
-    if (r==='出') present++;
-    else if (r==='遲') late++;
-    else if (r==='缺') absent++;
-    else if (r==='假') leave++;
-  });
-
-  grid.innerHTML = `
-    <div class="stat-card"><div class="stat-num text-success">${present}</div><div class="stat-label">出席</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--yellow)">${late}</div><div class="stat-label">遲到</div></div>
-    <div class="stat-card"><div class="stat-num text-danger">${absent}</div><div class="stat-label">缺席</div></div>
-    <div class="stat-card"><div class="stat-num" style="color:var(--blue)">${leave}</div><div class="stat-label">請假</div></div>
-  `;
+  const td=today();
+  const stus=me.classes.flatMap(c=>byCls(c));
+  const res=await Promise.all(stus.map(s=>dbGet(`students/${s.id}/attendance/${td}`)));
+  const sum={出:0,遲:0,缺:0,假:0};
+  res.forEach(r=>{ if(sum[r]!==undefined) sum[r]++; });
+  document.getElementById('statGrid').innerHTML=`
+    <div class="statcard"><div class="stat-n" style="color:var(--green)">${sum['出']}</div><div class="stat-l">出席</div></div>
+    <div class="statcard"><div class="stat-n" style="color:var(--yellow)">${sum['遲']}</div><div class="stat-l">遲到</div></div>
+    <div class="statcard"><div class="stat-n" style="color:var(--red)">${sum['缺']}</div><div class="stat-l">缺席</div></div>
+    <div class="statcard"><div class="stat-n" style="color:var(--blue)">${sum['假']}</div><div class="stat-l">請假</div></div>`;
 }
 
-async function renderReportGrid() {
-  if (!currentClass) { currentClass = currentUser.classes[0]; }
-  const grid = document.getElementById('reportGrid');
-  grid.innerHTML = '<div style="padding:20px;"><div class="loading-spinner"></div></div>';
-
-  const students = getStudentsByClass(currentClass);
-  const promises = students.map(s => dbGet(`students/${s.id}`));
-  const results = await Promise.all(promises);
-
-  grid.innerHTML = '';
-  students.forEach((s,i) => {
-    const d = results[i] || {};
-    const pts = d.points||0;
-    const medals = d.medals||0;
-    const card = document.createElement('div');
-    card.className = 'student-card';
-    card.style.cursor = 'pointer';
-    card.innerHTML = `
-      <div class="card-header">
-        <div class="student-num">${s.id}</div>
-        <div style="font-size:12px;color:var(--text-muted);">⭐${pts} 🎖️${medals}</div>
-      </div>
-      <div class="student-name">${s.name}</div>
-      <div style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
-        ${Object.keys(d.tasks||{}).length} 項任務 · ${Object.keys(d.log||{}).length} 筆記錄
-      </div>
-    `;
-    card.onclick = () => openDetail(s, d);
+async function renderRpt() {
+  if (!curCls) curCls=me.classes[0];
+  const grid=document.getElementById('rptGrid');
+  grid.innerHTML='<div class="spin"></div>';
+  const stus=byCls(curCls);
+  const res=await Promise.all(stus.map(s=>dbGet(`students/${s.id}`)));
+  grid.innerHTML='';
+  stus.forEach((s,i)=>{
+    const d=res[i]||{};
+    const card=document.createElement('div');
+    card.className='scard';
+    card.style.cursor='pointer';
+    card.innerHTML=`<div class="sc-top"><div class="sc-num">${s.id}</div><div style="font-size:12px;color:var(--tx3)">⭐${d.points||0} 🎖️${d.medals||0}</div></div>
+      <div class="sc-name" style="cursor:default">${s.name}</div>
+      <div style="font-size:12px;color:var(--tx2);margin-top:3px">${Object.keys(d.tasks||{}).length}任務 · ${Object.keys(d.log||{}).length}筆記錄</div>`;
+    card.onclick=()=>openDetail(s,d);
     grid.appendChild(card);
   });
 }
 
-// ==============================
-// EXPORT EXCEL
-// ==============================
-async function exportExcel() {
-  showToast('正在生成 Excel...');
-  const classes = currentUser.classes;
-  const wb = XLSX.utils.book_new();
-  const today = new Date().toLocaleDateString('zh-TW');
-
-  for (const cls of classes) {
-    const students = getStudentsByClass(cls);
-    const promises = students.map(s => dbGet(`students/${s.id}`));
-    const results = await Promise.all(promises);
-
-    const rows = [['學號','姓名','班級','點數','金牌數','今日出勤','任務數','日誌筆數']];
-    students.forEach((s,i) => {
-      const d = results[i]||{};
-      rows.push([
-        s.id, s.name, s.cls,
-        d.points||0, d.medals||0,
-        d.attendance?.[today]||'未',
-        Object.keys(d.tasks||{}).length,
-        Object.keys(d.log||{}).length
-      ]);
-    });
-
-    const ws = XLSX.utils.aoa_to_sheet(rows);
-    XLSX.utils.book_append_sheet(wb, ws, cls);
+async function exportXlsx() {
+  toast('生成 Excel...');
+  const wb=XLSX.utils.book_new(), td=today();
+  for (const cls of me.classes) {
+    const stus=byCls(cls);
+    const res=await Promise.all(stus.map(s=>dbGet(`students/${s.id}`)));
+    const rows=[['學號','姓名','班級','點數','金牌','今日出勤']];
+    stus.forEach((s,i)=>{ const d=res[i]||{}; rows.push([s.id,s.name,s.cls,d.points||0,d.medals||0,d.attendance?.[td]||'未']); });
+    XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(rows),cls);
   }
-
-  XLSX.writeFile(wb, `莊敬音樂科報表_${today}.xlsx`);
-  showToast('Excel 已下載','success');
+  XLSX.writeFile(wb,`莊敬音樂科_${td}.xlsx`);
+  toast('Excel 已下載','ok');
 }
 
-// ==============================
-// EXPORT PDF
-// ==============================
-async function exportPDF() {
-  showToast('正在生成 PDF...');
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ orientation:'landscape' });
-  const today = new Date().toLocaleDateString('zh-TW');
-
-  doc.setFontSize(16);
-  doc.text('莊敬高職音樂科 教務報表', 14, 15);
-  doc.setFontSize(10);
-  doc.text(`生成日期：${today}`, 14, 22);
-
-  const classes = currentUser.classes;
-  let y = 30;
-
-  for (const cls of classes) {
-    const students = getStudentsByClass(cls);
-    const promises = students.map(s => dbGet(`students/${s.id}`));
-    const results = await Promise.all(promises);
-
-    const rows = students.map((s,i) => {
-      const d = results[i]||{};
-      return [s.id, s.name, d.points||0, d.medals||0, d.attendance?.[today]||'未'];
-    });
-
-    doc.autoTable({
-      startY: y,
-      head: [[cls,'姓名','點數','金牌','今日']],
-      body: rows,
-      styles: { fontSize:9 },
-      headStyles: { fillColor:[180,145,30] }
-    });
-    y = doc.lastAutoTable.finalY + 10;
-    if (y > 180) { doc.addPage(); y = 20; }
+async function exportPdf() {
+  toast('生成 PDF...');
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({orientation:'landscape'});
+  const td=today();
+  doc.setFontSize(14); doc.text('莊敬高職音樂科 教務報表',14,14);
+  doc.setFontSize(10); doc.text(`日期：${td}`,14,21);
+  let y=28;
+  for (const cls of me.classes) {
+    const stus=byCls(cls);
+    const res=await Promise.all(stus.map(s=>dbGet(`students/${s.id}`)));
+    doc.autoTable({startY:y,head:[[cls,'姓名','點數','金牌','今日']],body:stus.map((s,i)=>{const d=res[i]||{};return[s.id,s.name,d.points||0,d.medals||0,d.attendance?.[td]||'未'];}),styles:{fontSize:9},headStyles:{fillColor:[180,145,30]}});
+    y=doc.lastAutoTable.finalY+8;
+    if(y>180){doc.addPage();y=20;}
   }
-
-  doc.save(`莊敬音樂科報表_${today}.pdf`);
-  showToast('PDF 已下載','success');
+  doc.save(`莊敬音樂科_${td}.pdf`);
+  toast('PDF 已下載','ok');
 }
 
-
-// ==============================
-// BATCH MODE
-// ==============================
-let batchMode = false;
-let batchSelected = new Set();
-
-function toggleBatchMode() {
-  batchMode = !batchMode;
-  batchSelected.clear();
-  document.body.classList.toggle('batch-mode', batchMode);
-  document.getElementById('batchToolbar').style.display = batchMode ? 'flex' : 'none';
-  document.getElementById('batchModeBtn').classList.toggle('gold', batchMode);
-  document.getElementById('batchCount').textContent = '0';
-  // 取消所有選取高亮
-  document.querySelectorAll('.student-card.batch-selected').forEach(c => c.classList.remove('batch-selected'));
-}
-
-function toggleBatchSelect(id, card) {
-  if (batchSelected.has(id)) {
-    batchSelected.delete(id);
-    card.classList.remove('batch-selected');
-  } else {
-    batchSelected.add(id);
-    card.classList.add('batch-selected');
-  }
-  document.getElementById('batchCount').textContent = batchSelected.size;
-}
-
-function selectAllBatch() {
-  if (!currentClass) return;
-  getStudentsByClass(currentClass).forEach(s => {
-    batchSelected.add(s.id);
-    const card = document.getElementById(`card-${s.id}`);
-    if (card) card.classList.add('batch-selected');
+// ══════════════════════════════════════════
+// DIALOG
+// ══════════════════════════════════════════
+function openDlg(title, bodyHtml, actions) {
+  document.getElementById('dlgTitle').textContent = title;
+  document.getElementById('dlgBody').innerHTML = bodyHtml;
+  const acts = document.getElementById('dlgActs');
+  acts.innerHTML = '';
+  actions.forEach(a=>{
+    const b=document.createElement('button');
+    b.className='dlg-btn '+(a.cls||'');
+    b.textContent=a.label;
+    b.onclick=async()=>{ const r=await a.fn(); if(r!==false) closeDlg(); };
+    acts.appendChild(b);
   });
-  document.getElementById('batchCount').textContent = batchSelected.size;
+  document.getElementById('dlgOverlay').classList.add('on');
+  setTimeout(()=>{const f=document.querySelector('#dlgBody .dlg-input');if(f)f.focus();},100);
 }
 
-function clearBatchSelection() {
-  batchSelected.clear();
-  document.querySelectorAll('.student-card.batch-selected').forEach(c => c.classList.remove('batch-selected'));
-  document.getElementById('batchCount').textContent = '0';
-}
+function closeDlg() { document.getElementById('dlgOverlay').classList.remove('on'); }
 
-async function batchAddPoints(delta) {
-  if (batchSelected.size === 0) { showToast('請先選取學生','error'); return; }
-  openDialog(delta>0?`⭐ 批次加 1 點（${batchSelected.size} 人）`:`－ 批次扣 1 點（${batchSelected.size} 人）`,
-    `<div class="dialog-label">原因</div>
-     <input class="dialog-input" type="text" id="batchReason" placeholder="請輸入原因">`,
-    [{label:'確認執行', cls:'confirm', action: async ()=>{
-      const reason = document.getElementById('batchReason').value.trim();
-      if (!reason) { showToast('請填寫原因','error'); return false; }
-      showToast('批次處理中…');
-      for (const id of batchSelected) {
-        const data = await dbGet(`students/${id}`);
-        const pts = Math.max(0, (data?.points||0) + delta);
-        const logKey = Date.now().toString();
-        await dbUpdate(`students/${id}`, {
-          points: pts,
-          [`log/${logKey}`]: { time:now(), action: delta>0?'批次加點':'批次扣點', reason, teacher:currentUser.name, delta }
-        });
-        await new Promise(r=>setTimeout(r,50)); // 避免衝突
-      }
-      showToast(`已完成 ${batchSelected.size} 人批次${delta>0?'加':'扣'}點 ✓`, 'success');
-      clearBatchSelection();
-      renderStudentGrid();
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
-async function batchAddMedal() {
-  if (batchSelected.size === 0) { showToast('請先選取學生','error'); return; }
-  openDialog(`🎖️ 批次加金牌（${batchSelected.size} 人）`,
-    `<div class="dialog-label">原因</div>
-     <input class="dialog-input" type="text" id="batchMedalReason" placeholder="請輸入原因">`,
-    [{label:'確認執行', cls:'confirm', action: async ()=>{
-      const reason = document.getElementById('batchMedalReason').value.trim();
-      if (!reason) { showToast('請填寫原因','error'); return false; }
-      showToast('批次處理中…');
-      for (const id of batchSelected) {
-        const data = await dbGet(`students/${id}`);
-        const medals = (data?.medals||0) + 1;
-        const logKey = Date.now().toString();
-        await dbUpdate(`students/${id}`, {
-          medals,
-          [`log/${logKey}`]: { time:now(), action:'批次加金牌', reason, teacher:currentUser.name, delta:1 }
-        });
-        await new Promise(r=>setTimeout(r,50));
-      }
-      showToast(`已完成 ${batchSelected.size} 人批次加金牌 ✓`, 'success');
-      clearBatchSelection();
-      renderStudentGrid();
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
-// ==============================
-// RESET FUNCTIONS
-// ==============================
-async function resetStudentPoints() {
-  if (!currentStudent) return;
-  openDialog('⚠️ 重置點數',
-    `<div class="dialog-message">確認將「${currentStudent.name}」的點數歸零？<br><span style="color:var(--red);font-size:13px;">此操作不可復原</span></div>`,
-    [{label:'確認重置', cls:'danger-confirm', action: async ()=>{
-      const logKey = Date.now().toString();
-      await dbUpdate(`students/${currentStudent.id}`, {
-        points: 0,
-        [`log/${logKey}`]: { time:now(), action:'重置點數', reason:'老師手動重置', teacher:currentUser.name, delta:0 }
-      });
-      showToast('點數已歸零');
-      openDetail(currentStudent);
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
-async function resetStudentMedals() {
-  if (!currentStudent) return;
-  openDialog('⚠️ 重置金牌',
-    `<div class="dialog-message">確認將「${currentStudent.name}」的金牌歸零？<br><span style="color:var(--red);font-size:13px;">此操作不可復原</span></div>`,
-    [{label:'確認重置', cls:'danger-confirm', action: async ()=>{
-      const logKey = Date.now().toString();
-      await dbUpdate(`students/${currentStudent.id}`, {
-        medals: 0,
-        [`log/${logKey}`]: { time:now(), action:'重置金牌', reason:'老師手動重置', teacher:currentUser.name, delta:0 }
-      });
-      showToast('金牌已歸零');
-      openDetail(currentStudent);
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
-async function resetStudentAll() {
-  if (!currentStudent) return;
-  openDialog('🗑️ 清除全部資料',
-    `<div class="dialog-message" style="color:var(--red);">確認清除「${currentStudent.name}」的所有資料？<br>包含點數、金牌、任務、日誌。<br><strong>此操作完全不可復原！</strong></div>`,
-    [{label:'確認清除', cls:'danger-confirm', action: async ()=>{
-      await db.ref(`${DB_ROOT}/students/${currentStudent.id}`).set({
-        password: '0000'
-      });
-      showToast('資料已清除');
-      closeDetail();
-      renderStudentGrid();
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
-async function resetAllStudents() {
-  openDialog('⚠️⚠️ 全班資料重置',
-    `<div class="dialog-message" style="color:var(--red);">
-      <strong>警告！這將清除目前班級所有學生的點數、金牌、任務與日誌！</strong><br><br>
-      請輸入「確認重置」以執行：<br>
-      <input class="dialog-input" type="text" id="resetConfirmText" placeholder="確認重置" style="margin-top:10px;">
-    </div>`,
-    [{label:'執行重置', cls:'danger-confirm', action: async ()=>{
-      const confirm = document.getElementById('resetConfirmText').value.trim();
-      if (confirm !== '確認重置') { showToast('請輸入確認文字','error'); return false; }
-      if (!currentClass) { showToast('請先選擇班級','error'); return false; }
-      showToast('重置中，請稍候…');
-      const students = getStudentsByClass(currentClass);
-      for (const s of students) {
-        const data = await dbGet(`students/${s.id}`);
-        await db.ref(`${DB_ROOT}/students/${s.id}`).set({
-          password: data?.password || '0000'
-        });
-        await new Promise(r=>setTimeout(r,50));
-      }
-      showToast(`${currentClass} 全班資料已重置 ✓`, 'success');
-      renderStudentGrid();
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
-// ==============================
-// DIALOG SYSTEM
-// ==============================
-function openDialog(title, bodyHtml, actions) {
-  document.getElementById('dialogTitle').textContent = title;
-  document.getElementById('dialogBody').innerHTML = bodyHtml;
-
-  const actionsEl = document.getElementById('dialogActions');
-  actionsEl.innerHTML = '';
-  actions.forEach(a => {
-    const btn = document.createElement('button');
-    btn.className = `dialog-btn ${a.cls||''}`;
-    btn.textContent = a.label;
-    btn.onclick = async () => {
-      const result = await a.action();
-      if (result !== false) closeDialog();
-    };
-    actionsEl.appendChild(btn);
-  });
-
-  document.getElementById('dialogOverlay').classList.add('active');
-}
-
-
-// ==============================
-// 批次加點
-// ==============================
-function openBatchPoints() {
-  if (!currentClass) return;
-  const students = getStudentsByClass(currentClass);
-  
-  // 建立學生勾選清單
-  const checkList = students.map(s => 
-    `<label style="display:flex;align-items:center;gap:8px;padding:5px 0;cursor:pointer;border-bottom:1px solid var(--border);">
-      <input type="checkbox" class="batch-check" value="${s.id}" style="width:16px;height:16px;accent-color:var(--gold);">
-      <span style="font-size:15px;font-weight:bold;">${s.name}</span>
-      <span style="font-size:11px;color:var(--text-muted);">${s.id}</span>
-    </label>`
-  ).join('');
-
-  openDialog('⭐ 批次加點',
-    `<div style="margin-bottom:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-       <button onclick="batchSelectAll(true)" class="btn-sm" style="font-size:12px;">全選</button>
-       <button onclick="batchSelectAll(false)" class="btn-sm" style="font-size:12px;">全不選</button>
-       <span style="font-size:12px;color:var(--text-secondary);">已選 <span id="batchCount">0</span> 人</span>
-     </div>
-     <div class="dialog-label">加點數</div>
-     <input class="dialog-input" type="number" id="batchDelta" value="1" min="1" max="10" style="margin-bottom:10px;">
-     <div class="dialog-label">原因</div>
-     <input class="dialog-input" type="text" id="batchReason" placeholder="例：表現優秀" style="margin-bottom:10px;">
-     <div style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:6px 10px;">
-       ${checkList}
-     </div>`,
-    [{label:'確認加點', cls:'confirm', action: async () => {
-      const checked = [...document.querySelectorAll('.batch-check:checked')].map(c=>c.value);
-      const delta = parseInt(document.getElementById('batchDelta').value) || 1;
-      const reason = document.getElementById('batchReason').value.trim();
-      if (checked.length === 0) { showToast('請至少選一位學生','error'); return false; }
-      if (!reason) { showToast('請填寫原因','error'); return false; }
-      
-      showToast(`正在為 ${checked.length} 位學生加點...`);
-      const logKey = Date.now().toString();
-      const updates = {};
-      
-      for (const id of checked) {
-        const data = await dbGet(`students/${id}`);
-        const pts = (data?.points || 0) + delta;
-        updates[`${DB_ROOT}/students/${id}/points`] = pts;
-        updates[`${DB_ROOT}/students/${id}/log/${logKey}_${id}`] = {
-          time: now(), action: `批次加點 +${delta}`, reason,
-          teacher: currentUser.name, delta
-        };
-      }
-      
-      await db.ref('/').update(updates);
-      showToast(`✅ 已為 ${checked.length} 位學生各加 ${delta} 點`, 'success');
-      renderStudentGrid();
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-
-  // 監聽勾選變化更新計數
-  setTimeout(() => {
-    document.querySelectorAll('.batch-check').forEach(cb => {
-      cb.addEventListener('change', () => {
-        const n = document.querySelectorAll('.batch-check:checked').length;
-        const el = document.getElementById('batchCount');
-        if (el) el.textContent = n;
-      });
-    });
-  }, 100);
-}
-
-function batchSelectAll(val) {
-  document.querySelectorAll('.batch-check').forEach(cb => { cb.checked = val; });
-  const n = val ? document.querySelectorAll('.batch-check').length : 0;
-  const el = document.getElementById('batchCount');
-  if (el) el.textContent = n;
-}
-
-// ==============================
-// 個人重置
-// ==============================
-function openResetStudent() {
-  if (!currentStudent) return;
-  openDialog(`⚠️ 重置「${currentStudent.name}」的資料`,
-    `<div class="dialog-message" style="color:var(--text-primary);">請選擇要重置的項目：</div>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="rst_pts" style="accent-color:var(--gold);margin-right:8px;">點數歸零</label>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="rst_medals" style="accent-color:var(--gold);margin-right:8px;">金牌歸零</label>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="rst_tasks" style="accent-color:var(--gold);margin-right:8px;">清除所有任務</label>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="rst_log" style="accent-color:var(--gold);margin-right:8px;">清除異動日誌</label>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="rst_att" style="accent-color:var(--gold);margin-right:8px;">清除出勤紀錄</label>
-     <div style="margin-top:12px;padding:10px;background:rgba(231,76,60,0.1);border:1px solid rgba(231,76,60,0.3);border-radius:8px;font-size:12px;color:var(--red);">⚠️ 此操作無法復原，請謹慎確認</div>`,
-    [{label:'確認重置', cls:'danger-confirm', action: async () => {
-      const updates = {};
-      const id = currentStudent.id;
-      if (document.getElementById('rst_pts').checked) updates[`${DB_ROOT}/students/${id}/points`] = 0;
-      if (document.getElementById('rst_medals').checked) updates[`${DB_ROOT}/students/${id}/medals`] = 0;
-      if (document.getElementById('rst_tasks').checked) updates[`${DB_ROOT}/students/${id}/tasks`] = null;
-      if (document.getElementById('rst_log').checked) updates[`${DB_ROOT}/students/${id}/log`] = null;
-      if (document.getElementById('rst_att').checked) updates[`${DB_ROOT}/students/${id}/attendance`] = null;
-      if (Object.keys(updates).length === 0) { showToast('請至少選一個項目','error'); return false; }
-      await db.ref('/').update(updates);
-      showToast(`${currentStudent.name} 資料已重置`, 'success');
-      openDetail(currentStudent);
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
-// ==============================
-// 全班重置
-// ==============================
-function openResetClass() {
-  if (!currentClass) return;
-  openDialog(`⚠️ 全班重置「${currentClass}」`,
-    `<div class="dialog-message" style="color:var(--text-primary);">請選擇要重置的項目（全班所有學生）：</div>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="crst_pts" style="accent-color:var(--gold);margin-right:8px;">點數全部歸零</label>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="crst_medals" style="accent-color:var(--gold);margin-right:8px;">金牌全部歸零</label>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="crst_tasks" style="accent-color:var(--gold);margin-right:8px;">清除所有任務</label>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="crst_log" style="accent-color:var(--gold);margin-right:8px;">清除所有異動日誌</label>
-     <label style="display:block;margin-bottom:8px;cursor:pointer;"><input type="checkbox" id="crst_att" style="accent-color:var(--gold);margin-right:8px;">清除所有出勤紀錄</label>
-     <div style="margin-top:12px;padding:10px;background:rgba(231,76,60,0.15);border:1px solid rgba(231,76,60,0.5);border-radius:8px;font-size:12px;color:var(--red);font-weight:bold;">🚨 此操作將影響全班 ${getStudentsByClass(currentClass||'').length} 位學生且無法復原！</div>`,
-    [{label:'確認全班重置', cls:'danger-confirm', action: async () => {
-      const students = getStudentsByClass(currentClass);
-      const doPts = document.getElementById('crst_pts').checked;
-      const doMedals = document.getElementById('crst_medals').checked;
-      const doTasks = document.getElementById('crst_tasks').checked;
-      const doLog = document.getElementById('crst_log').checked;
-      const doAtt = document.getElementById('crst_att').checked;
-      if (!doPts && !doMedals && !doTasks && !doLog && !doAtt) { showToast('請至少選一個項目','error'); return false; }
-      
-      const updates = {};
-      students.forEach(s => {
-        if (doPts)    updates[`${DB_ROOT}/students/${s.id}/points`] = 0;
-        if (doMedals) updates[`${DB_ROOT}/students/${s.id}/medals`] = 0;
-        if (doTasks)  updates[`${DB_ROOT}/students/${s.id}/tasks`] = null;
-        if (doLog)    updates[`${DB_ROOT}/students/${s.id}/log`] = null;
-        if (doAtt)    updates[`${DB_ROOT}/students/${s.id}/attendance`] = null;
-      });
-      
-      await db.ref('/').update(updates);
-      showToast(`${currentClass} 全班資料已重置`, 'success');
-      renderStudentGrid();
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
-function closeDialog() {
-  document.getElementById('dialogOverlay').classList.remove('active');
-}
-
-document.getElementById('dialogOverlay').addEventListener('click', e => {
-  if (e.target === document.getElementById('dialogOverlay')) closeDialog();
-});
-
-// ==============================
+// ══════════════════════════════════════════
 // INIT
-// ==============================
-// 💡 這裡就是您要貼上的新位置 (學生傳送訊息功能)
-async function openStudentSendMessage() {
-  openDialog('✉️ 傳送訊息給老師',
-    `<div class="dialog-label">收件人</div>
-     <div style="color:var(--gold);margin-bottom:10px;">所有管理教師</div>
-     <div class="dialog-label">訊息內容</div>
-     <textarea class="dialog-input" id="stuMsgContent" rows="4" placeholder="請輸入您想對老師說的話..."></textarea>`,
-    [{label:'確認傳送', cls:'confirm', action: async () => {
-      const content = document.getElementById('stuMsgContent').value.trim();
-      if (!content) { showToast('內容不能為空','error'); return false; }
-
-      const key = Date.now().toString();
-      await dbSet(`teacherInbox/${key}`, {
-        from: currentUser.name,
-        studentId: currentUser.studentId,
-        content: content,
-        time: now(),
-        read: false
-      });
-      showToast('訊息已成功傳送給老師！', 'success');
-      return true;
-    }}, {label:'取消', cls:'', action:()=>true}]
-  );
-}
-
+// ══════════════════════════════════════════
+window.addEventListener('load', () => {
+  showScreen('loginScreen');
+  db.ref('.info/connected').on('value', s=>{
+    console.log(s.val()?'✅ Firebase 已連線':'⚠️ Firebase 離線');
+  });
+});
 </script>
 </body>
 </html>
