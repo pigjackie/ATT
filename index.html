@@ -1345,94 +1345,114 @@ function openSendMsg() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生端訊息系統：最高規格修正版 ──
+// ── 學生端訊息監聽與渲染 ──
 let _stuMsgListener = null;
-
-// 將函數明確掛載到 window，確保動態 HTML 的 onclick 絕對找得到
-window.markRead = async function(stuId, k) {
-  console.log("%c[系統通訊] 嘗試標記已讀:", "color: #D4AF37; font-weight: bold;", stuId, k);
-  
-  try {
-    // 1. 更新學生個人訊息狀態
-    // 使用預定義的 ref(p)，確保路徑包含 ROOT (jjvs_v2)
-    await ref(`stuMsgs/${stuId}/${k}`).update({ 
-      read: true,
-      readAt: now() 
-    });
-    
-    // 2. 同步更新全域訊息表 (採樂觀執行，若失敗不影響學生端)
-    try {
-      await ref(`messages/${k}`).update({ read: true });
-    } catch(e) {
-      console.warn("[系統通訊] 全域訊息同步跳過");
-    }
-
-    toast('訊息已讀', 'ok');
-  } catch (e) {
-    console.error("[系統錯誤] 無法寫入 Firebase:", e);
-    toast('讀取失敗，請檢查網路或權限', 'err');
-  }
-};
 
 async function loadStuMsgs(stuId) {
   _currentStuId = stuId;
-  const msgPath = `stuMsgs/${stuId}`;
+  
+  // 先清理舊的監聽器，避免重複
+  if (_stuMsgListener) {
+    db.ref(`${ROOT}/stuMsgs/${_stuMsgListener.id}`).off('value');
+  }
 
-  // 先移除舊監聽器，防止記憶體洩漏與邏輯重疊
-  ref(msgPath).off('value');
+  // 設定監聽器
+  const msgRef = db.ref(`${ROOT}/stuMsgs/${stuId}`);
+  _stuMsgListener = { id: stuId };
 
-  // 開啟即時動態監聽
-  ref(msgPath).on('value', snap => {
+  msgRef.on('value', snap => {
     const data = snap.val() || {};
     _renderStuMsgs(stuId, data);
   });
 }
 
 function _renderStuMsgs(stuId, data) {
-  const list = document.getElementById('stuBannerList');
-  const dot = document.getElementById('stuNotifDot');
-  if (!list) return;
-
   const allMsgs = Object.entries(data).sort((a, b) => b[0].localeCompare(a[0]));
-  const unreadCount = allMsgs.filter(([, m]) => !m.read).length;
+  const unread = allMsgs.filter(([, m]) => !m.read);
+  
+  const dot = document.getElementById('stuNotifDot');
+  const banner = document.getElementById('stuBanner');
+  const list = document.getElementById('stuBannerList');
 
-  // 更新 UI 紅點狀態
+  // 更新導航列紅點
   if (dot) {
-    dot.classList.toggle('on', unreadCount > 0);
-    dot.style.display = unreadCount > 0 ? 'block' : 'none';
+    if (unread.length > 0) {
+      dot.classList.add('on');
+      dot.style.display = 'block';
+    } else {
+      dot.classList.remove('on');
+      dot.style.display = 'none';
+    }
   }
 
+  if (!list) return;
+
   if (allMsgs.length === 0) {
-    list.innerHTML = '<div class="empty">目前沒有新訊息</div>';
+    list.innerHTML = '<div style="padding:15px; color:var(--tx3); font-size:13px;">目前沒有訊息</div>';
     return;
   }
 
-  // 生成 HTML：重點在於 window.markRead 的調用
+  // 渲染訊息列表
+  // 增加 onclick 讓整條訊息都可以點擊已讀
   list.innerHTML = allMsgs.slice(0, 20).map(([k, m]) => {
+    const typeLabel = { notice: '📢 通知', punishment: '⚠️ 處罰', deduct: '🔴 扣分' }[m.type] || '📢 通知';
     const isUnread = !m.read;
-    const typeLabel = { notice: '📢 通知', punishment: '⚠️ 處罰', deduct: '🔴 扣分' }[m.type] || '📢';
-    const borderCol = m.read ? 'var(--bdr)' : (m.type === 'punishment' ? 'var(--yellow)' : (m.type === 'deduct' ? 'var(--red)' : 'var(--blue)'));
-
+    
     return `
       <div class="stu-msg-item" 
-           style="border-left:4px solid ${borderCol}; 
-                  opacity: ${m.read ? '0.6' : '1'}; 
-                  padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
-        <div class="stu-msg-from" style="font-size: 11px; color: var(--tx2); margin-bottom: 4px;">
-          ${typeLabel} · ${m.from} · ${m.time}
-          ${m.read ? '<span style="color:var(--green); margin-left:8px;">✓ 已讀</span>' : '<span style="color:var(--red); margin-left:8px; font-weight:bold;">● 未讀</span>'}
+           onclick="if(${isUnread}) markRead('${stuId}','${k}')"
+           style="opacity:${m.read ? '0.6' : '1'}; 
+                  cursor:${isUnread ? 'pointer' : 'default'};
+                  border-left:4px solid ${m.read ? 'var(--bdr)' : m.type === 'punishment' ? 'var(--yellow)' : 'var(--blue)'};
+                  margin-bottom:8px; transition: 0.2s;">
+        <div class="stu-msg-from">
+          <span style="color:var(--gold)">${typeLabel}</span> · ${m.from} · ${m.time}
+          ${m.read ? '<span style="color:var(--green);margin-left:6px">✓ 已讀</span>' : '<span style="color:var(--red);margin-left:6px;font-weight:bold">● 未讀</span>'}
         </div>
-        <div style="font-size: 14px; color: var(--tx); line-height: 1.5;">${m.content}</div>
-        ${isUnread ? `
-          <button class="btn s" 
-                  style="margin-top: 8px; width: 100%; padding: 6px; font-weight: bold;" 
-                  onclick="window.markRead('${stuId}', '${k}')">
-            確認收悉
-          </button>` : ''}
+        <div style="font-size:14px; margin:5px 0; line-height:1.4;">${m.content}</div>
+        ${isUnread ? `<div style="font-size:11px; color:var(--tx3); text-align:right;">(點擊訊息標記為已讀)</div>` : ''}
       </div>`;
   }).join('');
 }
-}// ── 學生自己兌換金牌 ──
+
+// ── 核心修正：標記已讀函式 ──
+async function markRead(stuId, k) {
+  try {
+    // 1. 更新學生個人訊息路徑
+    await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).update({ read: true });
+    
+    // 2. 嘗試同步更新全域訊息表（如果有對應的話）
+    // 這裡使用 try-catch 是因為有些全域訊息 key 可能不完全一致
+    try {
+      await db.ref(`${ROOT}/messages/${k}`).update({ read: true });
+    } catch(e) {
+      console.log("Global message sync skipped or key not found");
+    }
+
+    toast('訊息已讀', 'ok');
+  } catch (e) {
+    console.error("MarkRead Error:", e);
+    toast('讀取失敗：' + e.message, 'err');
+  }
+}
+
+// ── 修正橫幅開關邏輯 ──
+function toggleStuBanner() {
+  const banner = document.getElementById('stuBanner');
+  if (!banner) return;
+  
+  stuBannerOpen = !stuBannerOpen;
+  banner.style.display = stuBannerOpen ? 'block' : 'none';
+  
+  if (stuBannerOpen && _currentStuId) {
+    // 開啟時強制拉一次最新資料
+    dbGet(`stuMsgs/${_currentStuId}`).then(data => {
+      _renderStuMsgs(_currentStuId, data || {});
+    });
+  }
+}
+
+// ── 學生自己兌換金牌 ──
 async function stuRedeemMedal(stuId, pts) {
   if (pts < 5) { toast('點數不足5點','err'); return; }
   openDlg('🎖️ 兌換金牌',
