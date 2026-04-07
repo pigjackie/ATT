@@ -188,6 +188,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .msg-tag{font-size:10px;padding:2px 7px;border-radius:10px;display:inline-block}
 .msg-tag.notice{background:rgba(52,152,219,.2);color:var(--blue)}
 .msg-tag.punish{background:rgba(241,196,15,.2);color:var(--yellow)}
+.msg-tag.deduct{background:rgba(231,76,60,.2);color:var(--red)}
 .msg-read{font-size:11px}
 
 /* ── STUDENT MSG BANNER ── */
@@ -314,6 +315,9 @@ select:focus{border-color:var(--gold)}
         <button class="btn s" onclick="batchPts(1)">⭐ +1點</button>
         <button class="btn d" onclick="batchPts(-1)">－ 扣1點</button>
         <button class="btn g" onclick="batchMedal()">🎖️ +金牌</button>
+        <button class="btn" onclick="batchSetAtt('出')" style="border-color:var(--green);color:var(--green)">✓ 批次出席</button>
+        <button class="btn" onclick="batchSetAtt('缺')" style="border-color:var(--red);color:var(--red)">✗ 批次缺席</button>
+        <button class="btn" onclick="batchSetAtt('遲')" style="border-color:var(--yellow);color:var(--yellow)">⏱ 批次遲到</button>
         <button class="btn" onclick="selectAll()">全選</button>
         <button class="btn" onclick="clearSel()">清除</button>
         <button class="btn d" onclick="toggleBatch()" style="margin-left:auto">✕ 結束</button>
@@ -327,12 +331,17 @@ select:focus{border-color:var(--gold)}
     </div>
     <!-- 訊息中心 -->
     <div id="tabInbox" style="display:none">
-      <div class="row" style="margin-bottom:14px">
+      <div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <h3 style="color:var(--gold)">💬 訊息中心</h3>
-        <button class="btn g" style="margin-left:auto" onclick="openSendMsg()">✉️ 發送訊息</button>
+        <button class="btn g" onclick="openSendMsg()">✉️ 新增訊息</button>
+        <button class="btn" onclick="renderInbox()">🔄 重新整理</button>
       </div>
-      <div style="font-size:12px;color:var(--tx3);margin-bottom:10px">點名字可查看詳細 · 訊息狀態即時同步</div>
-      <div id="inboxList"><div class="empty">尚無已發出訊息</div></div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn on" id="inboxTabAll" onclick="inboxFilter('all')" style="border-color:var(--gold);color:var(--gold)">全部</button>
+        <button class="btn" id="inboxTabUnread" onclick="inboxFilter('unread')">🔴 未讀</button>
+        <button class="btn" id="inboxTabPunish" onclick="inboxFilter('punishment')">⚠️ 處罰</button>
+      </div>
+      <div id="inboxList"><div class="empty">尚無訊息</div></div>
     </div>
     <!-- 報表 -->
     <div id="tabReport" style="display:none">
@@ -344,6 +353,9 @@ select:focus{border-color:var(--gold)}
       </div>
       <div class="clsbtns" id="clsBtnsR"></div>
       <div class="sgrid" id="rptGrid"></div>
+      <hr style="border-color:var(--bdr);margin:20px 0">
+      <h3 style="color:var(--red);margin-bottom:12px">🔴 扣分記錄（近期）</h3>
+      <div id="deductLog"><div class="empty">載入中...</div></div>
     </div>
     <!-- 教師管理 -->
     <div id="tabTeachers" style="display:none">
@@ -422,7 +434,10 @@ select:focus{border-color:var(--gold)}
   <div class="dp-sec">
     <div class="dp-sec-t">📝 處罰任務</div>
     <div id="dpTasks"></div>
-    <button class="btn" style="width:100%;margin-top:7px" onclick="openAddTask()">＋ 新增任務</button>
+    <div class="row" style="margin-top:7px">
+      <button class="btn" onclick="openAddTask()" style="flex:1">＋ 新增任務</button>
+      <button class="btn" onclick="openAddCopy()" style="flex:1">📝 新增罰抄</button>
+    </div>
   </div>
   <div class="dp-sec">
     <div class="dp-sec-t">📜 異動日誌</div>
@@ -430,9 +445,10 @@ select:focus{border-color:var(--gold)}
   </div>
   <div class="dp-sec">
     <div class="dp-sec-t">⚠️ 重置</div>
-    <div class="row">
+    <div class="row" style="flex-wrap:wrap;gap:6px">
       <button class="btn d" onclick="resetPts()">重置點數</button>
       <button class="btn d" onclick="resetMedals()">重置金牌</button>
+      <button class="btn d" onclick="resetPw()">重置密碼(→0000)</button>
       <button class="btn d" onclick="resetAll()" style="background:rgba(231,76,60,.15)">🗑️ 清除全部</button>
     </div>
   </div>
@@ -706,7 +722,7 @@ function switchTab(t) {
   const map = {att:'tabAtt',apply:'tabApply',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers'};
   document.getElementById(map[t]).style.display = '';
   if (t==='att') renderGrid();
-  if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); }
+  if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); loadDeductLog(); }
   if (t==='teachers') renderTeachers();
   if (t==='inbox') renderInbox();
   if (t==='apply') {} // already live
@@ -762,7 +778,7 @@ async function renderGrid() {
         <div class="sc-num">${s.id}</div>
         <div class="sbadge ${att}" onclick="cycleAtt(event,'${s.id}')">${att}</div>
       </div>
-      <div class="sc-name" onclick="handleCardClick(event,'${s.id}')">${s.name}</div>
+      <div class="sc-name" onclick="handleCardClick(event,'${s.id}')"><span style='font-size:11px;color:var(--tx3);margin-right:3px'>${s.id.split('-')[1]||''}</span>${s.name}</div>
       <div class="sc-pts">
         <div class="sc-stars">${'★'.repeat(stars)}${'☆'.repeat(10-stars)}</div>
         <div class="sc-medals">${medals>0?'🎖️×'+medals:''}</div>
@@ -811,16 +827,21 @@ async function autoDeductLate(id) {
 }
 
 async function saveAtt() {
-  if (!curCls||!Object.keys(pendAtt).length) { toast('無變更'); return; }
+  if (!curCls) { toast('請先選班級','err'); return; }
   const td = today();
   const upd = {};
+  let count = 0;
   for (const [id,att] of Object.entries(pendAtt)) {
     if (byId(id)?.cls!==curCls) continue;
     upd[`${ROOT}/students/${id}/attendance/${td}`] = att;
+    count++;
   }
+  if (!count) { toast('無變更需儲存'); return; }
   await db.ref('/').update(upd);
-  pendAtt = {};
-  toast('點名已儲存','ok');
+  // 清除已儲存班級的 pendAtt
+  byCls(curCls).forEach(s=>{ delete pendAtt[s.id]; });
+  toast(`已儲存 ${count} 筆點名記錄`,'ok');
+  renderGrid();
 }
 
 function setAllAtt(att) {
@@ -855,6 +876,26 @@ function updBatchCnt() { document.getElementById('batchCnt').textContent = batch
 function selectAll() { byCls(curCls).forEach(s=>batchSel.add(s.id)); updBatchCnt(); renderGrid(); }
 function clearSel() { batchSel.clear(); updBatchCnt(); renderGrid(); }
 
+function batchSetAtt(att) {
+  if (!batchSel.size) { toast('請先勾選學生','err'); return; }
+  batchSel.forEach(id => {
+    pendAtt[id] = att;
+    const card = document.getElementById(`sc-${id}`);
+    if (card) {
+      card.className = `scard s${att} sel`;
+      const badge = card.querySelector('.sbadge');
+      if (badge) { badge.className=`sbadge ${att}`; badge.textContent=att; }
+    }
+  });
+  toast(`已批次設定 ${batchSel.size} 人為「${att}」`);
+  if (att==='遲') {
+    openDlg('⏱ 批次遲到確認',`<div class="dlg-msg">已標記 ${batchSel.size} 人遲到。<br>是否同時自動扣1點？</div>`,
+      [{label:'是，自動扣點',cls:'ok',fn:async()=>{
+        for(const id of batchSel){ await autoDeductLate(id); }
+        toast('批次遲到扣點完成','ok'); return true;
+      }},{label:'否，只改狀態',fn:()=>true}]);
+  }
+}
 async function batchPts(delta) {
   if (!batchSel.size) { toast('請先勾選學生','err'); return; }
   openDlg(delta>0?`⭐ 批次+1點（${batchSel.size}人）`:`－ 批次扣1點（${batchSel.size}人）`,
@@ -1052,6 +1093,22 @@ function openAddTask() {
     }},{label:'取消',fn:()=>true}]);
 }
 
+function openAddCopy() {
+  if (!curStu) return;
+  openDlg('📝 新增罰抄任務',
+    `<div class="dlg-label">罰抄內容</div><input class="dlg-input" type="text" id="cpName" placeholder="例：抄寫第三章樂理">
+     <div class="dlg-label">罰抄字數 / 行數</div><input class="dlg-input" type="number" id="cpTotal" placeholder="例：100" min="1">`,
+    [{label:'新增罰抄',cls:'ok',fn:async()=>{
+      const name=document.getElementById('cpName').value.trim();
+      const total=parseInt(document.getElementById('cpTotal').value);
+      if(!name||!total||total<1){toast('請填寫完整','err');return false}
+      const k=Date.now()+'';
+      await dbUpd(`students/${curStu.id}`,{[`tasks/${k}`]:{name:'📝罰抄：'+name,total,done:0,type:'copy'}});
+      // 自動發通知
+      await sendNotifToStudent(curStu.id,curStu.name,`新增罰抄任務：${name}（共${total}行）`,'punishment');
+      toast('罰抄任務已新增'); openDetail(curStu); return true;
+    }},{label:'取消',fn:()=>true}]);
+}
 async function incrTask(k) {
   if (!curStu) return;
   const d=await dbGet(`students/${curStu.id}/tasks/${k}`);
@@ -1087,6 +1144,11 @@ async function resetAll() {
   openDlg('🗑️ 清除全部資料',`<div class="dlg-msg" style="color:var(--red)">確認清除「${curStu.name}」所有資料？<br><b>此操作不可復原！</b></div>`,
     [{label:'確認清除',cls:'del',fn:async()=>{ await dbSet(`students/${curStu.id}`,{password:(await dbGet(`students/${curStu.id}`))?.password||'0000'}); toast('已清除'); openDetail(curStu); renderGrid(); return true; }},{label:'取消',fn:()=>true}]);
 }
+async function resetPw() {
+  if (!curStu) return;
+  openDlg('🔑 重置密碼',`<div class="dlg-msg">確認將「${curStu.name}」密碼重置為 <b>0000</b>？</div>`,
+    [{label:'確認重置',cls:'del',fn:async()=>{ await dbUpd(`students/${curStu.id}`,{password:'0000'}); toast('密碼已重置為 0000','ok'); openDetail(curStu); return true; }},{label:'取消',fn:()=>true}]);
+}
 async function resetAllDlg() {
   openDlg('⚠️ 全班資料重置',`<div class="dlg-msg" style="color:var(--red)">確認重置所有學生的點數、金牌、任務、日誌？<br><b>此操作不可復原！</b></div>`,
     [{label:'確認重置',cls:'del',fn:async()=>{
@@ -1120,11 +1182,13 @@ function renderApplyList(data) {
     <div class="apply-item">
       <div class="ai-info">
         <div class="ai-name">${a.studentName} <span style="font-size:12px;color:var(--tx2)">${a.studentClass}</span></div>
-        <div class="ai-reason">原因：${a.reason}</div>
-        <div class="ai-time">${a.time}</div>
+        <div class="ai-reason" style="background:rgba(212,175,55,.07);padding:4px 8px;border-radius:4px;margin:3px 0">📝 ${a.reason||'（未填原因）'}</div>
+        <div class="ai-time">${a.time}${a.contact&&a.contact!=='未填'?' · 聯絡：'+a.contact:''}</div>
       </div>
-      <button class="btn s" onclick="approveExit('${k}','${a.studentName}')">✅ 核可</button>
-      <button class="btn d" onclick="rejectExit('${k}')">✕ 拒絕</button>
+      <div style="display:flex;flex-direction:column;gap:4px">
+        <button class="btn s" onclick="approveExit('${k}','${a.studentName}')">✅ 核可</button>
+        <button class="btn d" onclick="rejectExit('${k}')">✕ 拒絕</button>
+      </div>
     </div>`).join('');
 }
 
@@ -1143,13 +1207,14 @@ async function rejectExit(k) {
 
 function openApplyExit() {
   openDlg('🚪 申請第八節外出',
-    `<div class="dlg-label">外出原因</div><textarea class="dlg-input" id="exitR" rows="3" placeholder="請填寫原因"></textarea>`,
+    `<div class="dlg-label">外出原因（必填）</div><textarea class="dlg-input" id="exitR" rows="2" placeholder="請填寫外出原因..."></textarea><div class="dlg-label" style="margin-top:4px">聯絡方式（選填）</div><input class="dlg-input" type="text" id="exitContact" placeholder="家長電話或自身聯絡方式">`,
     [{label:'送出申請',cls:'ok',fn:async()=>{
       const reason=document.getElementById('exitR').value.trim();
+      const contact=document.getElementById('exitContact').value.trim();
       if(!reason){toast('請填寫原因','err');return false}
       const stu=byName(me.name);
       const k=Date.now()+'';
-      await dbSet(`exitApply/${k}`,{studentName:me.name,studentId:stu?.id||'',studentClass:stu?.cls||'',reason,time:now(),status:'pending'});
+      await dbSet(`exitApply/${k}`,{studentName:me.name,studentId:stu?.id||'',studentClass:stu?.cls||'',reason,contact:contact||'未填',time:now(),status:'pending'});
       toast('申請已送出，請等待審核');
       listenMyApproval(k,me.name);
       return true;
@@ -1190,26 +1255,39 @@ function startMsgListener() {
   });
 }
 
+let inboxFilterMode = 'all';
+function inboxFilter(mode) {
+  inboxFilterMode = mode;
+  ['all','unread','punishment'].forEach(m=>{
+    const btn = document.getElementById('inboxTab'+m.charAt(0).toUpperCase()+m.slice(1));
+    if(btn) { btn.style.borderColor=m===mode?'var(--gold)':''; btn.style.color=m===mode?'var(--gold)':''; }
+  });
+  renderInbox();
+}
+
 async function renderInbox(data) {
   if (!data) data = await dbGet('messages')||{};
   const c = document.getElementById('inboxList');
   if (!c) return;
-  const ents = Object.entries(data).sort((a,b)=>b[0]-a[0]);
-  if (!ents.length) { c.innerHTML='<div class="empty">尚無已發出訊息</div>'; return; }
-  // 計算未讀（學生端有沒有讀）
+  let ents = Object.entries(data).sort((a,b)=>b[0]-a[0]);
+  if (inboxFilterMode==='unread') ents=ents.filter(([,m])=>!m.read);
+  if (inboxFilterMode==='punishment') ents=ents.filter(([,m])=>m.type==='punishment');
+  if (!ents.length) { c.innerHTML='<div class="empty">尚無訊息</div>'; return; }
   let unread = 0;
   c.innerHTML = ents.map(([k,m])=>{
     if (!m.read) unread++;
-    return `<div class="msg-item ${m.type==='punishment'?'punish':''}">
+    const typeLabel = {notice:'📢通知',punishment:'⚠️處罰',deduct:'🔴扣分'}[m.type]||'📢通知';
+    const typeClass = m.type==='punishment'?'punish':m.type==='deduct'?'unread':'';
+    return `<div class="msg-item ${typeClass}" style="border-left:3px solid ${m.read?'var(--bdr)':m.type==='punishment'?'var(--yellow)':m.type==='deduct'?'var(--red)':'var(--blue)'}">
       <div class="msg-hd">
-        <div class="msg-to">發給：<b>${m.to}</b> <span class="msg-tag ${m.type==='punishment'?'punish':'notice'}">${m.type==='punishment'?'⚠️處罰':'📢通知'}</span></div>
-        <div style="display:flex;gap:6px;align-items:center">
-          <div class="msg-time">${m.time} · ${m.from}</div>
-          <button class="btn d" onclick="delMsg('${k}')" style="padding:2px 7px;font-size:11px">刪除</button>
+        <div class="msg-to">發給：<b>${m.to}</b> <span class="msg-tag notice">${typeLabel}</span></div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0">
+          <div class="msg-time">${m.time}</div>
+          <button class="btn d" onclick="delMsg('${k}')" style="padding:2px 7px;font-size:10px">刪</button>
         </div>
       </div>
       <div class="msg-body">${m.content}</div>
-      <div class="msg-read" style="color:${m.read?'var(--green)':'var(--red)'}">${m.read?'✅ 已讀':'🔴 未讀'}</div>
+      <div style="font-size:11px;color:var(--tx3)">發送者：${m.from} · <span style="color:${m.read?'var(--green)':'var(--red)'}">${m.read?'✅已讀':'🔴未讀'}</span></div>
     </div>`;
   }).join('');
   const ib = document.getElementById('inboxBadge');
@@ -1223,40 +1301,46 @@ async function delMsg(k) {
 }
 
 function openSendMsg() {
+  const clsOpts = CLASSES.map(cls=>`<option value="cls:${cls}">📢 ${cls} 全班</option>`).join('');
   const stuOpts = CLASSES.map(cls=>
     `<optgroup label="${cls}">`+
-    byCls(cls).map(s=>`<option value="${s.id}:${s.name}">${s.name}</option>`).join('')+
+    byCls(cls).map(s=>`<option value="stu:${s.id}:${s.name}">${s.id.split('-')[1]||''} ${s.name}</option>`).join('')+
     `</optgroup>`
   ).join('');
-  openDlg('✉️ 發送訊息 / 處罰通知',
+  openDlg('✉️ 發送訊息',
     `<div class="dlg-label">發送對象</div>
      <select class="dlg-input" id="msgTo" style="width:100%;margin-bottom:12px">
-       <option value="">── 全班廣播 ──</option>${stuOpts}
+       <option value="all">🌐 全校廣播（所有班級）</option>
+       ${clsOpts}
+       <optgroup label="─ 個別學生 ─">${stuOpts}</optgroup>
      </select>
      <div class="dlg-label">類型</div>
      <select class="dlg-input" id="msgType" style="width:100%;margin-bottom:12px">
        <option value="notice">📢 一般通知</option>
        <option value="punishment">⚠️ 處罰通知</option>
+       <option value="deduct">🔴 扣分通知</option>
      </select>
      <div class="dlg-label">訊息內容</div>
-     <textarea class="dlg-input" id="msgContent" rows="4" placeholder="請輸入訊息內容..."></textarea>`,
+     <textarea class="dlg-input" id="msgContent" rows="3" placeholder="請輸入訊息內容..."></textarea>`,
     [{label:'發送',cls:'ok',fn:async()=>{
       const target = document.getElementById('msgTo').value;
       const type = document.getElementById('msgType').value;
       const content = document.getElementById('msgContent').value.trim();
       if (!content){toast('請填寫內容','err');return false}
       const k = Date.now()+'';
-      let toName='全班', toIds=STUDENTS.map(s=>s.id);
-      if (target) { const [id,name]=target.split(':'); toName=name; toIds=[id]; }
+      let toName, toIds;
+      if (target === 'all') {
+        toName='全校'; toIds=STUDENTS.map(s=>s.id);
+      } else if (target.startsWith('cls:')) {
+        const cls=target.slice(4); toName=cls+'全班'; toIds=byCls(cls).map(s=>s.id);
+      } else {
+        const parts=target.split(':'); toName=parts[2]; toIds=[parts[1]];
+      }
       const upd = {};
-      // 存到 messages（老師端記錄）
       upd[`${ROOT}/messages/${k}`] = {from:me.name, to:toName, content, type, time:now(), read:false};
-      // 每個學生的 stuMsgs
-      toIds.forEach(id=>{
-        upd[`${ROOT}/stuMsgs/${id}/${k}`] = {from:me.name, content, type, time:now(), read:false};
-      });
+      toIds.forEach(id=>{ upd[`${ROOT}/stuMsgs/${id}/${k}`] = {from:me.name, content, type, time:now(), read:false}; });
       await db.ref('/').update(upd);
-      toast(`訊息已發送給 ${toName}`,'ok');
+      toast(`已發送給 ${toName}（${toIds.length}人）`,'ok');
       return true;
     }},{label:'取消',fn:()=>true}]);
 }
@@ -1282,21 +1366,61 @@ async function loadStuMsgs(stuId) {
         <div class="${m.type==='punishment'?'stu-msg-type-punishment':'stu-msg-type-notice'}">${m.content}</div>
         <button class="btn" onclick="markRead('${stuId}','${k}')" style="margin-top:5px;font-size:11px;padding:2px 9px">✓ 已讀</button>
       </div>`).join('');
+    // 有未讀自動展開，鈴鐺亮起
     if (stuBannerOpen) banner.style.display='';
-    // 讓鈴鐺知道有未讀
     dot.classList.add('on');
+    dot.title = `${unread.length} 則未讀訊息`;
   });
 }
 
 function toggleStuBanner() {
   stuBannerOpen = !stuBannerOpen;
-  document.getElementById('stuBanner').style.display = stuBannerOpen?'':'none';
+  const banner = document.getElementById('stuBanner');
+  banner.style.display = stuBannerOpen ? '' : 'none';
 }
 
 async function markRead(stuId, k) {
   await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).update({read:true});
   // 如果老師那邊只有這一人的訊息，更新已讀
   await db.ref(`${ROOT}/messages/${k}`).update({read:true});
+}
+
+
+// ── 學生自己兌換金牌 ──
+async function stuRedeemMedal(stuId, pts) {
+  if (pts < 5) { toast('點數不足5點','err'); return; }
+  openDlg('🎖️ 兌換金牌',
+    `<div class="dlg-msg">確認扣除5點，兌換1枚金牌？<br>兌換後剩餘：${pts-5}點</div>`,
+    [{label:'確認兌換',cls:'ok',fn:async()=>{
+      const d = await dbGet(`students/${stuId}`);
+      const newPts = (d?.points||0)-5, newMedals = (d?.medals||0)+1;
+      const lk = Date.now()+'';
+      await dbUpd(`students/${stuId}`,{points:newPts,medals:newMedals,
+        [`log/${lk}`]:{time:now(),action:'學生兌換金牌',reason:'集滿5點自行兌換',teacher:'學生',delta:-5}});
+      toast('金牌兌換成功🎖️','ok');
+      const stu = byId(stuId); if(stu) loadStuView(stu);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+// ── 學生修改密碼 ──
+function stuChangePw(stuId) {
+  openDlg('🔑 修改密碼',
+    `<div class="dlg-label">目前密碼</div><input class="dlg-input" type="password" id="cpOld" placeholder="目前密碼">
+     <div class="dlg-label">新密碼</div><input class="dlg-input" type="password" id="cpNew1" placeholder="新密碼">
+     <div class="dlg-label">確認新密碼</div><input class="dlg-input" type="password" id="cpNew2" placeholder="再次輸入">`,
+    [{label:'確認修改',cls:'ok',fn:async()=>{
+      const old = document.getElementById('cpOld').value;
+      const n1 = document.getElementById('cpNew1').value;
+      const n2 = document.getElementById('cpNew2').value;
+      const d = await dbGet(`students/${stuId}`);
+      const stored = d?.password||'0000';
+      if (old !== stored) { toast('目前密碼錯誤','err'); return false; }
+      if (!n1) { toast('新密碼不能為空','err'); return false; }
+      if (n1 !== n2) { toast('兩次密碼不一致','err'); return false; }
+      await dbUpd(`students/${stuId}`,{password:n1});
+      toast('密碼已更新','ok'); return true;
+    }},{label:'取消',fn:()=>true}]);
 }
 
 // ══════════════════════════════════════════
@@ -1327,6 +1451,14 @@ async function loadStuView(stu) {
       <div class="dp-sec-t">🎖️ 金牌庫存</div>
       <div class="medals-row">${medals>0?Array(Math.min(medals,10)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>10?`<span style="color:var(--gold);font-size:16px;align-self:center">+${medals-10}</span>`:''): '<span style="color:var(--tx3);font-size:13px">尚無金牌</span>'}</div>
       <div style="font-size:13px;color:var(--tx2);margin-bottom:14px">共 <b style="color:var(--gold)">${medals}</b> 枚</div>
+      <hr class="sep">
+      <div class="dp-sec-t" style="margin-bottom:8px">🎁 兌換金牌</div>
+      <button class="btn g" onclick="stuRedeemMedal('${stu.id}',${pts})" ${pts<5?'disabled style="opacity:.5"':''} style="width:100%;padding:10px;font-size:14px;margin-bottom:4px">
+        🎖️ ${pts>=5?'兌換金牌（扣5點）':'點數不足（需滿5點）'}
+      </button>
+      <hr class="sep">
+      <div class="dp-sec-t" style="margin-bottom:8px">🔑 修改密碼</div>
+      <button class="btn" onclick="stuChangePw('${stu.id}')" style="width:100%;padding:10px;font-size:14px;margin-bottom:4px">修改我的密碼</button>
       <hr class="sep">
       <div class="dp-sec-t">📜 最近記錄</div>
       <div>${Object.entries(d.log||{}).sort((a,b)=>b[0]-a[0]).slice(0,8).map(([,e])=>`
@@ -1390,6 +1522,32 @@ async function delTeacher(k, name) {
 // ══════════════════════════════════════════
 // REPORT & EXPORT
 // ══════════════════════════════════════════
+async function loadDeductLog() {
+  const el = document.getElementById('deductLog');
+  if (!el) return;
+  el.innerHTML = '<div class="spin"></div>';
+  // 讀取所有學生log中 delta<0 的記錄
+  const stus = me.classes.flatMap(c=>byCls(c));
+  const all = [];
+  for (const s of stus) {
+    const log = await dbGet(`students/${s.id}/log`) || {};
+    Object.values(log).forEach(e => {
+      if ((e.delta||0) < 0) all.push({...e, studentName:s.name, studentId:s.id, cls:s.cls});
+    });
+  }
+  all.sort((a,b)=>(b.time||'').localeCompare(a.time||'')); 
+  const recent = all.slice(0,40);
+  if (!recent.length) { el.innerHTML='<div class="empty">尚無扣分記錄</div>'; return; }
+  el.innerHTML = recent.map(e=>`
+    <div class="log-item sub" style="background:var(--bg1);padding:8px 12px;border-radius:6px;margin-bottom:5px">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <span style="font-weight:bold">${e.studentName} <span style="font-size:11px;color:var(--tx3)">${e.cls}</span></span>
+        <span style="color:var(--red);font-weight:bold">${e.delta}點</span>
+      </div>
+      <div class="log-t">${e.time||''} · ${e.teacher||''}</div>
+      <div style="font-size:13px">${e.action||''}${e.reason?' — '+e.reason:''}</div>
+    </div>`).join('');
+}
 async function renderStats() {
   const td=today();
   const stus=me.classes.flatMap(c=>byCls(c));
@@ -1416,7 +1574,7 @@ async function renderRpt() {
     card.className='scard';
     card.style.cursor='pointer';
     card.innerHTML=`<div class="sc-top"><div class="sc-num">${s.id}</div><div style="font-size:12px;color:var(--tx3)">⭐${d.points||0} 🎖️${d.medals||0}</div></div>
-      <div class="sc-name" style="cursor:default">${s.name}</div>
+      <div class="sc-name" style="cursor:default"><span style="font-size:11px;color:var(--tx3);margin-right:3px">${s.id.split('-')[1]||''}</span>${s.name}</div>
       <div style="font-size:12px;color:var(--tx2);margin-top:3px">${Object.keys(d.tasks||{}).length}任務 · ${Object.keys(d.log||{}).length}筆記錄</div>`;
     card.onclick=()=>openDetail(s,d);
     grid.appendChild(card);
