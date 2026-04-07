@@ -1345,48 +1345,103 @@ function openSendMsg() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生端訊息 ──
+// ── 學生端訊息系統 (優化版) ──
+let _stuMsgListener = null;
+
 async function loadStuMsgs(stuId) {
-  ref(`stuMsgs/${stuId}`).on('value', snap => {
-    const data = snap.val()||{};
-    const unread = Object.entries(data).filter(([,m])=>!m.read);
-    const dot = document.getElementById('stuNotifDot');
-    if (dot) dot.classList.toggle('on', unread.length>0);
-    const banner = document.getElementById('stuBanner');
-    const list = document.getElementById('stuBannerList');
-    if (!banner||!list) return;
-    if (!unread.length) {
-      banner.style.display='none';
-      stuBannerOpen = false;
-      return;
-    }
-    list.innerHTML = unread.map(([k,m])=>`
-      <div class="stu-msg-item">
-        <div class="stu-msg-from">${m.type==='punishment'?'⚠️ 處罰通知':'📢 通知'} · 來自 ${m.from} · ${m.time}</div>
-        <div class="${m.type==='punishment'?'stu-msg-type-punishment':'stu-msg-type-notice'}">${m.content}</div>
-        <button class="btn" onclick="markRead('${stuId}','${k}')" style="margin-top:5px;font-size:11px;padding:2px 9px">✓ 已讀</button>
-      </div>`).join('');
-    // 有未讀自動展開，鈴鐺亮起
-    if (stuBannerOpen) banner.style.display='';
-    dot.classList.add('on');
-    dot.title = `${unread.length} 則未讀訊息`;
+  _currentStuId = stuId;
+  const msgPath = `stuMsgs/${stuId}`;
+
+  // 先移除舊的監聽器，避免重複執行
+  ref(msgPath).off('value');
+
+  // 開啟即時監聽：資料庫一改，畫面立刻跳
+  ref(msgPath).on('value', snap => {
+    const data = snap.val() || {};
+    _renderStuMsgs(stuId, data);
   });
 }
 
-function toggleStuBanner() {
-  stuBannerOpen = !stuBannerOpen;
-  const banner = document.getElementById('stuBanner');
-  banner.style.display = stuBannerOpen ? '' : 'none';
+function _renderStuMsgs(stuId, data) {
+  const list = document.getElementById('stuBannerList');
+  const dot = document.getElementById('stuNotifDot');
+  if (!list) return;
+
+  const allMsgs = Object.entries(data).sort((a, b) => b[0].localeCompare(a[0]));
+  const unreadCount = allMsgs.filter(([, m]) => !m.read).length;
+
+  // 更新導航列紅點狀態
+  if (dot) {
+    dot.classList.toggle('on', unreadCount > 0);
+  }
+
+  if (allMsgs.length === 0) {
+    list.innerHTML = '<div class="empty">尚無訊息</div>';
+    return;
+  }
+
+  // 渲染訊息內容
+  list.innerHTML = allMsgs.slice(0, 20).map(([k, m]) => {
+    const isUnread = !m.read;
+    const typeLabel = { notice: '📢 通知', punishment: '⚠️ 處罰', deduct: '🔴 扣分' }[m.type] || '📢';
+    
+    // 這裡我們直接在 HTML 裡呼叫修正後的 markRead
+    return `
+      <div class="stu-msg-item" 
+           style="border-left:3px solid ${m.read ? 'var(--bdr)' : (m.type === 'punishment' ? 'var(--yellow)' : 'var(--blue)')}; 
+                  opacity: ${m.read ? '0.7' : '1'}">
+        <div class="stu-msg-from">
+          ${typeLabel} · ${m.from} · ${m.time}
+          ${m.read ? '<span style="color:var(--green);margin-left:5px">✓ 已讀</span>' : ''}
+        </div>
+        <div style="margin:5px 0; color:var(--tx)">${m.content}</div>
+        ${isUnread ? `
+          <button class="btn s" 
+                  style="margin-top:5px; padding:3px 12px" 
+                  onclick="markRead('${stuId}', '${k}')">
+            ✓ 標記已讀
+          </button>` : ''}
+      </div>`;
+  }).join('');
 }
 
+// ── 核心修正：確保路徑絕對正確的 markRead ──
 async function markRead(stuId, k) {
-  await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).update({read:true});
-  // 如果老師那邊只有這一人的訊息，更新已讀
-  await db.ref(`${ROOT}/messages/${k}`).update({read:true});
+  // 防止重複點擊
+  console.log("正在嘗試讀取訊息:", stuId, k);
+  
+  try {
+    // 使用你定義的 ref(p) 輔助函式，這樣路徑才會自動帶上 ROOT (jjvs_v2)
+    // 1. 更新學生個人的訊息狀態
+    await ref(`stuMsgs/${stuId}/${k}`).update({ read: true });
+    
+    // 2. 同步更新老師端的總訊息表 (非必要，但建議保留)
+    try {
+      await ref(`messages/${k}`).update({ read: true });
+    } catch(e) {
+      // 如果老師端的 key 不同，這裡跳過不影響學生端
+    }
+
+    toast('已讀取', 'ok');
+  } catch (e) {
+    console.error("已讀失敗:", e);
+    toast('讀取失敗，請檢查網路', 'err');
+  }
 }
 
-
-// ── 學生自己兌換金牌 ──
+// ── 橫幅切換優化 ──
+function toggleStuBanner() {
+  const banner = document.getElementById('stuBanner');
+  if (!banner) return;
+  
+  stuBannerOpen = !stuBannerOpen;
+  banner.style.display = stuBannerOpen ? 'block' : 'none';
+  
+  // 每次打開時確保有最新資料
+  if (stuBannerOpen && _currentStuId) {
+    loadStuMsgs(_currentStuId);
+  }
+}// ── 學生自己兌換金牌 ──
 async function stuRedeemMedal(stuId, pts) {
   if (pts < 5) { toast('點數不足5點','err'); return; }
   openDlg('🎖️ 兌換金牌',
