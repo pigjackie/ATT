@@ -284,6 +284,7 @@ select:focus{border-color:var(--gold)}
     <div class="topbar-logo">🎼</div>
     <div class="topbar-title">莊敬音樂科教務系統</div>
     <div class="topbar-user">身份：<b id="curUser">—</b></div>
+    <button class="btn" onclick="teacherChangePw()" style="font-size:11px">🔑 改密碼</button>
     <button class="notif-btn" onclick="switchTab('inbox')" title="訊息中心">💬<span class="notif-dot" id="teacherNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
@@ -302,6 +303,7 @@ select:focus{border-color:var(--gold)}
         <button class="btn g" onclick="saveAtt()">💾 儲存點名</button>
         <button class="btn" onclick="setAllAtt('出')">全部出席</button>
         <button class="btn" id="batchBtn" onclick="toggleBatch()">☑️ 批次加點</button>
+        <button class="btn d" onclick="resetClsDlg()" style="font-size:11px">⚠️ 本班重置</button>
         <div class="legend">
           <div class="litem"><div class="ldot" style="background:var(--green)"></div>出席</div>
           <div class="litem"><div class="ldot" style="background:var(--yellow)"></div>遲到</div>
@@ -318,6 +320,7 @@ select:focus{border-color:var(--gold)}
         <button class="btn" onclick="batchSetAtt('出')" style="border-color:var(--green);color:var(--green)">✓ 批次出席</button>
         <button class="btn" onclick="batchSetAtt('缺')" style="border-color:var(--red);color:var(--red)">✗ 批次缺席</button>
         <button class="btn" onclick="batchSetAtt('遲')" style="border-color:var(--yellow);color:var(--yellow)">⏱ 批次遲到</button>
+        <button class="btn" onclick="batchAddTask()">📝 批次任務</button>
         <button class="btn" onclick="selectAll()">全選</button>
         <button class="btn" onclick="clearSel()">清除</button>
         <button class="btn d" onclick="toggleBatch()" style="margin-left:auto">✕ 結束</button>
@@ -349,7 +352,7 @@ select:focus{border-color:var(--gold)}
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap">
         <button class="btn g" onclick="exportXlsx()">📥 Excel</button>
         <button class="btn" onclick="exportPdf()">📄 PDF</button>
-        <button class="btn d" onclick="resetAllDlg()" style="margin-left:auto">⚠️ 全班重置</button>
+        <button class="btn d" onclick="resetAllDlg()" style="margin-left:auto">⚠️ 全校重置</button>
       </div>
       <div class="clsbtns" id="clsBtnsR"></div>
       <div class="sgrid" id="rptGrid"></div>
@@ -379,7 +382,10 @@ select:focus{border-color:var(--gold)}
   </div>
   <!-- 訊息橫幅 -->
   <div id="stuBanner">
-    <div style="font-size:13px;color:var(--red);font-weight:bold;margin-bottom:8px">🔴 未讀訊息</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-size:13px;color:var(--red);font-weight:bold">🔔 訊息通知</div>
+      <button class="btn" onclick="_currentStuId&&_renderStuMsgs(_currentStuId)" style="font-size:11px;padding:2px 10px">🔄 重新整理</button>
+    </div>
     <div id="stuBannerList"></div>
   </div>
   <div class="content">
@@ -458,8 +464,9 @@ select:focus{border-color:var(--gold)}
 <div id="exitPass">
   <div class="ep-title">✅ 准予外出</div>
   <div class="ep-name" id="epName">—</div>
-  <div class="ep-info" id="epDate">—</div>
+  <div class="ep-info" id="epDate">核可時間：—</div>
   <div class="ep-info" id="epTeacher">核可老師：—</div>
+  <div class="ep-info" id="epOutTime" style="font-size:18px;margin-top:8px;background:rgba(255,255,255,.15);padding:8px 24px;border-radius:20px">外出時間：—</div>
   <button class="ep-close" onclick="document.getElementById('exitPass').classList.remove('on')">關閉</button>
 </div>
 
@@ -513,7 +520,7 @@ const STUDENTS = [
   {id:"M3-17",name:"廖敏君",cls:"音三莊"},{id:"M3-18",name:"劉慶霈",cls:"音三莊"},
   {id:"M3-19",name:"蔡慧琳",cls:"音三莊"},{id:"M3-20",name:"鄭淳融",cls:"音三莊"},
   {id:"M3-21",name:"魏宜宸",cls:"音三莊"},{id:"M3-22",name:"徐婉瑜",cls:"音三莊"},
-  {id:"M3-23",name:"安𠸍臻",cls:"音三莊"},{id:"M3-24",name:"江岑君",cls:"音三莊"},
+  {id:"M3-23",name:"安兪臻",cls:"音三莊"},{id:"M3-24",name:"江岑君",cls:"音三莊"},
   {id:"M3-25",name:"池宛昕",cls:"音三莊"},{id:"M3-26",name:"李曉萍",cls:"音三莊"},
   {id:"M3-27",name:"周玄禮",cls:"音三莊"},{id:"M3-28",name:"王以昕",cls:"音三莊"},
   {id:"M3-29",name:"林祐立",cls:"音三莊"},{id:"M3-30",name:"邱詩涵",cls:"音三莊"},
@@ -561,7 +568,7 @@ const STUDENTS = [
   {id:"M1-05",name:"李昕柔",cls:"音一莊"},{id:"M1-06",name:"盧丞菲",cls:"音一莊"},
   {id:"M1-07",name:"林欣霈",cls:"音一莊"},{id:"M1-08",name:"林耘瑄",cls:"音一莊"},
   {id:"M1-09",name:"林詩翡",cls:"音一莊"},{id:"M1-10",name:"姜妤捷",cls:"音一莊"},
-  {id:"M1-11",name:"張筑笹",cls:"音一莊"},{id:"M1-12",name:"廖聿淓",cls:"音一莊"},
+  {id:"M1-11",name:"張筑琹",cls:"音一莊"},{id:"M1-12",name:"廖聿淓",cls:"音一莊"},
   {id:"M1-13",name:"曾彥瑄",cls:"音一莊"},{id:"M1-14",name:"盧瑗",cls:"音一莊"},
   {id:"M1-15",name:"鍾欣庭",cls:"音一莊"},{id:"M1-16",name:"黃郁晴",cls:"音一莊"},
   {id:"M1-17",name:"詹中愷",cls:"音一莊"},{id:"M1-18",name:"鄭誌浩",cls:"音一莊"},
@@ -686,6 +693,30 @@ async function doStudentLogin() {
   } catch(e) { toast('連線失敗','err'); }
 }
 
+function teacherChangePw() {
+  if (!me) return;
+  if (me.role === 'master') {
+    toast('最高權限密碼請直接修改程式碼中的 MASTER.pass','err'); return;
+  }
+  openDlg('🔑 修改教師密碼',
+    `<div class="dlg-label">目前密碼</div><input class="dlg-input" type="password" id="tpOld" placeholder="目前密碼">
+     <div class="dlg-label">新密碼</div><input class="dlg-input" type="password" id="tpNew1" placeholder="新密碼">
+     <div class="dlg-label">確認新密碼</div><input class="dlg-input" type="password" id="tpNew2" placeholder="再次輸入">`,
+    [{label:'確認修改',cls:'ok',fn:async()=>{
+      const old = document.getElementById('tpOld').value;
+      const n1 = document.getElementById('tpNew1').value;
+      const n2 = document.getElementById('tpNew2').value;
+      if(!n1){toast('新密碼不能為空','err');return false}
+      if(n1!==n2){toast('兩次密碼不一致','err');return false}
+      // 找老師的key
+      const teachers = await dbGet('teachers')||{};
+      const entry = Object.entries(teachers).find(([,t])=>t.name===me.name);
+      if (!entry){toast('找不到帳號資料','err');return false}
+      if (entry[1].pass !== old){toast('目前密碼錯誤','err');return false}
+      await db.ref(`${ROOT}/teachers/${entry[0]}/pass`).set(n1);
+      toast('密碼已更新','ok'); return true;
+    }},{label:'取消',fn:()=>true}]);
+}
 function doLogout() { location.reload(); }
 
 // ══════════════════════════════════════════
@@ -941,6 +972,34 @@ async function batchMedal() {
     }},{label:'取消',fn:()=>true}]);
 }
 
+async function batchAddTask() {
+  if (!batchSel.size) { toast('請先勾選學生','err'); return; }
+  openDlg(`📝 批次新增任務（${batchSel.size}人）`,
+    `<div class="dlg-label">任務名稱</div><input class="dlg-input" type="text" id="btName" placeholder="例：抄寫樂理第三章">
+     <div class="dlg-label">總次數 / 行數</div><input class="dlg-input" type="number" id="btTotal" placeholder="例：50" min="1">
+     <div class="dlg-label">類型</div>
+     <select class="dlg-input" id="btType" style="width:100%;margin-bottom:12px">
+       <option value="">一般任務</option>
+       <option value="copy">📝 罰抄</option>
+     </select>`,
+    [{label:'新增',cls:'ok',fn:async()=>{
+      const name = document.getElementById('btName').value.trim();
+      const total = parseInt(document.getElementById('btTotal').value);
+      const type = document.getElementById('btType').value;
+      if(!name||!total||total<1){toast('請填寫完整','err');return false}
+      const prefix = type==='copy'?'📝罰抄：':'';
+      const upd = {};
+      for (const id of batchSel) {
+        const k = Date.now()+'_'+id;
+        upd[`${ROOT}/students/${id}/tasks/${k}`] = {name:prefix+name, total, done:0, type:type||'task'};
+        upd[`${ROOT}/stuMsgs/${id}/${k}`] = {from:me.name, content:`新增任務：${prefix+name}（共${total}次）`, type:'punishment', time:now(), read:false};
+      }
+      await db.ref('/').update(upd);
+      toast(`已為 ${batchSel.size} 人新增任務`,'ok');
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
 // ══════════════════════════════════════════
 // DETAIL PANEL
 // ══════════════════════════════════════════
@@ -1024,11 +1083,16 @@ function renderTasks(tasks) {
 
 function renderLog(log) {
   const c = document.getElementById('dpLog');
-  const ents = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,40);
+  const ents = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,60);
   if (!ents.length) { c.innerHTML='<div style="color:var(--tx3);font-size:13px">尚無記錄</div>'; return; }
   c.innerHTML = ents.map(([,e])=>{
-    const cls = e.delta>0?'add':e.delta<0?'sub':e.action?.includes('牌')?'med':'';
-    return `<div class="log-item ${cls}"><div class="log-t">${e.time||''} · ${e.teacher||''}</div><div>${e.action||''}${e.reason?' — '+e.reason:''}</div></div>`;
+    const isExit = e.action?.includes('外出');
+    const cls = isExit?'med':e.delta>0?'add':e.delta<0?'sub':e.action?.includes('牌')?'med':'';
+    const icon = isExit?'🚪 ':'';
+    return `<div class="log-item ${cls}" style="${isExit?'border-left-color:var(--blue)':''}">
+      <div class="log-t">${e.time||''} · ${e.teacher||''}</div>
+      <div>${icon}${e.action||''}${e.reason?' — '+e.reason:''}</div>
+    </div>`;
   }).join('');
 }
 
@@ -1149,13 +1213,55 @@ async function resetPw() {
   openDlg('🔑 重置密碼',`<div class="dlg-msg">確認將「${curStu.name}」密碼重置為 <b>0000</b>？</div>`,
     [{label:'確認重置',cls:'del',fn:async()=>{ await dbUpd(`students/${curStu.id}`,{password:'0000'}); toast('密碼已重置為 0000','ok'); openDetail(curStu); return true; }},{label:'取消',fn:()=>true}]);
 }
-async function resetAllDlg() {
-  openDlg('⚠️ 全班資料重置',`<div class="dlg-msg" style="color:var(--red)">確認重置所有學生的點數、金牌、任務、日誌？<br><b>此操作不可復原！</b></div>`,
+async function resetClsDlg() {
+  if (!curCls) { toast('請先選班級','err'); return; }
+  openDlg(`⚠️ 重置 ${curCls}`,
+    `<div class="dlg-msg" style="color:var(--red)">確認重置「${curCls}」所有學生的點數、金牌、任務、日誌？<br><b>此操作不可復原！</b></div>
+     <div style="margin-top:8px;font-size:13px;color:var(--tx2)">
+       <label><input type="checkbox" id="rAtt" style="margin-right:6px">同時清除出勤記錄</label>
+     </div>`,
     [{label:'確認重置',cls:'del',fn:async()=>{
-      const upd={};
-      STUDENTS.forEach(s=>{ upd[`${ROOT}/students/${s.id}/points`]=0; upd[`${ROOT}/students/${s.id}/medals`]=0; upd[`${ROOT}/students/${s.id}/tasks`]=null; upd[`${ROOT}/students/${s.id}/log`]=null; });
+      const clearAtt = document.getElementById('rAtt')?.checked;
+      const stus = byCls(curCls);
+      const upd = {};
+      stus.forEach(s=>{
+        upd[`${ROOT}/students/${s.id}/points`] = 0;
+        upd[`${ROOT}/students/${s.id}/medals`] = 0;
+        upd[`${ROOT}/students/${s.id}/tasks`] = null;
+        upd[`${ROOT}/students/${s.id}/log`] = null;
+        if (clearAtt) upd[`${ROOT}/students/${s.id}/attendance`] = null;
+      });
       await db.ref('/').update(upd);
-      toast('全班資料已重置','ok'); renderGrid(); return true;
+      toast(`${curCls} 已重置`,'ok'); renderGrid(); return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+async function resetAllDlg() {
+  openDlg('⚠️ 全校資料重置',
+    `<div class="dlg-msg" style="color:var(--red);margin-bottom:12px">確認重置<b>所有學生</b>的資料？<br><b>此操作完全不可復原！</b></div>
+     <div style="font-size:13px;color:var(--tx2)">
+       <label style="display:block;margin-bottom:6px"><input type="checkbox" id="ra1" checked style="margin-right:6px"> 清除點數與金牌</label>
+       <label style="display:block;margin-bottom:6px"><input type="checkbox" id="ra2" checked style="margin-right:6px"> 清除任務與罰抄</label>
+       <label style="display:block;margin-bottom:6px"><input type="checkbox" id="ra3" checked style="margin-right:6px"> 清除異動日誌</label>
+       <label style="display:block;margin-bottom:6px"><input type="checkbox" id="ra4" style="margin-right:6px"> 清除出勤記錄</label>
+       <label style="display:block"><input type="checkbox" id="ra5" style="margin-right:6px"> 清除所有訊息</label>
+     </div>`,
+    [{label:'確認全部重置',cls:'del',fn:async()=>{
+      const p = document.getElementById('ra1')?.checked;
+      const t = document.getElementById('ra2')?.checked;
+      const l = document.getElementById('ra3')?.checked;
+      const a = document.getElementById('ra4')?.checked;
+      const m = document.getElementById('ra5')?.checked;
+      const upd={};
+      STUDENTS.forEach(s=>{
+        if(p){ upd[`${ROOT}/students/${s.id}/points`]=0; upd[`${ROOT}/students/${s.id}/medals`]=0; }
+        if(t) upd[`${ROOT}/students/${s.id}/tasks`]=null;
+        if(l) upd[`${ROOT}/students/${s.id}/log`]=null;
+        if(a) upd[`${ROOT}/students/${s.id}/attendance`]=null;
+        if(m){ upd[`${ROOT}/stuMsgs/${s.id}`]=null; }
+      });
+      if(m) upd[`${ROOT}/messages`]=null;
+      await db.ref('/').update(upd);
+      toast('全校資料已重置','ok'); renderGrid(); return true;
     }},{label:'取消',fn:()=>true}]);
 }
 
@@ -1193,15 +1299,32 @@ function renderApplyList(data) {
 }
 
 async function approveExit(k, name) {
-  await dbUpd(`exitApply/${k}`,{status:'approved',approvedBy:me.name,approvedTime:now()});
-  // 發通知給學生
+  const applyData = await dbGet(`exitApply/${k}`);
+  const t = now();
+  await dbUpd(`exitApply/${k}`,{status:'approved',approvedBy:me.name,approvedTime:t});
   const stu = byName(name);
-  if (stu) await sendNotifToStudent(stu.id, name, '第八節外出申請已核可 ✅', 'notice');
+  if (stu) {
+    const lk = Date.now()+'';
+    // 寫入學生日誌
+    await dbUpd(`students/${stu.id}`,{
+      [`log/${lk}`]:{time:t, action:'第八節外出核可', reason:applyData?.reason||'', teacher:me.name, delta:0}
+    });
+    await sendNotifToStudent(stu.id, name, '第八節外出申請已核可 ✅', 'notice');
+  }
   toast(`已核可 ${name} 外出`,'ok');
 }
 
 async function rejectExit(k) {
-  await dbUpd(`exitApply/${k}`,{status:'rejected'});
+  const applyData = await dbGet(`exitApply/${k}`);
+  await dbUpd(`exitApply/${k}`,{status:'rejected', rejectedBy:me.name, rejectedTime:now()});
+  const stu = byName(applyData?.studentName||'');
+  if (stu) {
+    const lk = Date.now()+'';
+    await dbUpd(`students/${stu.id}`,{
+      [`log/${lk}`]:{time:now(), action:'第八節外出申請被拒', reason:applyData?.reason||'', teacher:me.name, delta:0}
+    });
+    await sendNotifToStudent(stu.id, applyData?.studentName||'', '第八節外出申請未獲核可', 'notice');
+  }
   toast('已拒絕申請');
 }
 
@@ -1233,8 +1356,9 @@ function listenMyApproval(k, name) {
 
 function showExitPass(name, teacher, time) {
   document.getElementById('epName').textContent = name;
-  document.getElementById('epDate').textContent = time;
+  document.getElementById('epDate').textContent = '核可時間：'+time;
   document.getElementById('epTeacher').textContent = '核可老師：'+teacher;
+  document.getElementById('epOutTime').textContent = '外出時間：'+now();
   document.getElementById('exitPass').classList.add('on');
 }
 
@@ -1345,65 +1469,43 @@ function openSendMsg() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生端訊息 ──
-let _stuMsgListener = null;
+// ── 學生端訊息（簡潔可靠版） ──
 let _currentStuId = null;
 
 async function loadStuMsgs(stuId) {
   _currentStuId = stuId;
-  // 先拉一次資料，渲染 banner
-  _renderStuMsgs(stuId);
-  // 監聽變化（已讀後自動更新紅點）
-  if (_stuMsgListener) ref(`stuMsgs/${_stuMsgListener.id}`).off('value', _stuMsgListener.fn);
-  const fn = () => _renderStuMsgs(stuId);
-  _stuMsgListener = {id: stuId, fn};
-  ref(`stuMsgs/${stuId}`).on('value', fn);
+  await _renderStuMsgs(stuId);
 }
 
 async function _renderStuMsgs(stuId) {
   const data = (await dbGet(`stuMsgs/${stuId}`))||{};
-  const allMsgs = Object.entries(data).sort((a,b)=>b[0].localeCompare(a[0]));
-  const unread = allMsgs.filter(([,m])=>!m.read);
+  const all = Object.entries(data).sort((a,b)=>b[0].localeCompare(a[0]));
+  const unread = all.filter(([,m])=>!m.read);
+
+  // 紅點
   const dot = document.getElementById('stuNotifDot');
-  const banner = document.getElementById('stuBanner');
+  if (dot) dot.classList.toggle('on', unread.length>0);
+
+  // Banner 內容
   const list = document.getElementById('stuBannerList');
+  if (!list) return;
 
-  // 更新紅點
-  if (dot) {
-    if (unread.length > 0) {
-      dot.classList.add('on');
-      dot.title = `${unread.length} 則未讀`;
-    } else {
-      dot.classList.remove('on');
-      dot.title = '';
-    }
-  }
-
-  if (!banner || !list) return;
-
-  if (allMsgs.length === 0) {
-    banner.style.display = 'none';
-    list.innerHTML = '';
+  if (all.length === 0) {
+    list.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:4px 0">目前無任何訊息</div>';
     return;
   }
 
-  // 渲染：未讀在上，已讀在下（最多顯示20則）
-  const display = [...unread, ...allMsgs.filter(([,m])=>m.read)].slice(0,20);
-  list.innerHTML = display.map(([k,m])=>`
-    <div class="stu-msg-item" style="opacity:${m.read?'.6':'1'};border-left:3px solid ${m.read?'var(--bdr)':m.type==='punishment'?'var(--yellow)':'var(--blue)'}">
-      <div class="stu-msg-from">
-        ${m.type==='punishment'?'⚠️ 處罰':m.type==='deduct'?'🔴 扣分':'📢 通知'} · ${m.from} · ${m.time}
-        ${m.read?'<span style="color:var(--green);margin-left:6px">✅已讀</span>':''}
-      </div>
-      <div class="${m.type==='punishment'?'stu-msg-type-punishment':'stu-msg-type-notice'}" style="margin:3px 0">${m.content}</div>
-      ${!m.read?`<button class="btn s" onclick="markRead('${stuId}','${k}')" style="margin-top:4px;font-size:11px;padding:2px 10px">✓ 標記已讀</button>`:''}
+  list.innerHTML = all.slice(0,30).map(([k,m])=>`
+    <div class="stu-msg-item" style="opacity:${m.read?.65:1};border-left:3px solid ${m.read?'var(--bdr)':m.type==='punishment'||m.type==='deduct'?'var(--yellow)':'var(--blue)'}">
+      <div class="stu-msg-from">${
+        m.type==='punishment'?'⚠️ 處罰通知':m.type==='deduct'?'🔴 扣分':'📢 通知'
+      } · ${m.from||'系統'} · ${m.time||''}</div>
+      <div style="font-size:14px;margin:4px 0;color:var(--tx)">${m.content||''}</div>
+      ${!m.read
+        ? `<button class="btn s" onclick="markRead('${stuId}','${k}')" style="font-size:11px;padding:2px 10px;margin-top:4px">✓ 已讀</button>`
+        : '<span style="font-size:11px;color:var(--green)">✅ 已讀</span>'
+      }
     </div>`).join('');
-
-  // banner 開關狀態交給 stuBannerOpen
-  if (stuBannerOpen) {
-    banner.style.display = '';
-  }
-  // 有未讀時，banner若關閉也要顯示紅點提醒
 }
 
 function toggleStuBanner() {
@@ -1411,26 +1513,17 @@ function toggleStuBanner() {
   const banner = document.getElementById('stuBanner');
   if (!banner) return;
   banner.style.display = stuBannerOpen ? '' : 'none';
-  // 開啟時重新渲染最新資料
-  if (stuBannerOpen && _currentStuId) {
-    _renderStuMsgs(_currentStuId);
-  }
+  if (stuBannerOpen && _currentStuId) _renderStuMsgs(_currentStuId);
 }
 
 async function markRead(stuId, k) {
-  // 先在UI立刻反映（樂觀更新）
-  const dot = document.getElementById('stuNotifDot');
-
   try {
-    // 更新學生自己的訊息
-    await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).update({read: true});
-    // 嘗試更新老師端記錄（key可能不同，用 try 避免錯誤）
-    try { await db.ref(`${ROOT}/messages/${k}`).update({read: true}); } catch(e) {}
-    toast('已讀','ok');
-    // 重新渲染
+    await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).update({read:true});
+    try { await db.ref(`${ROOT}/messages/${k}`).update({read:true}); } catch(e){}
+    toast('已標記為已讀','ok');
     await _renderStuMsgs(stuId);
   } catch(e) {
-    toast('更新失敗，請重試','err');
+    toast('請重試','err');
   }
 }
 
