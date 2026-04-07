@@ -1345,112 +1345,95 @@ function openSendMsg() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生端訊息監聽與渲染 ──
+// ── 學生端訊息 ──
 let _stuMsgListener = null;
+let _currentStuId = null;
 
 async function loadStuMsgs(stuId) {
   _currentStuId = stuId;
-  
-  // 先清理舊的監聽器，避免重複
-  if (_stuMsgListener) {
-    db.ref(`${ROOT}/stuMsgs/${_stuMsgListener.id}`).off('value');
-  }
-
-  // 設定監聽器
-  const msgRef = db.ref(`${ROOT}/stuMsgs/${stuId}`);
-  _stuMsgListener = { id: stuId };
-
-  msgRef.on('value', snap => {
-    const data = snap.val() || {};
-    _renderStuMsgs(stuId, data);
-  });
+  // 先拉一次資料，渲染 banner
+  _renderStuMsgs(stuId);
+  // 監聽變化（已讀後自動更新紅點）
+  if (_stuMsgListener) ref(`stuMsgs/${_stuMsgListener.id}`).off('value', _stuMsgListener.fn);
+  const fn = () => _renderStuMsgs(stuId);
+  _stuMsgListener = {id: stuId, fn};
+  ref(`stuMsgs/${stuId}`).on('value', fn);
 }
 
-function _renderStuMsgs(stuId, data) {
-  const allMsgs = Object.entries(data).sort((a, b) => b[0].localeCompare(a[0]));
-  const unread = allMsgs.filter(([, m]) => !m.read);
-  
+async function _renderStuMsgs(stuId) {
+  const data = (await dbGet(`stuMsgs/${stuId}`))||{};
+  const allMsgs = Object.entries(data).sort((a,b)=>b[0].localeCompare(a[0]));
+  const unread = allMsgs.filter(([,m])=>!m.read);
   const dot = document.getElementById('stuNotifDot');
   const banner = document.getElementById('stuBanner');
   const list = document.getElementById('stuBannerList');
 
-  // 更新導航列紅點
+  // 更新紅點
   if (dot) {
     if (unread.length > 0) {
       dot.classList.add('on');
-      dot.style.display = 'block';
+      dot.title = `${unread.length} 則未讀`;
     } else {
       dot.classList.remove('on');
-      dot.style.display = 'none';
+      dot.title = '';
     }
   }
 
-  if (!list) return;
+  if (!banner || !list) return;
 
   if (allMsgs.length === 0) {
-    list.innerHTML = '<div style="padding:15px; color:var(--tx3); font-size:13px;">目前沒有訊息</div>';
+    banner.style.display = 'none';
+    list.innerHTML = '';
     return;
   }
 
-  // 渲染訊息列表
-  // 增加 onclick 讓整條訊息都可以點擊已讀
-  list.innerHTML = allMsgs.slice(0, 20).map(([k, m]) => {
-    const typeLabel = { notice: '📢 通知', punishment: '⚠️ 處罰', deduct: '🔴 扣分' }[m.type] || '📢 通知';
-    const isUnread = !m.read;
-    
-    return `
-      <div class="stu-msg-item" 
-           onclick="if(${isUnread}) markRead('${stuId}','${k}')"
-           style="opacity:${m.read ? '0.6' : '1'}; 
-                  cursor:${isUnread ? 'pointer' : 'default'};
-                  border-left:4px solid ${m.read ? 'var(--bdr)' : m.type === 'punishment' ? 'var(--yellow)' : 'var(--blue)'};
-                  margin-bottom:8px; transition: 0.2s;">
-        <div class="stu-msg-from">
-          <span style="color:var(--gold)">${typeLabel}</span> · ${m.from} · ${m.time}
-          ${m.read ? '<span style="color:var(--green);margin-left:6px">✓ 已讀</span>' : '<span style="color:var(--red);margin-left:6px;font-weight:bold">● 未讀</span>'}
-        </div>
-        <div style="font-size:14px; margin:5px 0; line-height:1.4;">${m.content}</div>
-        ${isUnread ? `<div style="font-size:11px; color:var(--tx3); text-align:right;">(點擊訊息標記為已讀)</div>` : ''}
-      </div>`;
-  }).join('');
-}
+  // 渲染：未讀在上，已讀在下（最多顯示20則）
+  const display = [...unread, ...allMsgs.filter(([,m])=>m.read)].slice(0,20);
+  list.innerHTML = display.map(([k,m])=>`
+    <div class="stu-msg-item" style="opacity:${m.read?'.6':'1'};border-left:3px solid ${m.read?'var(--bdr)':m.type==='punishment'?'var(--yellow)':'var(--blue)'}">
+      <div class="stu-msg-from">
+        ${m.type==='punishment'?'⚠️ 處罰':m.type==='deduct'?'🔴 扣分':'📢 通知'} · ${m.from} · ${m.time}
+        ${m.read?'<span style="color:var(--green);margin-left:6px">✅已讀</span>':''}
+      </div>
+      <div class="${m.type==='punishment'?'stu-msg-type-punishment':'stu-msg-type-notice'}" style="margin:3px 0">${m.content}</div>
+      ${!m.read?`<button class="btn s" onclick="markRead('${stuId}','${k}')" style="margin-top:4px;font-size:11px;padding:2px 10px">✓ 標記已讀</button>`:''}
+    </div>`).join('');
 
-// ── 核心修正：標記已讀函式 ──
-async function markRead(stuId, k) {
-  try {
-    // 1. 更新學生個人訊息路徑
-    await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).update({ read: true });
-    
-    // 2. 嘗試同步更新全域訊息表（如果有對應的話）
-    // 這裡使用 try-catch 是因為有些全域訊息 key 可能不完全一致
-    try {
-      await db.ref(`${ROOT}/messages/${k}`).update({ read: true });
-    } catch(e) {
-      console.log("Global message sync skipped or key not found");
-    }
-
-    toast('訊息已讀', 'ok');
-  } catch (e) {
-    console.error("MarkRead Error:", e);
-    toast('讀取失敗：' + e.message, 'err');
+  // banner 開關狀態交給 stuBannerOpen
+  if (stuBannerOpen) {
+    banner.style.display = '';
   }
+  // 有未讀時，banner若關閉也要顯示紅點提醒
 }
 
-// ── 修正橫幅開關邏輯 ──
 function toggleStuBanner() {
+  stuBannerOpen = !stuBannerOpen;
   const banner = document.getElementById('stuBanner');
   if (!banner) return;
-  
-  stuBannerOpen = !stuBannerOpen;
-  banner.style.display = stuBannerOpen ? 'block' : 'none';
-  
+  banner.style.display = stuBannerOpen ? '' : 'none';
+  // 開啟時重新渲染最新資料
   if (stuBannerOpen && _currentStuId) {
-    // 開啟時強制拉一次最新資料
-    dbGet(`stuMsgs/${_currentStuId}`).then(data => {
-      _renderStuMsgs(_currentStuId, data || {});
-    });
+    _renderStuMsgs(_currentStuId);
   }
 }
+
+async function markRead(stuId, k) {
+  // 先在UI立刻反映（樂觀更新）
+  const dot = document.getElementById('stuNotifDot');
+
+  try {
+    // 更新學生自己的訊息
+    await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).update({read: true});
+    // 嘗試更新老師端記錄（key可能不同，用 try 避免錯誤）
+    try { await db.ref(`${ROOT}/messages/${k}`).update({read: true}); } catch(e) {}
+    toast('已讀','ok');
+    // 重新渲染
+    await _renderStuMsgs(stuId);
+  } catch(e) {
+    toast('更新失敗，請重試','err');
+  }
+}
+
 
 // ── 學生自己兌換金牌 ──
 async function stuRedeemMedal(stuId, pts) {
@@ -1492,60 +1475,143 @@ function stuChangePw(stuId) {
 // ══════════════════════════════════════════
 // STUDENT VIEW (self)
 // ══════════════════════════════════════════
+let _stuViewListener = null;  // Firebase 即時監聽器
+
 async function loadStuView(stu) {
-  const c = document.getElementById('stuCard');
-  c.innerHTML = '<div class="spin"></div>';
-  const d = (await dbGet(`students/${stu.id}`))||{};
+  // 設定即時監聽（點名更新後自動重新渲染）
+  if (_stuViewListener) {
+    ref(`students/${_stuViewListener}`).off('value');
+  }
+  _stuViewListener = stu.id;
+  ref(`students/${stu.id}`).on('value', snap => {
+    _renderStuView(stu, snap.val()||{});
+  });
+  // 監聽外出申請
+  listenMyApprovalStu(stu.name);
+}
+
+function _renderStuView(stu, d) {
+  const el = document.getElementById('stuCard');
+  if (!el) return;
   const td = today();
   const att = d.attendance?.[td]||'未點名';
   const pts = d.points||0, medals = d.medals||0;
+  const tasks = d.tasks||{};
+  const log = d.log||{};
   const attColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[att]||'var(--tx2)';
-  c.innerHTML = `
-    <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:18px;padding:28px;box-shadow:0 0 20px rgba(212,175,55,.1)">
-      <div style="text-align:center;margin-bottom:18px">
-        <div style="font-size:13px;color:var(--tx2)">${stu.cls}</div>
-        <div style="font-size:34px;font-weight:bold;color:var(--gold);margin:6px 0">${stu.name}</div>
-        <div style="font-size:14px;color:var(--tx2)">今日：<span style="color:${attColor};font-weight:bold">${att}</span></div>
+  const taskEntries = Object.entries(tasks);
+
+  // 任務 HTML
+  const tasksHtml = taskEntries.length === 0
+    ? '<div style="color:var(--tx3);font-size:13px;padding:6px 0">目前無任務 ✓</div>'
+    : taskEntries.map(([k,t])=>{
+        const pct = Math.min(100, Math.round(((t.done||0)/t.total)*100));
+        const done = t.done||0;
+        return `<div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <div style="font-size:14px;font-weight:bold">${t.name}</div>
+            <span style="font-size:12px;color:${done>=t.total?'var(--green)':'var(--tx2)'}">${done}/${t.total} ${done>=t.total?'✅':''}</span>
+          </div>
+          <div style="height:5px;background:var(--bg);border-radius:3px;overflow:hidden">
+            <div style="height:100%;width:${pct}%;background:${done>=t.total?'var(--green)':'var(--gold)'};transition:width .3s"></div>
+          </div>
+        </div>`;
+      }).join('');
+
+  // 日誌 HTML
+  const logHtml = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,10).map(([,e])=>`
+    <div class="log-item ${e.delta>0?'add':e.delta<0?'sub':''}">
+      <div class="log-t">${e.time||''}</div>
+      <div>${e.action||''}${e.reason?' — '+e.reason:''}</div>
+    </div>`).join('') || '<div style="color:var(--tx3);font-size:13px">尚無記錄</div>';
+
+  el.innerHTML = `
+    <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:18px;padding:24px;box-shadow:0 0 20px rgba(212,175,55,.1)">
+
+      <!-- 頭部：名字 + 今日出勤 -->
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--tx2)">${stu.cls} · ${stu.id}</div>
+        <div style="font-size:32px;font-weight:bold;color:var(--gold);margin:6px 0">${stu.name}</div>
+        <div style="font-size:15px;color:var(--tx2)">今日出勤：<span style="color:${attColor};font-weight:bold;font-size:18px">${att}</span></div>
+        <button class="btn" onclick="loadStuView(byId('${stu.id}'))" style="margin-top:8px;font-size:11px;padding:3px 12px">🔄 重新整理</button>
       </div>
+
       <hr class="sep">
+
+      <!-- 集點卡 -->
       <div class="dp-sec-t">⭐ 點數集點卡</div>
-      <div class="pts-card">
+      <div class="pts-card" style="margin-bottom:10px">
         <div class="pts-grid">${Array(10).fill(0).map((_,i)=>`<div class="pc ${i<pts?'on':'off'}">${i<pts?'⭐':''}</div>`).join('')}</div>
         <div class="pts-info">目前：<b>${pts}</b> 點</div>
       </div>
-      <hr class="sep">
-      <div class="dp-sec-t">🎖️ 金牌庫存</div>
-      <div class="medals-row">${medals>0?Array(Math.min(medals,10)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>10?`<span style="color:var(--gold);font-size:16px;align-self:center">+${medals-10}</span>`:''): '<span style="color:var(--tx3);font-size:13px">尚無金牌</span>'}</div>
-      <div style="font-size:13px;color:var(--tx2);margin-bottom:14px">共 <b style="color:var(--gold)">${medals}</b> 枚</div>
-      <hr class="sep">
-      <div class="dp-sec-t" style="margin-bottom:8px">🎁 兌換金牌</div>
-      <button class="btn g" onclick="stuRedeemMedal('${stu.id}',${pts})" ${pts<5?'disabled style="opacity:.5"':''} style="width:100%;padding:10px;font-size:14px;margin-bottom:4px">
+      <button class="btn g" onclick="stuRedeemMedal('${stu.id}',${pts})" ${pts<5?'disabled style="opacity:.5;cursor:not-allowed"':''} style="width:100%;padding:10px;font-size:14px;margin-bottom:4px">
         🎖️ ${pts>=5?'兌換金牌（扣5點）':'點數不足（需滿5點）'}
       </button>
+
       <hr class="sep">
-      <div class="dp-sec-t" style="margin-bottom:8px">🔑 修改密碼</div>
-      <button class="btn" onclick="stuChangePw('${stu.id}')" style="width:100%;padding:10px;font-size:14px;margin-bottom:4px">修改我的密碼</button>
+
+      <!-- 金牌 -->
+      <div class="dp-sec-t">🎖️ 金牌庫存</div>
+      <div class="medals-row" style="margin-bottom:6px">${medals>0
+        ? Array(Math.min(medals,10)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>10?`<span style="color:var(--gold);font-size:16px;align-self:center">+${medals-10}</span>`:'')
+        : '<span style="color:var(--tx3);font-size:13px">尚無金牌</span>'}</div>
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:4px">共 <b style="color:var(--gold)">${medals}</b> 枚</div>
+
       <hr class="sep">
+
+      <!-- 待完成任務（罰抄） -->
+      <div class="dp-sec-t">📝 待完成任務（罰抄）</div>
+      ${tasksHtml}
+
+      <hr class="sep">
+
+      <!-- 修改密碼 -->
+      <div class="dp-sec-t" style="margin-bottom:8px">🔑 帳號設定</div>
+      <button class="btn" onclick="stuChangePw('${stu.id}')" style="width:100%;padding:9px;font-size:13px">🔑 修改我的密碼</button>
+
+      <hr class="sep">
+
+      <!-- 最近異動記錄 -->
       <div class="dp-sec-t">📜 最近記錄</div>
-      <div>${Object.entries(d.log||{}).sort((a,b)=>b[0]-a[0]).slice(0,8).map(([,e])=>`
-        <div class="log-item ${e.delta>0?'add':e.delta<0?'sub':''}">
-          <div class="log-t">${e.time||''}</div>
-          <div>${e.action||''}${e.reason?' — '+e.reason:''}</div>
-        </div>`).join('')||'<div style="color:var(--tx3);font-size:13px">尚無記錄</div>'}</div>
+      ${logHtml}
     </div>`;
-  // 監聽外出審核
-  listenMyApprovalStu(stu.name);
 }
 
 function listenMyApprovalStu(name) {
   ref('exitApply').on('value', snap=>{
-    const data=snap.val()||{};
-    const td=today();
-    const approved=Object.values(data).find(a=>a.studentName===name&&a.status==='approved'&&a.approvedTime?.includes(td.replace(/\//g,'/')));
-    const area=document.getElementById('stuPassArea');
-    if (approved&&area) {
-      area.innerHTML=`<button class="btn g" onclick="showExitPass('${name}','${approved.approvedBy}','${approved.approvedTime}')" style="width:100%;padding:12px;font-size:14px">📋 顯示外出憑證</button>`;
-    }
+    const data = snap.val()||{};
+    const td = today();
+    const myApps = Object.entries(data)
+      .filter(([,a])=>a.studentName===name)
+      .sort((a,b)=>b[0]-a[0]);
+
+    const area = document.getElementById('stuPassArea');
+    if (!area) return;
+
+    // 今日核可的通行證
+    const approvedToday = myApps.find(([,a])=>a.status==='approved' && (a.approvedTime||'').startsWith(td.replace(/\//g,'/')));
+
+    // 歷史申請記錄（最近10筆）
+    const histHtml = myApps.slice(0,10).map(([,a])=>{
+      const statusColor = {approved:'var(--green)',rejected:'var(--red)',pending:'var(--yellow)'}[a.status]||'var(--tx2)';
+      const statusLabel = {approved:'✅ 已核可',rejected:'✕ 已拒絕',pending:'⏳ 待審核'}[a.status]||a.status;
+      return `<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:6px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <span style="font-size:12px;color:var(--tx2)">${a.time}</span>
+          <span style="font-size:12px;color:${statusColor};font-weight:bold">${statusLabel}</span>
+        </div>
+        <div style="font-size:13px">原因：${a.reason}</div>
+        ${a.approvedBy?`<div style="font-size:11px;color:var(--tx3);margin-top:2px">核可老師：${a.approvedBy}</div>`:''}
+        ${a.status==='rejected'?'<div style="font-size:11px;color:var(--red);margin-top:2px">申請未通過</div>':''}
+      </div>`;
+    }).join('') || '<div style="color:var(--tx3);font-size:13px">尚無申請記錄</div>';
+
+    area.innerHTML = `
+      ${approvedToday ? `<button class="btn g" onclick="showExitPass('${name}','${approvedToday[1].approvedBy}','${approvedToday[1].approvedTime}')" style="width:100%;padding:12px;font-size:14px;margin-bottom:12px">📋 顯示外出憑證</button>` : ''}
+      <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:13px;padding:16px;margin-bottom:10px">
+        <div class="dp-sec-t" style="margin-bottom:10px">📋 第八節外出申請記錄</div>
+        ${histHtml}
+      </div>`;
   });
 }
 
