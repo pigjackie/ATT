@@ -1345,17 +1345,43 @@ function openSendMsg() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生端訊息系統 (優化版) ──
+// ── 學生端訊息系統：最高規格修正版 ──
 let _stuMsgListener = null;
+
+// 將函數明確掛載到 window，確保動態 HTML 的 onclick 絕對找得到
+window.markRead = async function(stuId, k) {
+  console.log("%c[系統通訊] 嘗試標記已讀:", "color: #D4AF37; font-weight: bold;", stuId, k);
+  
+  try {
+    // 1. 更新學生個人訊息狀態
+    // 使用預定義的 ref(p)，確保路徑包含 ROOT (jjvs_v2)
+    await ref(`stuMsgs/${stuId}/${k}`).update({ 
+      read: true,
+      readAt: now() 
+    });
+    
+    // 2. 同步更新全域訊息表 (採樂觀執行，若失敗不影響學生端)
+    try {
+      await ref(`messages/${k}`).update({ read: true });
+    } catch(e) {
+      console.warn("[系統通訊] 全域訊息同步跳過");
+    }
+
+    toast('訊息已讀', 'ok');
+  } catch (e) {
+    console.error("[系統錯誤] 無法寫入 Firebase:", e);
+    toast('讀取失敗，請檢查網路或權限', 'err');
+  }
+};
 
 async function loadStuMsgs(stuId) {
   _currentStuId = stuId;
   const msgPath = `stuMsgs/${stuId}`;
 
-  // 先移除舊的監聽器，避免重複執行
+  // 先移除舊監聽器，防止記憶體洩漏與邏輯重疊
   ref(msgPath).off('value');
 
-  // 開啟即時監聽：資料庫一改，畫面立刻跳
+  // 開啟即時動態監聽
   ref(msgPath).on('value', snap => {
     const data = snap.val() || {};
     _renderStuMsgs(stuId, data);
@@ -1370,77 +1396,42 @@ function _renderStuMsgs(stuId, data) {
   const allMsgs = Object.entries(data).sort((a, b) => b[0].localeCompare(a[0]));
   const unreadCount = allMsgs.filter(([, m]) => !m.read).length;
 
-  // 更新導航列紅點狀態
+  // 更新 UI 紅點狀態
   if (dot) {
     dot.classList.toggle('on', unreadCount > 0);
+    dot.style.display = unreadCount > 0 ? 'block' : 'none';
   }
 
   if (allMsgs.length === 0) {
-    list.innerHTML = '<div class="empty">尚無訊息</div>';
+    list.innerHTML = '<div class="empty">目前沒有新訊息</div>';
     return;
   }
 
-  // 渲染訊息內容
+  // 生成 HTML：重點在於 window.markRead 的調用
   list.innerHTML = allMsgs.slice(0, 20).map(([k, m]) => {
     const isUnread = !m.read;
     const typeLabel = { notice: '📢 通知', punishment: '⚠️ 處罰', deduct: '🔴 扣分' }[m.type] || '📢';
-    
-    // 這裡我們直接在 HTML 裡呼叫修正後的 markRead
+    const borderCol = m.read ? 'var(--bdr)' : (m.type === 'punishment' ? 'var(--yellow)' : (m.type === 'deduct' ? 'var(--red)' : 'var(--blue)'));
+
     return `
       <div class="stu-msg-item" 
-           style="border-left:3px solid ${m.read ? 'var(--bdr)' : (m.type === 'punishment' ? 'var(--yellow)' : 'var(--blue)')}; 
-                  opacity: ${m.read ? '0.7' : '1'}">
-        <div class="stu-msg-from">
+           style="border-left:4px solid ${borderCol}; 
+                  opacity: ${m.read ? '0.6' : '1'}; 
+                  padding: 12px; margin-bottom: 10px; background: rgba(255,255,255,0.03); border-radius: 8px;">
+        <div class="stu-msg-from" style="font-size: 11px; color: var(--tx2); margin-bottom: 4px;">
           ${typeLabel} · ${m.from} · ${m.time}
-          ${m.read ? '<span style="color:var(--green);margin-left:5px">✓ 已讀</span>' : ''}
+          ${m.read ? '<span style="color:var(--green); margin-left:8px;">✓ 已讀</span>' : '<span style="color:var(--red); margin-left:8px; font-weight:bold;">● 未讀</span>'}
         </div>
-        <div style="margin:5px 0; color:var(--tx)">${m.content}</div>
+        <div style="font-size: 14px; color: var(--tx); line-height: 1.5;">${m.content}</div>
         ${isUnread ? `
           <button class="btn s" 
-                  style="margin-top:5px; padding:3px 12px" 
-                  onclick="markRead('${stuId}', '${k}')">
-            ✓ 標記已讀
+                  style="margin-top: 8px; width: 100%; padding: 6px; font-weight: bold;" 
+                  onclick="window.markRead('${stuId}', '${k}')">
+            確認收悉
           </button>` : ''}
       </div>`;
   }).join('');
 }
-
-// ── 核心修正：確保路徑絕對正確的 markRead ──
-async function markRead(stuId, k) {
-  // 防止重複點擊
-  console.log("正在嘗試讀取訊息:", stuId, k);
-  
-  try {
-    // 使用你定義的 ref(p) 輔助函式，這樣路徑才會自動帶上 ROOT (jjvs_v2)
-    // 1. 更新學生個人的訊息狀態
-    await ref(`stuMsgs/${stuId}/${k}`).update({ read: true });
-    
-    // 2. 同步更新老師端的總訊息表 (非必要，但建議保留)
-    try {
-      await ref(`messages/${k}`).update({ read: true });
-    } catch(e) {
-      // 如果老師端的 key 不同，這裡跳過不影響學生端
-    }
-
-    toast('已讀取', 'ok');
-  } catch (e) {
-    console.error("已讀失敗:", e);
-    toast('讀取失敗，請檢查網路', 'err');
-  }
-}
-
-// ── 橫幅切換優化 ──
-function toggleStuBanner() {
-  const banner = document.getElementById('stuBanner');
-  if (!banner) return;
-  
-  stuBannerOpen = !stuBannerOpen;
-  banner.style.display = stuBannerOpen ? 'block' : 'none';
-  
-  // 每次打開時確保有最新資料
-  if (stuBannerOpen && _currentStuId) {
-    loadStuMsgs(_currentStuId);
-  }
 }// ── 學生自己兌換金牌 ──
 async function stuRedeemMedal(stuId, pts) {
   if (pts < 5) { toast('點數不足5點','err'); return; }
