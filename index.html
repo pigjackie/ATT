@@ -192,7 +192,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .msg-read{font-size:11px}
 
 /* ── STUDENT MSG BANNER ── */
-#stuBanner{display:none;background:rgba(231,76,60,.1);border-bottom:1px solid rgba(231,76,60,.25);padding:10px 16px}
+#stuBanner{display:none;background:rgba(231,76,60,.1);border-bottom:1px solid rgba(231,76,60,.25);padding:10px 16px;max-height:70vh;overflow-y:auto}
 .stu-msg-item{background:rgba(231,76,60,.07);border-radius:7px;padding:8px 11px;margin-bottom:6px;font-size:13px}
 .stu-msg-from{font-size:10px;color:var(--tx3);margin-bottom:2px}
 .stu-msg-type-notice{color:var(--blue)}.stu-msg-type-punishment{color:var(--yellow)}
@@ -1482,38 +1482,48 @@ async function _renderStuMsgs(stuId) {
   const all = Object.entries(data).sort((a,b)=>b[0].localeCompare(a[0]));
   const unread = all.filter(([,m])=>!m.read);
 
-  // 紅點
+  // 更新紅點
   const dot = document.getElementById('stuNotifDot');
   if (dot) dot.classList.toggle('on', unread.length>0);
 
-  // Banner 內容
+  // 更新 banner 內容
   const list = document.getElementById('stuBannerList');
   if (!list) return;
 
   if (all.length === 0) {
-    list.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:4px 0">目前無任何訊息</div>';
+    list.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:8px 0">目前無任何訊息</div>';
     return;
   }
 
-  list.innerHTML = all.slice(0,30).map(([k,m])=>`
-    <div class="stu-msg-item" style="opacity:${m.read?.65:1};border-left:3px solid ${m.read?'var(--bdr)':m.type==='punishment'||m.type==='deduct'?'var(--yellow)':'var(--blue)'}">
-      <div class="stu-msg-from">${
-        m.type==='punishment'?'⚠️ 處罰通知':m.type==='deduct'?'🔴 扣分':'📢 通知'
-      } · ${m.from||'系統'} · ${m.time||''}</div>
+  const rows = all.slice(0,30).map(([k,m]) => {
+    const isRead = m.read === true;
+    const opacity = isRead ? '0.6' : '1';
+    const borderColor = isRead ? 'var(--bdr)'
+      : (m.type==='punishment'||m.type==='deduct') ? 'var(--yellow)' : 'var(--blue)';
+    const typeLabel = m.type==='punishment' ? '⚠️ 處罰通知'
+      : m.type==='deduct' ? '🔴 扣分' : '📢 通知';
+    const readBtn = !isRead
+      ? `<button class="btn s" onclick="markRead('${stuId}','${k}')" style="font-size:11px;padding:2px 10px;margin-top:4px">✓ 已讀</button>`
+      : '<span style="font-size:11px;color:var(--green)">✅ 已讀</span>';
+    return `<div class="stu-msg-item" style="opacity:${opacity};border-left:3px solid ${borderColor}">
+      <div class="stu-msg-from">${typeLabel} · ${m.from||'系統'} · ${m.time||''}</div>
       <div style="font-size:14px;margin:4px 0;color:var(--tx)">${m.content||''}</div>
-      ${!m.read
-        ? `<button class="btn s" onclick="markRead('${stuId}','${k}')" style="font-size:11px;padding:2px 10px;margin-top:4px">✓ 已讀</button>`
-        : '<span style="font-size:11px;color:var(--green)">✅ 已讀</span>'
-      }
-    </div>`).join('');
+      ${readBtn}
+    </div>`;
+  });
+  list.innerHTML = rows.join('');
 }
 
 function toggleStuBanner() {
   stuBannerOpen = !stuBannerOpen;
   const banner = document.getElementById('stuBanner');
   if (!banner) return;
-  banner.style.display = stuBannerOpen ? '' : 'none';
-  if (stuBannerOpen && _currentStuId) _renderStuMsgs(_currentStuId);
+  if (stuBannerOpen) {
+    banner.style.setProperty('display', 'block', 'important');
+    if (_currentStuId) _renderStuMsgs(_currentStuId);
+  } else {
+    banner.style.setProperty('display', 'none', 'important');
+  }
 }
 
 async function markRead(stuId, k) {
@@ -1600,14 +1610,19 @@ function _renderStuView(stu, d) {
     : taskEntries.map(([k,t])=>{
         const pct = Math.min(100, Math.round(((t.done||0)/t.total)*100));
         const done = t.done||0;
-        return `<div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:8px">
+        const isDone = done >= t.total;
+        return `<div style="background:var(--bg2);border:1px solid ${isDone?'var(--green)':'var(--bdr)'};border-radius:8px;padding:10px 12px;margin-bottom:8px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
             <div style="font-size:14px;font-weight:bold">${t.name}</div>
-            <span style="font-size:12px;color:${done>=t.total?'var(--green)':'var(--tx2)'}">${done}/${t.total} ${done>=t.total?'✅':''}</span>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span style="font-size:12px;color:${isDone?'var(--green)':'var(--tx2)'}">${done}/${t.total}${isDone?' ✅':''}</span>
+              ${isDone ? `<button class="btn d" onclick="stuDelTask('${stu.id}','${k}')" style="font-size:11px;padding:1px 8px">刪除</button>` : ''}
+            </div>
           </div>
           <div style="height:5px;background:var(--bg);border-radius:3px;overflow:hidden">
-            <div style="height:100%;width:${pct}%;background:${done>=t.total?'var(--green)':'var(--gold)'};transition:width .3s"></div>
+            <div style="height:100%;width:${pct}%;background:${isDone?'var(--green)':'var(--gold)'};transition:width .3s"></div>
           </div>
+          ${isDone ? '<div style="font-size:11px;color:var(--green);margin-top:4px">任務完成！可點刪除清除記錄</div>' : ''}
         </div>`;
       }).join('');
 
@@ -1706,6 +1721,18 @@ function listenMyApprovalStu(name) {
         ${histHtml}
       </div>`;
   });
+}
+
+async function stuDelTask(stuId, taskKey) {
+  openDlg('🗑️ 刪除已完成任務',
+    '<div class="dlg-msg">確認刪除這項已完成的任務記錄？</div>',
+    [{label:'確認刪除',cls:'del',fn:async()=>{
+      await db.ref(`${ROOT}/students/${stuId}/tasks/${taskKey}`).remove();
+      toast('任務記錄已刪除','ok');
+      const stu = byId(stuId);
+      if (stu) loadStuView(stu);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
 }
 
 // ══════════════════════════════════════════
