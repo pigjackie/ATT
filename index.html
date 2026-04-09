@@ -749,12 +749,20 @@ function teacherChangePw() {
     }},{label:'取消',fn:()=>true}]);
 }
 async function refreshStuView(stuId) {
-  const stu = byId(stuId);
+  // stuId 可能來自 innerHTML onclick 字串，優先用全域變數
+  const id = stuId || _currentStuId;
+  if (!id) return;
+  const stu = byId(id);
   if (!stu) return;
-  const d = (await dbGet(`students/${stuId}`))||{};
-  _renderStuView(stu, d);
-  await _renderStuMsgs(stuId);
-  toast('已重新整理','ok');
+  try {
+    const d = (await dbGet(`students/${id}`))||{};
+    _renderStuView(stu, d);
+    await _renderStuMsgs(id);
+    toast('已重新整理','ok');
+  } catch(e) {
+    toast('重新整理失敗，請重試','err');
+    console.error('refreshStuView error:', e);
+  }
 }
 function doLogout() { location.reload(); }
 
@@ -773,6 +781,7 @@ function enterApp() {
 
 function enterStudentView(stu) {
   document.getElementById('stuUserName').textContent = stu.name;
+  _currentStuId = stu.id;   // 全域記錄，供 refreshStuView 使用
   showScreen('studentScreen');
   loadStuView(stu);
   loadStuMsgs(stu.id);
@@ -1357,9 +1366,9 @@ function _renderExitLog() {
       ${a.outTime?`<div style="font-size:13px;color:var(--blue);margin-bottom:4px">🕐 預計外出：${a.outTime}${a.retTime&&a.retTime!=='未填'?' → 返回：'+a.retTime:''}</div>`:''}
       ${a.contact&&a.contact!=='未填'?`<div style="font-size:12px;color:var(--tx2);margin-bottom:4px">📞 聯絡：${a.contact}</div>`:''}
       <div style="font-size:11px;color:var(--tx3);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap">
-        <span>申請時間：${a.applyTime||a.time||'—'}</span>
+        <span>申請時間：${dateWithDay(a.applyTime||a.time||'—')}</span>
         ${a.approvedBy?`<span>核可老師：${a.approvedBy}</span>`:''}
-        ${a.approvedTime?`<span>核可時間：${a.approvedTime}</span>`:''}
+        ${a.approvedTime?`<span>核可時間：${dateWithDay(a.approvedTime)}</span>`:''}
         ${a.rejectedBy?`<span>拒絕老師：${a.rejectedBy}</span>`:''}
       </div>
     </div>`).join('');
@@ -1754,7 +1763,7 @@ function _renderStuView(stu, d) {
         <div style="font-size:12px;color:var(--tx2)">${stu.cls} · ${stu.id}</div>
         <div style="font-size:32px;font-weight:bold;color:var(--gold);margin:6px 0">${stu.name}</div>
         <div style="font-size:15px;color:var(--tx2)">今日出勤：<span style="color:${attColor};font-weight:bold;font-size:18px">${att}</span></div>
-        <button class="btn" onclick="refreshStuView('${stu.id}')" style="margin-top:8px;font-size:11px;padding:3px 12px">🔄 重新整理</button>
+        <button class="btn" onclick="refreshStuView()" style="margin-top:8px;font-size:11px;padding:3px 12px">🔄 重新整理</button>
       </div>
 
       <hr class="sep">
