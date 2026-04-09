@@ -617,6 +617,19 @@ let stuBannerOpen = false;
 // UTILS
 // ══════════════════════════════════════════
 const now = () => new Date().toLocaleString('zh-TW',{hour12:false});
+const WEEKDAYS = ['日','一','二','三','四','五','六'];
+const nowWithDay = () => {
+  const d = new Date();
+  return d.toLocaleString('zh-TW',{hour12:false}) + '（' + WEEKDAYS[d.getDay()] + '）';
+};
+const dateWithDay = (dateStr) => {
+  // dateStr 可能是 "2025/4/9 下午5:00:00" 或 now() 格式
+  try {
+    const d = dateStr ? new Date(dateStr.replace(/\//g,'-')) : new Date();
+    const wd = WEEKDAYS[d.getDay()];
+    return isNaN(d)?dateStr+'（？）':dateStr+'（'+wd+'）';
+  } catch(e) { return dateStr; }
+};
 const today = () => new Date().toLocaleDateString('zh-TW');
 const byName = n => STUDENTS.find(s=>s.name===n);
 const byId = id => STUDENTS.find(s=>s.id===id);
@@ -734,6 +747,14 @@ function teacherChangePw() {
       await db.ref(`${ROOT}/teachers/${entry[0]}/pass`).set(n1);
       toast('密碼已更新','ok'); return true;
     }},{label:'取消',fn:()=>true}]);
+}
+async function refreshStuView(stuId) {
+  const stu = byId(stuId);
+  if (!stu) return;
+  const d = (await dbGet(`students/${stuId}`))||{};
+  _renderStuView(stu, d);
+  await _renderStuMsgs(stuId);
+  toast('已重新整理','ok');
 }
 function doLogout() { location.reload(); }
 
@@ -1446,11 +1467,11 @@ function listenMyApproval(k, name) {
 
 function showExitPass(name, teacher, time, applyTime, outTime, retTime) {
   document.getElementById('epName').textContent = name;
-  document.getElementById('epApplyTime').textContent = '申請時間：'+(applyTime||time||'—');
+  document.getElementById('epApplyTime').textContent = '申請時間：'+dateWithDay(applyTime||time||'—');
   document.getElementById('epPlanTime').textContent = '預計外出：'+(outTime||'未填')+(retTime&&retTime!=='未填'?' → 返回：'+retTime:'');
-  document.getElementById('epDate').textContent = '核可時間：'+(time||'—');
+  document.getElementById('epDate').textContent = '核可時間：'+dateWithDay(time||'—');
   document.getElementById('epTeacher').textContent = '核可老師：'+(teacher||'—');
-  document.getElementById('epOutTime').textContent = '憑證展示時間：'+now();
+  document.getElementById('epOutTime').textContent = '憑證展示時間：'+nowWithDay();
   document.getElementById('exitPass').classList.add('on');
 }
 
@@ -1733,7 +1754,7 @@ function _renderStuView(stu, d) {
         <div style="font-size:12px;color:var(--tx2)">${stu.cls} · ${stu.id}</div>
         <div style="font-size:32px;font-weight:bold;color:var(--gold);margin:6px 0">${stu.name}</div>
         <div style="font-size:15px;color:var(--tx2)">今日出勤：<span style="color:${attColor};font-weight:bold;font-size:18px">${att}</span></div>
-        <button class="btn" onclick="loadStuView(byId('${stu.id}'))" style="margin-top:8px;font-size:11px;padding:3px 12px">🔄 重新整理</button>
+        <button class="btn" onclick="refreshStuView('${stu.id}')" style="margin-top:8px;font-size:11px;padding:3px 12px">🔄 重新整理</button>
       </div>
 
       <hr class="sep">
