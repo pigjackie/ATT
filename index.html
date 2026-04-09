@@ -291,6 +291,7 @@ select:focus{border-color:var(--gold)}
   <div class="navtabs">
     <button class="navtab on" onclick="switchTab('att')" id="tab-att">📋 點名</button>
     <button class="navtab" onclick="switchTab('apply')" id="tab-apply">🚪 外出申請<span class="nbadge" id="applyBadge" style="display:none">0</span></button>
+    <button class="navtab" onclick="switchTab('exitlog')" id="tab-exitlog">📋 外出日誌</button>
     <button class="navtab" onclick="switchTab('inbox')" id="tab-inbox">💬 訊息<span class="nbadge" id="inboxBadge" style="display:none">0</span></button>
     <button class="navtab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
@@ -332,6 +333,21 @@ select:focus{border-color:var(--gold)}
       <h3 style="color:var(--gold);margin-bottom:14px">🚪 第八節外出申請審核</h3>
       <div id="applyList"><div class="empty">目前無待審核申請</div></div>
     </div>
+    <!-- 外出紀錄日誌 -->
+    <div id="tabExitLog" style="display:none">
+      <div class="row" style="margin-bottom:14px">
+        <h3 style="color:var(--gold)">📋 第八節外出申請日誌</h3>
+        <button class="btn" onclick="loadExitLog()" style="margin-left:auto">🔄 重新整理</button>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn" id="elAll" onclick="filterExitLog('all')" style="border-color:var(--gold);color:var(--gold)">全部</button>
+        <button class="btn" id="elApproved" onclick="filterExitLog('approved')">✅ 已核可</button>
+        <button class="btn" id="elPending" onclick="filterExitLog('pending')">⏳ 待審核</button>
+        <button class="btn" id="elRejected" onclick="filterExitLog('rejected')">✕ 已拒絕</button>
+      </div>
+      <div id="exitLogList"><div class="empty">載入中...</div></div>
+    </div>
+
     <!-- 訊息中心 -->
     <div id="tabInbox" style="display:none">
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px">
@@ -464,9 +480,11 @@ select:focus{border-color:var(--gold)}
 <div id="exitPass">
   <div class="ep-title">✅ 准予外出</div>
   <div class="ep-name" id="epName">—</div>
-  <div class="ep-info" id="epDate">核可時間：—</div>
-  <div class="ep-info" id="epTeacher">核可老師：—</div>
-  <div class="ep-info" id="epOutTime" style="font-size:18px;margin-top:8px;background:rgba(255,255,255,.15);padding:8px 24px;border-radius:20px">外出時間：—</div>
+  <div class="ep-info" id="epApplyTime" style="font-size:16px;opacity:.8">申請時間：—</div>
+  <div class="ep-info" id="epPlanTime" style="font-size:20px;background:rgba(255,255,255,.2);padding:8px 28px;border-radius:20px;margin:8px 0">預計外出：—</div>
+  <div class="ep-info" id="epDate" style="font-size:17px">核可時間：—</div>
+  <div class="ep-info" id="epTeacher" style="font-size:17px">核可老師：—</div>
+  <div class="ep-info" id="epOutTime" style="font-size:15px;opacity:.75;margin-top:4px">憑證展示時間：—</div>
   <button class="ep-close" onclick="document.getElementById('exitPass').classList.remove('on')">關閉</button>
 </div>
 
@@ -744,18 +762,19 @@ function enterStudentView(stu) {
 // ══════════════════════════════════════════
 function switchTab(t) {
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
-  ['att','apply','inbox','report','teachers'].forEach(id=>{
+  ['att','apply','exitlog','inbox','report','teachers'].forEach(id=>{
     const el = document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));
     if (el) el.style.display = 'none';
   });
   document.getElementById('tab-'+t).classList.add('on');
   // map tab id to content div
-  const map = {att:'tabAtt',apply:'tabApply',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers'};
+  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers'};
   document.getElementById(map[t]).style.display = '';
   if (t==='att') renderGrid();
   if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); loadDeductLog(); }
   if (t==='teachers') renderTeachers();
   if (t==='inbox') renderInbox();
+  if (t==='exitlog') loadExitLog();
   if (t==='apply') {} // already live
 }
 
@@ -1268,6 +1287,63 @@ async function resetAllDlg() {
 // ══════════════════════════════════════════
 // EXIT APPLY
 // ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// EXIT LOG（所有老師可查）
+// ══════════════════════════════════════════
+let _allExitData = {};
+let _exitLogFilter = 'all';
+
+async function loadExitLog() {
+  const el = document.getElementById('exitLogList');
+  if (!el) return;
+  el.innerHTML = '<div class="spin"></div>';
+  _allExitData = (await dbGet('exitApply'))||{};
+  _renderExitLog();
+}
+
+function filterExitLog(mode) {
+  _exitLogFilter = mode;
+  ['all','approved','pending','rejected'].forEach(m=>{
+    const btn = document.getElementById('el'+m.charAt(0).toUpperCase()+m.slice(1));
+    if (btn) {
+      btn.style.borderColor = m===mode?'var(--gold)':'';
+      btn.style.color = m===mode?'var(--gold)':'';
+    }
+  });
+  _renderExitLog();
+}
+
+function _renderExitLog() {
+  const el = document.getElementById('exitLogList');
+  if (!el) return;
+  let entries = Object.entries(_allExitData).sort((a,b)=>b[0]-a[0]);
+  if (_exitLogFilter !== 'all') entries = entries.filter(([,a])=>a.status===_exitLogFilter);
+  if (!entries.length) { el.innerHTML='<div class="empty">尚無記錄</div>'; return; }
+
+  const statusColor = {approved:'var(--green)',rejected:'var(--red)',pending:'var(--yellow)'};
+  const statusLabel = {approved:'✅ 已核可',rejected:'✕ 已拒絕',pending:'⏳ 待審核'};
+
+  el.innerHTML = entries.map(([k,a])=>`
+    <div style="background:var(--bg1);border:1px solid ${a.status==='approved'?'rgba(46,204,113,.3)':a.status==='rejected'?'rgba(231,76,60,.3)':'var(--bdr)'};border-radius:var(--r);padding:14px 16px;margin-bottom:10px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px">
+        <div>
+          <span style="font-size:16px;font-weight:bold">${a.studentName}</span>
+          <span style="font-size:12px;color:var(--tx2);margin-left:8px">${a.studentClass||''}</span>
+        </div>
+        <span style="font-size:13px;color:${statusColor[a.status]||'var(--tx2)'};font-weight:bold;white-space:nowrap">${statusLabel[a.status]||a.status}</span>
+      </div>
+      <div style="font-size:13px;margin-bottom:4px">📝 原因：${a.reason||'—'}</div>
+      ${a.outTime?`<div style="font-size:13px;color:var(--blue);margin-bottom:4px">🕐 預計外出：${a.outTime}${a.retTime&&a.retTime!=='未填'?' → 返回：'+a.retTime:''}</div>`:''}
+      ${a.contact&&a.contact!=='未填'?`<div style="font-size:12px;color:var(--tx2);margin-bottom:4px">📞 聯絡：${a.contact}</div>`:''}
+      <div style="font-size:11px;color:var(--tx3);margin-top:6px;display:flex;gap:16px;flex-wrap:wrap">
+        <span>申請時間：${a.applyTime||a.time||'—'}</span>
+        ${a.approvedBy?`<span>核可老師：${a.approvedBy}</span>`:''}
+        ${a.approvedTime?`<span>核可時間：${a.approvedTime}</span>`:''}
+        ${a.rejectedBy?`<span>拒絕老師：${a.rejectedBy}</span>`:''}
+      </div>
+    </div>`).join('');
+}
+
 function startApplyListener() {
   ref('exitApply').on('value', snap => {
     const data = snap.val()||{};
@@ -1289,7 +1365,8 @@ function renderApplyList(data) {
       <div class="ai-info">
         <div class="ai-name">${a.studentName} <span style="font-size:12px;color:var(--tx2)">${a.studentClass}</span></div>
         <div class="ai-reason" style="background:rgba(212,175,55,.07);padding:4px 8px;border-radius:4px;margin:3px 0">📝 ${a.reason||'（未填原因）'}</div>
-        <div class="ai-time">${a.time}${a.contact&&a.contact!=='未填'?' · 聯絡：'+a.contact:''}</div>
+        <div style="font-size:12px;color:var(--blue);margin:2px 0">🕐 外出：${a.outTime||'未填'} ${a.retTime&&a.retTime!=='未填'?' → 返回：'+a.retTime:''}</div>
+        <div class="ai-time">申請：${a.applyTime||a.time}${a.contact&&a.contact!=='未填'?' · 聯絡：'+a.contact:''}</div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px">
         <button class="btn s" onclick="approveExit('${k}','${a.studentName}')">✅ 核可</button>
@@ -1330,14 +1407,27 @@ async function rejectExit(k) {
 
 function openApplyExit() {
   openDlg('🚪 申請第八節外出',
-    `<div class="dlg-label">外出原因（必填）</div><textarea class="dlg-input" id="exitR" rows="2" placeholder="請填寫外出原因..."></textarea><div class="dlg-label" style="margin-top:4px">聯絡方式（選填）</div><input class="dlg-input" type="text" id="exitContact" placeholder="家長電話或自身聯絡方式">`,
+    `<div class="dlg-label">外出原因（必填）</div><textarea class="dlg-input" id="exitR" rows="2" placeholder="請填寫外出原因..."></textarea>
+     <div class="dlg-label" style="margin-top:4px">預計外出時間（必填）</div>
+     <input class="dlg-input" type="text" id="exitOutTime" placeholder="例：17:30 或 放學後30分鐘">
+     <div class="dlg-label" style="margin-top:4px">預計返回時間（選填）</div>
+     <input class="dlg-input" type="text" id="exitRetTime" placeholder="例：18:00">
+     <div class="dlg-label" style="margin-top:4px">聯絡方式（選填）</div>
+     <input class="dlg-input" type="text" id="exitContact" placeholder="家長電話或自身聯絡方式">`,
     [{label:'送出申請',cls:'ok',fn:async()=>{
       const reason=document.getElementById('exitR').value.trim();
+      const outTime=document.getElementById('exitOutTime').value.trim();
+      const retTime=document.getElementById('exitRetTime').value.trim();
       const contact=document.getElementById('exitContact').value.trim();
       if(!reason){toast('請填寫原因','err');return false}
+      if(!outTime){toast('請填寫預計外出時間','err');return false}
       const stu=byName(me.name);
       const k=Date.now()+'';
-      await dbSet(`exitApply/${k}`,{studentName:me.name,studentId:stu?.id||'',studentClass:stu?.cls||'',reason,contact:contact||'未填',time:now(),status:'pending'});
+      await dbSet(`exitApply/${k}`,{
+        studentName:me.name, studentId:stu?.id||'', studentClass:stu?.cls||'',
+        reason, outTime, retTime:retTime||'未填', contact:contact||'未填',
+        applyTime:now(), time:now(), status:'pending'
+      });
       toast('申請已送出，請等待審核');
       listenMyApproval(k,me.name);
       return true;
@@ -1354,11 +1444,13 @@ function listenMyApproval(k, name) {
   });
 }
 
-function showExitPass(name, teacher, time) {
+function showExitPass(name, teacher, time, applyTime, outTime, retTime) {
   document.getElementById('epName').textContent = name;
-  document.getElementById('epDate').textContent = '核可時間：'+time;
-  document.getElementById('epTeacher').textContent = '核可老師：'+teacher;
-  document.getElementById('epOutTime').textContent = '外出時間：'+now();
+  document.getElementById('epApplyTime').textContent = '申請時間：'+(applyTime||time||'—');
+  document.getElementById('epPlanTime').textContent = '預計外出：'+(outTime||'未填')+(retTime&&retTime!=='未填'?' → 返回：'+retTime:'');
+  document.getElementById('epDate').textContent = '核可時間：'+(time||'—');
+  document.getElementById('epTeacher').textContent = '核可老師：'+(teacher||'—');
+  document.getElementById('epOutTime').textContent = '憑證展示時間：'+now();
   document.getElementById('exitPass').classList.add('on');
 }
 
@@ -1705,17 +1797,19 @@ function listenMyApprovalStu(name) {
       const statusLabel = {approved:'✅ 已核可',rejected:'✕ 已拒絕',pending:'⏳ 待審核'}[a.status]||a.status;
       return `<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;margin-bottom:6px">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-          <span style="font-size:12px;color:var(--tx2)">${a.time}</span>
+          <span style="font-size:12px;color:var(--tx2)">申請：${a.applyTime||a.time}</span>
           <span style="font-size:12px;color:${statusColor};font-weight:bold">${statusLabel}</span>
         </div>
-        <div style="font-size:13px">原因：${a.reason}</div>
-        ${a.approvedBy?`<div style="font-size:11px;color:var(--tx3);margin-top:2px">核可老師：${a.approvedBy}</div>`:''}
+        <div style="font-size:13px">原因：${a.reason||'—'}</div>
+        ${a.outTime?`<div style="font-size:12px;color:var(--blue)">🕐 外出：${a.outTime}${a.retTime&&a.retTime!=='未填'?' → 返回：'+a.retTime:''}</div>`:''}
+        ${a.approvedBy?`<div style="font-size:11px;color:var(--tx3);margin-top:2px">核可老師：${a.approvedBy} · ${a.approvedTime||''}</div>`:''}
         ${a.status==='rejected'?'<div style="font-size:11px;color:var(--red);margin-top:2px">申請未通過</div>':''}
       </div>`;
     }).join('') || '<div style="color:var(--tx3);font-size:13px">尚無申請記錄</div>';
 
+    const ap = approvedToday?.[1];
     area.innerHTML = `
-      ${approvedToday ? `<button class="btn g" onclick="showExitPass('${name}','${approvedToday[1].approvedBy}','${approvedToday[1].approvedTime}')" style="width:100%;padding:12px;font-size:14px;margin-bottom:12px">📋 顯示外出憑證</button>` : ''}
+      ${ap ? `<button class="btn g" onclick="showExitPass('${name}','${ap.approvedBy||''}','${ap.approvedTime||''}','${ap.applyTime||ap.time||''}','${ap.outTime||''}','${ap.retTime||''}')" style="width:100%;padding:12px;font-size:14px;margin-bottom:12px">📋 顯示外出憑證</button>` : ''}
       <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:13px;padding:16px;margin-bottom:10px">
         <div class="dp-sec-t" style="margin-bottom:10px">📋 第八節外出申請記錄</div>
         ${histHtml}
