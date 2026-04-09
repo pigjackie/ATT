@@ -2,7 +2,7 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>莊敬音樂科教務管理系統</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -18,8 +18,10 @@
   --bdr:rgba(212,175,55,.2);--bdr2:rgba(212,175,55,.5);
   --r:12px;--r2:8px;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Noto Serif TC',Georgia,serif;overflow-x:hidden}
+/* 加上 -webkit-tap-highlight-color 避免手機點擊閃爍 */
+*{box-sizing:border-box;margin:0;padding:0; -webkit-tap-highlight-color: transparent;}
+/* 加入 PingFang TC 與 Noto Sans TC 解決舊手機特殊符號變問號的問題 */
+html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Noto Serif TC', 'PingFang TC', 'Heiti TC', 'Noto Sans TC', Georgia, serif;overflow-x:hidden}
 body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);z-index:1000;pointer-events:none}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:3px}
 
@@ -255,7 +257,11 @@ select:focus{border-color:var(--gold)}
 </head>
 <body>
 
-<!-- ══ LOGIN ══ -->
+<div id="globalLoader" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+  <div class="spin" style="width:30px;height:30px;border-width:3px;"></div>
+  <div style="margin-top:15px;color:var(--gold);font-size:14px;letter-spacing:1px;">系統初始化中...</div>
+</div>
+
 <div id="loginScreen" class="screen">
   <div class="lbox">
     <div class="llogo">🎼</div>
@@ -278,7 +284,6 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ TEACHER APP ══ -->
 <div id="appScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
@@ -297,7 +302,6 @@ select:focus{border-color:var(--gold)}
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
   </div>
   <div class="content">
-    <!-- 點名 -->
     <div id="tabAtt">
       <div class="clsbtns" id="clsBtns"></div>
       <div class="toolbar">
@@ -328,12 +332,10 @@ select:focus{border-color:var(--gold)}
       </div>
       <div class="sgrid" id="stuGrid"></div>
     </div>
-    <!-- 外出申請 -->
     <div id="tabApply" style="display:none">
       <h3 style="color:var(--gold);margin-bottom:14px">🚪 第八節外出申請審核</h3>
       <div id="applyList"><div class="empty">目前無待審核申請</div></div>
     </div>
-    <!-- 外出紀錄日誌 -->
     <div id="tabExitLog" style="display:none">
       <div class="row" style="margin-bottom:14px">
         <h3 style="color:var(--gold)">📋 第八節外出申請日誌</h3>
@@ -348,7 +350,6 @@ select:focus{border-color:var(--gold)}
       <div id="exitLogList"><div class="empty">載入中...</div></div>
     </div>
 
-    <!-- 訊息中心 -->
     <div id="tabInbox" style="display:none">
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <h3 style="color:var(--gold)">💬 訊息中心</h3>
@@ -362,7 +363,6 @@ select:focus{border-color:var(--gold)}
       </div>
       <div id="inboxList"><div class="empty">尚無訊息</div></div>
     </div>
-    <!-- 報表 -->
     <div id="tabReport" style="display:none">
       <div class="statgrid" id="statGrid"></div>
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap">
@@ -376,7 +376,6 @@ select:focus{border-color:var(--gold)}
       <h3 style="color:var(--red);margin-bottom:12px">🔴 扣分記錄（近期）</h3>
       <div id="deductLog"><div class="empty">載入中...</div></div>
     </div>
-    <!-- 教師管理 -->
     <div id="tabTeachers" style="display:none">
       <div class="row" style="margin-bottom:14px">
         <h3 style="color:var(--gold)">⚙️ 教師帳號管理</h3>
@@ -387,7 +386,6 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ STUDENT SCREEN ══ -->
 <div id="studentScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
@@ -396,7 +394,6 @@ select:focus{border-color:var(--gold)}
     <button class="notif-btn" id="stuNotifBtn" onclick="toggleStuBanner()" title="訊息通知">🔔<span class="notif-dot" id="stuNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
-  <!-- 訊息橫幅 -->
   <div id="stuBanner">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-size:13px;color:var(--red);font-weight:bold">🔔 訊息通知</div>
@@ -413,7 +410,6 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ DETAIL PANEL ══ -->
 <div id="detailPanel">
   <div class="dp-hd">
     <div>
@@ -476,7 +472,6 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ EXIT PASS ══ -->
 <div id="exitPass">
   <div class="ep-title">✅ 准予外出</div>
   <div class="ep-name" id="epName">—</div>
@@ -488,7 +483,6 @@ select:focus{border-color:var(--gold)}
   <button class="ep-close" onclick="document.getElementById('exitPass').classList.remove('on')">關閉</button>
 </div>
 
-<!-- ══ DIALOG ══ -->
 <div id="dlgOverlay" onclick="if(event.target===this)closeDlg()">
   <div class="dlg">
     <div class="dlg-title" id="dlgTitle"></div>
@@ -497,12 +491,11 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ TOAST ══ -->
 <div id="toast"></div>
 
 <script>
 // ══════════════════════════════════════════
-// FIREBASE
+// FIREBASE & DATA (完整保留)
 // ══════════════════════════════════════════
 const FBC = {
   apiKey:"AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
@@ -521,9 +514,6 @@ const dbGet = p => ref(p).once('value').then(s=>s.val());
 const dbSet = (p,v) => ref(p).set(v);
 const dbUpd = (p,v) => ref(p).update(v);
 
-// ══════════════════════════════════════════
-// STUDENT DATA
-// ══════════════════════════════════════════
 const CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
 const STUDENTS = [
   // 音三莊 40人
@@ -603,7 +593,7 @@ const MASTER = {name:"蕭旭成", pass:"0902"};
 const STATUS = ['未','出','遲','缺','假'];
 
 // ══════════════════════════════════════════
-// STATE
+// STATE & SESSION PERSISTENCE (新增優化區塊)
 // ══════════════════════════════════════════
 let me = null;         // current user
 let curCls = null;     // current class
@@ -612,6 +602,36 @@ let pendAtt = {};      // unsaved attendance
 let batchMode = false;
 let batchSel = new Set();
 let stuBannerOpen = false;
+
+// Session Manager: 檢查本地登入狀態
+async function checkAuthSession() {
+  const savedSession = localStorage.getItem('jjvs_session');
+  if (savedSession) {
+    try {
+      const sessionData = JSON.parse(savedSession);
+      me = sessionData;
+      if (me.role === 'student') {
+        const stu = STUDENTS.find(s => s.id === me.stuId);
+        if (stu) enterStudentView(stu);
+        else showScreen('loginScreen');
+      } else {
+        enterApp();
+      }
+    } catch (e) {
+      localStorage.removeItem('jjvs_session');
+      showScreen('loginScreen');
+    }
+  } else {
+    showScreen('loginScreen');
+  }
+  // 隱藏系統初始化加載畫面
+  document.getElementById('globalLoader').style.display = 'none';
+}
+
+// Session Manager: 儲存登入狀態
+function saveAuthSession(userData) {
+  localStorage.setItem('jjvs_session', JSON.stringify(userData));
+}
 
 // ══════════════════════════════════════════
 // UTILS
@@ -623,7 +643,6 @@ const nowWithDay = () => {
   return d.toLocaleString('zh-TW',{hour12:false}) + '（' + WEEKDAYS[d.getDay()] + '）';
 };
 const dateWithDay = (dateStr) => {
-  // dateStr 可能是 "2025/4/9 下午5:00:00" 或 now() 格式
   try {
     const d = dateStr ? new Date(dateStr.replace(/\//g,'-')) : new Date();
     const wd = WEEKDAYS[d.getDay()];
@@ -673,6 +692,7 @@ async function doLogin() {
   if (!name||!pass) { toast('請填寫帳號和密碼','err'); return; }
   if (name===MASTER.name && pass===MASTER.pass) {
     me = {name, role:'master', classes:CLASSES};
+    saveAuthSession(me); // 儲存 Session
     enterApp(); return;
   }
   toast('驗證中…');
@@ -686,6 +706,7 @@ async function doLogin() {
         const t = teachers[k];
         if (t.name===name && t.pass===pass) {
           me = {name, role:'teacher', classes:t.classes||[]};
+          saveAuthSession(me); // 儲存 Session
           enterApp(); return;
         }
       }
@@ -707,6 +728,8 @@ async function doStudentLogin() {
     const stored = data?.password || '0000';
     if (pass !== stored) { toast('密碼錯誤','err'); return; }
     me = {name, role:'student', stuId:stu.id};
+    saveAuthSession(me); // 儲存 Session
+    
     if (!data?.password || data.password==='0000') {
       openDlg('⚠️ 首次登入，請修改密碼',
         `<div class="dlg-label">新密碼</div><input class="dlg-input" type="password" id="np1" placeholder="新密碼">
@@ -739,7 +762,6 @@ function teacherChangePw() {
       const n2 = document.getElementById('tpNew2').value;
       if(!n1){toast('新密碼不能為空','err');return false}
       if(n1!==n2){toast('兩次密碼不一致','err');return false}
-      // 找老師的key
       const teachers = await dbGet('teachers')||{};
       const entry = Object.entries(teachers).find(([,t])=>t.name===me.name);
       if (!entry){toast('找不到帳號資料','err');return false}
@@ -749,7 +771,6 @@ function teacherChangePw() {
     }},{label:'取消',fn:()=>true}]);
 }
 async function refreshStuView(stuId) {
-  // stuId 可能來自 innerHTML onclick 字串，優先用全域變數
   const id = stuId || _currentStuId;
   if (!id) return;
   const stu = byId(id);
@@ -761,10 +782,25 @@ async function refreshStuView(stuId) {
     toast('已重新整理','ok');
   } catch(e) {
     toast('重新整理失敗，請重試','err');
-    console.error('refreshStuView error:', e);
   }
 }
-function doLogout() { location.reload(); }
+
+// 防呆機制：優化登出，不修改線上點名紀錄，僅清除本地憑證
+function doLogout() { 
+  if (Object.keys(pendAtt).length > 0) {
+    if (!confirm('尚有未儲存的點名變更，確定要登出嗎？（未存檔的變更將會遺失）')) return;
+  }
+  localStorage.removeItem('jjvs_session');
+  location.reload(); 
+}
+
+// 防呆機制：關閉網頁前警告
+window.addEventListener('beforeunload', (e) => {
+  if (Object.keys(pendAtt).length > 0) {
+    e.preventDefault();
+    e.returnValue = '您有未儲存的點名變更，離開將會遺失。';
+  }
+});
 
 // ══════════════════════════════════════════
 // ENTER APP
@@ -781,7 +817,7 @@ function enterApp() {
 
 function enterStudentView(stu) {
   document.getElementById('stuUserName').textContent = stu.name;
-  _currentStuId = stu.id;   // 全域記錄，供 refreshStuView 使用
+  _currentStuId = stu.id;
   showScreen('studentScreen');
   loadStuView(stu);
   loadStuMsgs(stu.id);
@@ -797,7 +833,6 @@ function switchTab(t) {
     if (el) el.style.display = 'none';
   });
   document.getElementById('tab-'+t).classList.add('on');
-  // map tab id to content div
   const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers'};
   document.getElementById(map[t]).style.display = '';
   if (t==='att') renderGrid();
@@ -805,7 +840,6 @@ function switchTab(t) {
   if (t==='teachers') renderTeachers();
   if (t==='inbox') renderInbox();
   if (t==='exitlog') loadExitLog();
-  if (t==='apply') {} // already live
 }
 
 // ══════════════════════════════════════════
@@ -837,37 +871,40 @@ function switchClsR(cls) { curCls = cls; renderRpt(); }
 async function renderGrid() {
   if (!curCls) return;
   const grid = document.getElementById('stuGrid');
-  grid.innerHTML = '<div style="padding:20px"><div class="spin"></div></div>';
+  grid.innerHTML = '<div style="padding:20px;text-align:center"><div class="spin"></div></div>';
   const stus = byCls(curCls);
   const td = today();
-  const res = await Promise.all(stus.map(s=>dbGet(`students/${s.id}`)));
-  const dm = {}; stus.forEach((s,i)=>dm[s.id]=res[i]||{});
-  grid.innerHTML = '';
-  stus.forEach(s => {
-    const d = dm[s.id];
-    const att = pendAtt[s.id] || d.attendance?.[td] || '未';
-    const pts = d.points||0;
-    const medals = d.medals||0;
-    const stars = Math.min(pts,10);
-    const sel = batchSel.has(s.id);
-    const card = document.createElement('div');
-    card.className = `scard s${att}${sel?' sel':''}`;
-    card.id = `sc-${s.id}`;
-    card.innerHTML = `
-      <div class="sc-top">
-        <div class="sc-num">${s.id}</div>
-        <div class="sbadge ${att}" onclick="cycleAtt(event,'${s.id}')">${att}</div>
-      </div>
-      <div class="sc-name" onclick="handleCardClick(event,'${s.id}')"><span style='font-size:11px;color:var(--tx3);margin-right:3px'>${s.id.split('-')[1]||''}</span>${s.name}</div>
-      <div class="sc-pts">
-        <div class="sc-stars">${'★'.repeat(stars)}${'☆'.repeat(10-stars)}</div>
-        <div class="sc-medals">${medals>0?'🎖️×'+medals:''}</div>
-      </div>
-      <div class="sc-hint">${batchMode?'👆點擊勾選':'👆名字查詳情'}</div>`;
-    // restore sel visual
-    if (sel) card.classList.add('sel');
-    grid.appendChild(card);
-  });
+  try {
+    const res = await Promise.all(stus.map(s=>dbGet(`students/${s.id}`)));
+    const dm = {}; stus.forEach((s,i)=>dm[s.id]=res[i]||{});
+    grid.innerHTML = '';
+    stus.forEach(s => {
+      const d = dm[s.id];
+      const att = pendAtt[s.id] || d.attendance?.[td] || '未';
+      const pts = d.points||0;
+      const medals = d.medals||0;
+      const stars = Math.min(pts,10);
+      const sel = batchSel.has(s.id);
+      const card = document.createElement('div');
+      card.className = `scard s${att}${sel?' sel':''}`;
+      card.id = `sc-${s.id}`;
+      card.innerHTML = `
+        <div class="sc-top">
+          <div class="sc-num">${s.id}</div>
+          <div class="sbadge ${att}" onclick="cycleAtt(event,'${s.id}')">${att}</div>
+        </div>
+        <div class="sc-name" onclick="handleCardClick(event,'${s.id}')"><span style='font-size:11px;color:var(--tx3);margin-right:3px'>${s.id.split('-')[1]||''}</span>${s.name}</div>
+        <div class="sc-pts">
+          <div class="sc-stars">${'★'.repeat(stars)}${'☆'.repeat(10-stars)}</div>
+          <div class="sc-medals">${medals>0?'🎖️×'+medals:''}</div>
+        </div>
+        <div class="sc-hint">${batchMode?'👆點擊勾選':'👆名字查詳情'}</div>`;
+      if (sel) card.classList.add('sel');
+      grid.appendChild(card);
+    });
+  } catch(e) {
+    grid.innerHTML = '<div class="empty">數據載入失敗</div>';
+  }
 }
 
 function handleCardClick(e, id) {
@@ -901,7 +938,6 @@ async function autoDeductLate(id) {
     points:pts,
     [`log/${lk}`]:{time:now(),action:'遲到自動扣點',reason:'遲到扣1點',teacher:me.name,delta:-1}
   });
-  // 發送記點通知給學生
   await sendNotifToStudent(id, stu?.name||id, '遲到自動扣1點', 'notice');
   toast(`${byId(id)?.name} 遲到，自動扣1點`);
 }
@@ -918,7 +954,6 @@ async function saveAtt() {
   }
   if (!count) { toast('無變更需儲存'); return; }
   await db.ref('/').update(upd);
-  // 清除已儲存班級的 pendAtt
   byCls(curCls).forEach(s=>{ delete pendAtt[s.id]; });
   toast(`已儲存 ${count} 筆點名記錄`,'ok');
   renderGrid();
@@ -990,7 +1025,6 @@ async function batchPts(delta) {
         const lk = Date.now()+'_'+id;
         upd[`${ROOT}/students/${id}/points`] = pts;
         upd[`${ROOT}/students/${id}/log/${lk}`] = {time:now(),action:delta>0?'批次加點':'批次扣點',reason,teacher:me.name,delta};
-        // 發通知
         const stu = byId(id);
         if (stu) upd[`${ROOT}/stuMsgs/${id}/${lk}`] = {from:me.name,content:`${delta>0?'獲得':'扣除'}1點 — ${reason}`,type:'notice',time:now(),read:false};
       }
@@ -1059,11 +1093,10 @@ async function openDetail(stu) {
   document.getElementById('dpName').textContent = stu.name;
   document.getElementById('dpCls').textContent = stu.cls+' · '+stu.id;
   document.getElementById('dpPw').textContent = d.password||'0000';
-  // 今日狀態
   const att = d.attendance?.[td]||'未';
   const attColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[att]||'var(--tx2)';
   document.getElementById('dpStatus').innerHTML = `<span style="color:${attColor}">${att}</span>`;
-  // 出勤歷史
+  
   const attH = d.attendance||{};
   const days = Object.keys(attH).sort().slice(-21);
   const sum = {出:0,遲:0,缺:0,假:0};
@@ -1080,7 +1113,7 @@ async function openDetail(stu) {
       const sd=day.replace(/^\d+\//,'').replace('/','/');
       return `<div class="att-day s${v}"><div class="dl">${sd}</div><div class="dv">${v}</div></div>`;
     }).join('')}</div>`;
-  // 點數
+    
   const pts = d.points||0;
   document.getElementById('dpPtsNum').textContent = pts;
   document.getElementById('redeemBtn').disabled = pts<5;
@@ -1092,16 +1125,15 @@ async function openDetail(stu) {
     c.textContent=i<pts?'⭐':'';
     pg.appendChild(c);
   }
-  // 金牌
+  
   const medals = d.medals||0;
   document.getElementById('dpMedalsN').textContent = medals;
   const mr = document.getElementById('dpMedals');
   mr.innerHTML = medals>0
     ? Array(Math.min(medals,12)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>12?`<span style="color:var(--gold);font-size:18px;align-self:center">+${medals-12}</span>`:'')
     : '<span style="color:var(--tx3);font-size:13px;font-style:italic">尚無金牌</span>';
-  // 任務
+    
   renderTasks(d.tasks||{});
-  // 日誌
   renderLog(d.log||{});
   document.getElementById('detailPanel').classList.add('open');
 }
@@ -1217,7 +1249,6 @@ function openAddCopy() {
       if(!name||!total||total<1){toast('請填寫完整','err');return false}
       const k=Date.now()+'';
       await dbUpd(`students/${curStu.id}`,{[`tasks/${k}`]:{name:'📝罰抄：'+name,total,done:0,type:'copy'}});
-      // 自動發通知
       await sendNotifToStudent(curStu.id,curStu.name,`新增罰抄任務：${name}（共${total}行）`,'punishment');
       toast('罰抄任務已新增'); openDetail(curStu); return true;
     }},{label:'取消',fn:()=>true}]);
@@ -1315,9 +1346,6 @@ async function resetAllDlg() {
 }
 
 // ══════════════════════════════════════════
-// EXIT APPLY
-// ══════════════════════════════════════════
-// ══════════════════════════════════════════
 // EXIT LOG（所有老師可查）
 // ══════════════════════════════════════════
 let _allExitData = {};
@@ -1412,7 +1440,6 @@ async function approveExit(k, name) {
   const stu = byName(name);
   if (stu) {
     const lk = Date.now()+'';
-    // 寫入學生日誌
     await dbUpd(`students/${stu.id}`,{
       [`log/${lk}`]:{time:t, action:'第八節外出核可', reason:applyData?.reason||'', teacher:me.name, delta:0}
     });
@@ -1495,7 +1522,6 @@ async function sendNotifToStudent(stuId, stuName, content, type='notice') {
 }
 
 function startMsgListener() {
-  // 監聽老師端發出的訊息未讀數
   ref('messages').on('value', snap => {
     renderInbox(snap.val()||{});
   });
@@ -1591,7 +1617,6 @@ function openSendMsg() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生端訊息（簡潔可靠版） ──
 let _currentStuId = null;
 
 async function loadStuMsgs(stuId) {
@@ -1603,20 +1628,14 @@ async function _renderStuMsgs(stuId) {
   const data = (await dbGet(`stuMsgs/${stuId}`))||{};
   const all = Object.entries(data).sort((a,b)=>b[0].localeCompare(a[0]));
   const unread = all.filter(([,m])=>!m.read);
-
-  // 更新紅點
   const dot = document.getElementById('stuNotifDot');
   if (dot) dot.classList.toggle('on', unread.length>0);
-
-  // 更新 banner 內容
   const list = document.getElementById('stuBannerList');
   if (!list) return;
-
   if (all.length === 0) {
     list.innerHTML = '<div style="color:var(--tx3);font-size:13px;padding:8px 0">目前無任何訊息</div>';
     return;
   }
-
   const rows = all.slice(0,30).map(([k,m]) => {
     const isRead = m.read === true;
     const opacity = isRead ? '0.6' : '1';
@@ -1659,8 +1678,6 @@ async function markRead(stuId, k) {
   }
 }
 
-
-// ── 學生自己兌換金牌 ──
 async function stuRedeemMedal(stuId, pts) {
   if (pts < 5) { toast('點數不足5點','err'); return; }
   openDlg('🎖️ 兌換金牌',
@@ -1677,7 +1694,6 @@ async function stuRedeemMedal(stuId, pts) {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生修改密碼 ──
 function stuChangePw(stuId) {
   openDlg('🔑 修改密碼',
     `<div class="dlg-label">目前密碼</div><input class="dlg-input" type="password" id="cpOld" placeholder="目前密碼">
@@ -1700,10 +1716,9 @@ function stuChangePw(stuId) {
 // ══════════════════════════════════════════
 // STUDENT VIEW (self)
 // ══════════════════════════════════════════
-let _stuViewListener = null;  // Firebase 即時監聽器
+let _stuViewListener = null;
 
 async function loadStuView(stu) {
-  // 設定即時監聽（點名更新後自動重新渲染）
   if (_stuViewListener) {
     ref(`students/${_stuViewListener}`).off('value');
   }
@@ -1711,7 +1726,6 @@ async function loadStuView(stu) {
   ref(`students/${stu.id}`).on('value', snap => {
     _renderStuView(stu, snap.val()||{});
   });
-  // 監聽外出申請
   listenMyApprovalStu(stu.name);
 }
 
@@ -1726,7 +1740,6 @@ function _renderStuView(stu, d) {
   const attColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[att]||'var(--tx2)';
   const taskEntries = Object.entries(tasks);
 
-  // 任務 HTML
   const tasksHtml = taskEntries.length === 0
     ? '<div style="color:var(--tx3);font-size:13px;padding:6px 0">目前無任務 ✓</div>'
     : taskEntries.map(([k,t])=>{
@@ -1748,7 +1761,6 @@ function _renderStuView(stu, d) {
         </div>`;
       }).join('');
 
-  // 日誌 HTML
   const logHtml = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,10).map(([,e])=>`
     <div class="log-item ${e.delta>0?'add':e.delta<0?'sub':''}">
       <div class="log-t">${e.time||''}</div>
@@ -1757,18 +1769,13 @@ function _renderStuView(stu, d) {
 
   el.innerHTML = `
     <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:18px;padding:24px;box-shadow:0 0 20px rgba(212,175,55,.1)">
-
-      <!-- 頭部：名字 + 今日出勤 -->
       <div style="text-align:center;margin-bottom:16px">
         <div style="font-size:12px;color:var(--tx2)">${stu.cls} · ${stu.id}</div>
         <div style="font-size:32px;font-weight:bold;color:var(--gold);margin:6px 0">${stu.name}</div>
         <div style="font-size:15px;color:var(--tx2)">今日出勤：<span style="color:${attColor};font-weight:bold;font-size:18px">${att}</span></div>
         <button class="btn" onclick="refreshStuView()" style="margin-top:8px;font-size:11px;padding:3px 12px">🔄 重新整理</button>
       </div>
-
       <hr class="sep">
-
-      <!-- 集點卡 -->
       <div class="dp-sec-t">⭐ 點數集點卡</div>
       <div class="pts-card" style="margin-bottom:10px">
         <div class="pts-grid">${Array(10).fill(0).map((_,i)=>`<div class="pc ${i<pts?'on':'off'}">${i<pts?'⭐':''}</div>`).join('')}</div>
@@ -1777,31 +1784,19 @@ function _renderStuView(stu, d) {
       <button class="btn g" onclick="stuRedeemMedal('${stu.id}',${pts})" ${pts<5?'disabled style="opacity:.5;cursor:not-allowed"':''} style="width:100%;padding:10px;font-size:14px;margin-bottom:4px">
         🎖️ ${pts>=5?'兌換金牌（扣5點）':'點數不足（需滿5點）'}
       </button>
-
       <hr class="sep">
-
-      <!-- 金牌 -->
       <div class="dp-sec-t">🎖️ 金牌庫存</div>
       <div class="medals-row" style="margin-bottom:6px">${medals>0
         ? Array(Math.min(medals,10)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>10?`<span style="color:var(--gold);font-size:16px;align-self:center">+${medals-10}</span>`:'')
         : '<span style="color:var(--tx3);font-size:13px">尚無金牌</span>'}</div>
       <div style="font-size:13px;color:var(--tx2);margin-bottom:4px">共 <b style="color:var(--gold)">${medals}</b> 枚</div>
-
       <hr class="sep">
-
-      <!-- 待完成任務（罰抄） -->
       <div class="dp-sec-t">📝 待完成任務（罰抄）</div>
       ${tasksHtml}
-
       <hr class="sep">
-
-      <!-- 修改密碼 -->
       <div class="dp-sec-t" style="margin-bottom:8px">🔑 帳號設定</div>
       <button class="btn" onclick="stuChangePw('${stu.id}')" style="width:100%;padding:9px;font-size:13px">🔑 修改我的密碼</button>
-
       <hr class="sep">
-
-      <!-- 最近異動記錄 -->
       <div class="dp-sec-t">📜 最近記錄</div>
       ${logHtml}
     </div>`;
@@ -1818,10 +1813,8 @@ function listenMyApprovalStu(name) {
     const area = document.getElementById('stuPassArea');
     if (!area) return;
 
-    // 今日核可的通行證
     const approvedToday = myApps.find(([,a])=>a.status==='approved' && (a.approvedTime||'').startsWith(td.replace(/\//g,'/')));
 
-    // 歷史申請記錄（最近10筆）
     const histHtml = myApps.slice(0,10).map(([,a])=>{
       const statusColor = {approved:'var(--green)',rejected:'var(--red)',pending:'var(--yellow)'}[a.status]||'var(--tx2)';
       const statusLabel = {approved:'✅ 已核可',rejected:'✕ 已拒絕',pending:'⏳ 待審核'}[a.status]||a.status;
@@ -1902,7 +1895,6 @@ async function loadDeductLog() {
   const el = document.getElementById('deductLog');
   if (!el) return;
   el.innerHTML = '<div class="spin"></div>';
-  // 讀取所有學生log中 delta<0 的記錄
   const stus = me.classes.flatMap(c=>byCls(c));
   const all = [];
   for (const s of stus) {
@@ -2012,10 +2004,10 @@ function openDlg(title, bodyHtml, actions) {
 function closeDlg() { document.getElementById('dlgOverlay').classList.remove('on'); }
 
 // ══════════════════════════════════════════
-// INIT
+// INIT (系統初始化綁定)
 // ══════════════════════════════════════════
 window.addEventListener('load', () => {
-  showScreen('loginScreen');
+  checkAuthSession(); // 網頁載入時啟動自動登入檢查
   db.ref('.info/connected').on('value', s=>{
     console.log(s.val()?'✅ Firebase 已連線':'⚠️ Firebase 離線');
   });
