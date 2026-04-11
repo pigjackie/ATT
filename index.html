@@ -309,7 +309,7 @@ select:focus{border-color:var(--gold)}
         <button class="btn g" onclick="saveAtt()">💾 儲存點名</button>
         <button class="btn" onclick="setAllAtt('出')">全部出席</button>
         <button class="btn" id="batchBtn" onclick="toggleBatch()">☑️ 批次加點</button>
-        <button class="btn d" onclick="resetClsDlg()" style="font-size:11px">⚠️ 本班重置</button>
+        <button class="btn d" onclick="resetClsDlg()" style="font-size:10px;opacity:.6;margin-left:auto" title="重置本班所有資料（危險）">🗑️ 本班重置</button>
         <div class="legend">
           <div class="litem"><div class="ldot" style="background:var(--green)"></div>出席</div>
           <div class="litem"><div class="ldot" style="background:var(--yellow)"></div>遲到</div>
@@ -382,7 +382,7 @@ select:focus{border-color:var(--gold)}
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap">
         <button class="btn g" onclick="exportXlsx()">📥 Excel</button>
         <button class="btn" onclick="exportPdf()">📄 PDF</button>
-        <button class="btn d" onclick="resetAllDlg()" style="margin-left:auto">⚠️ 全校重置</button>
+        <button class="btn d" onclick="resetAllDlg()" style="margin-left:auto;opacity:.6;font-size:11px" title="重置全校資料（危險）">🗑️ 全校重置</button>
       </div>
       <div class="clsbtns" id="clsBtnsR"></div>
       <div class="sgrid" id="rptGrid"></div>
@@ -480,12 +480,19 @@ select:focus{border-color:var(--gold)}
     <div id="dpLog" style="max-height:260px;overflow-y:auto"></div>
   </div>
   <div class="dp-sec">
-    <div class="dp-sec-t">⚠️ 重置</div>
-    <div class="row" style="flex-wrap:wrap;gap:6px">
-      <button class="btn d" onclick="resetPts()">重置點數</button>
-      <button class="btn d" onclick="resetMedals()">重置金牌</button>
-      <button class="btn d" onclick="resetPw()">重置密碼(→0000)</button>
-      <button class="btn d" onclick="resetAll()" style="background:rgba(231,76,60,.15)">🗑️ 清除全部</button>
+    <div class="dp-sec-t" style="cursor:pointer;user-select:none" onclick="toggleResetZone()" id="resetZoneTitle">
+      ⚠️ 重置區域 <span id="resetZoneArrow" style="font-size:10px;color:var(--tx3)">▶ 點擊展開</span>
+    </div>
+    <div id="resetZone" style="display:none">
+      <div style="font-size:12px;color:var(--red);margin-bottom:8px;padding:6px 8px;background:rgba(231,76,60,.08);border-radius:6px">
+        ⚠️ 以下操作不可復原，請謹慎使用
+      </div>
+      <div class="row" style="flex-wrap:wrap;gap:6px">
+        <button class="btn d" onclick="resetPts()">重置點數</button>
+        <button class="btn d" onclick="resetMedals()">重置金牌</button>
+        <button class="btn d" onclick="resetPw()">重置密碼(→0000)</button>
+        <button class="btn d" onclick="resetAll()" style="background:rgba(231,76,60,.15)">🗑️ 清除全部</button>
+      </div>
     </div>
   </div>
 </div>
@@ -816,6 +823,15 @@ async function refreshStuView(stuId) {
     console.error('refreshStuView error:', e);
   }
 }
+function toggleResetZone() {
+  const zone = document.getElementById('resetZone');
+  const arrow = document.getElementById('resetZoneArrow');
+  if (!zone) return;
+  const open = zone.style.display === 'none' || zone.style.display === '';
+  zone.style.display = open ? 'block' : 'none';
+  if (arrow) arrow.textContent = open ? '▼ 點擊收起' : '▶ 點擊展開';
+}
+
 function doLogout() {
   if (me?.role !== 'student' && Object.keys(pendAtt).length > 0) {
     if (!confirm('尚有未儲存的點名變更，確定要登出嗎？')) return;
@@ -938,17 +954,80 @@ function handleCardClick(e, id) {
 
 function cycleAtt(e, id) {
   e.stopPropagation();
+  // 顯示快速選單，不再循環切換（避免誤觸遲到自動扣點）
+  showAttMenu(e, id);
+}
+
+function showAttMenu(e, id) {
+  // 移除已有選單
+  const old = document.getElementById('attMenu');
+  if (old) old.remove();
+
   const cur = pendAtt[id] || '未';
-  const next = STATUS[(STATUS.indexOf(cur)+1)%STATUS.length];
-  pendAtt[id] = next;
+  const options = [
+    {v:'出', label:'✅ 出席', color:'var(--green)'},
+    {v:'遲', label:'⏱ 遲到', color:'var(--yellow)'},
+    {v:'缺', label:'✗ 缺席', color:'var(--red)'},
+    {v:'假', label:'📋 請假', color:'var(--blue)'},
+  ];
+
+  const menu = document.createElement('div');
+  menu.id = 'attMenu';
+  menu.style.cssText = `position:fixed;z-index:999;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.6);overflow:hidden;min-width:120px`;
+
+  options.forEach(opt => {
+    const btn = document.createElement('button');
+    btn.style.cssText = `display:block;width:100%;padding:10px 16px;background:${cur===opt.v?'rgba(212,175,55,.15)':'transparent'};border:none;border-bottom:1px solid var(--bdr);color:${opt.color};cursor:pointer;font-size:14px;font-family:inherit;text-align:left;transition:.15s`;
+    btn.innerHTML = `${opt.label}${cur===opt.v?' <span style="color:var(--gold)">◀ 目前</span>':''}`;
+    btn.onmouseenter = () => btn.style.background = 'rgba(212,175,55,.08)';
+    btn.onmouseleave = () => btn.style.background = cur===opt.v?'rgba(212,175,55,.15)':'transparent';
+    btn.onclick = (ev) => {
+      ev.stopPropagation();
+      setAtt(id, opt.v);
+      menu.remove();
+    };
+    menu.appendChild(btn);
+  });
+
+  // 定位選單
+  const rect = e.target.getBoundingClientRect();
+  const menuW = 140, menuH = 180;
+  let top = rect.bottom + 4;
+  let left = rect.left;
+  if (left + menuW > window.innerWidth) left = window.innerWidth - menuW - 8;
+  if (top + menuH > window.innerHeight) top = rect.top - menuH - 4;
+  menu.style.top = top + 'px';
+  menu.style.left = left + 'px';
+
+  document.body.appendChild(menu);
+
+  // 點其他地方關閉
+  setTimeout(() => {
+    document.addEventListener('click', function closer() {
+      menu.remove();
+      document.removeEventListener('click', closer);
+    }, {once:true});
+  }, 50);
+}
+
+function setAtt(id, att) {
+  pendAtt[id] = att;
   const card = document.getElementById(`sc-${id}`);
   if (card) {
-    card.className = `scard s${next}${batchSel.has(id)?' sel':''}`;
+    card.className = `scard s${att}${batchSel.has(id)?' sel':''}`;
     const badge = card.querySelector('.sbadge');
-    badge.className = `sbadge ${next}`;
-    badge.textContent = next;
+    if (badge) { badge.className=`sbadge ${att}`; badge.textContent=att; }
   }
-  if (next==='遲') autoDeductLate(id);
+  // 遲到：詢問是否扣點，不自動扣
+  if (att==='遲') {
+    const stu = byId(id);
+    const stuName = stu?.name || id;
+    openDlg(`⏱ ${stuName} 遲到`,
+      `<div class="dlg-msg">是否同時扣除 1 點？</div>`,
+      [{label:'是，扣1點',cls:'ok',fn:async()=>{ await autoDeductLate(id); return true; }},
+       {label:'否，只記遲到',fn:()=>true}]
+    );
+  }
 }
 
 async function autoDeductLate(id) {
