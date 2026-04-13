@@ -3,7 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>莊敬音樂科教務管理系統</title>
+<title>莊敬音樂科 · 綜合管理系統</title>
+<!-- PWA：讓這個網頁可以加到手機主畫面像 APP 一樣使用 -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="莊敬系統">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0A0A0C">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230A0A0C' rx='20'/><text y='.9em' font-size='72' x='50%' text-anchor='middle'>🎼</text></svg>">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -265,7 +272,7 @@ select:focus{border-color:var(--gold)}
   <div class="lbox">
     <div class="llogo">🎼</div>
     <div class="ltitle">莊敬高職音樂科</div>
-    <div class="lsub">教務管理系統 · Royal Edition</div>
+    <div class="lsub">教務 · 琴房預約 · 綜合管理系統</div>
     <div class="ltabs">
       <button class="ltab on" onclick="switchLTab('teacher')">教師登入</button>
       <button class="ltab" onclick="switchLTab('student')">學生登入</button>
@@ -290,6 +297,7 @@ select:focus{border-color:var(--gold)}
     <div class="topbar-title">莊敬音樂科教務系統</div>
     <div class="topbar-user">身份：<b id="curUser">—</b></div>
     <button class="btn" onclick="teacherChangePw()" style="font-size:11px">🔑 改密碼</button>
+    <button class="btn" onclick="switchToModule('piano')" style="font-size:11px;border-color:rgba(201,168,76,.4);color:#c9a84c" title="切換到琴房預約">🎹 琴房預約</button>
     <button class="notif-btn" onclick="switchTab('inbox')" title="訊息中心">💬<span class="notif-dot" id="teacherNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
@@ -707,8 +715,10 @@ async function doLogin() {
       for (const k of Object.keys(teachers)) {
         const t = teachers[k];
         if (t.name===name && t.pass===pass) {
-          me = {name, role:'teacher', classes:t.classes||[]};
-          enterApp(); return;
+          me = {name, role: t.role==='piano_only'?'piano_only':'teacher', classes:t.classes||[]};
+          saveAuthSession(me);
+          if (me.role==='piano_only') { enterPianoOnly(); } else { enterApp(); }
+          return;
         }
       }
     }
@@ -793,6 +803,8 @@ async function checkAuthSession() {
           localStorage.removeItem('jjvs_session');
           showScreen('loginScreen');
         }
+      } else if (me.role === 'piano_only') {
+        enterPianoOnly();
       } else {
         enterApp();
       }
@@ -844,6 +856,7 @@ function doLogout() {
 // ENTER APP
 // ══════════════════════════════════════════
 function enterApp() {
+  if (me.role === 'piano_only') { enterPianoOnly(); return; }
   document.getElementById('curUser').textContent = me.name;
   document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
   showScreen('appScreen');
@@ -2022,7 +2035,7 @@ async function renderTeachers() {
   Object.entries(teachers).forEach(([k,t])=>{
     const d=document.createElement('div');
     d.className='titem';
-    d.innerHTML=`<div><div class="ti-name">${t.name}</div><div class="ti-cls">班級：${(t.classes||[]).join('、')||'無'}</div><div class="ti-pw">密碼：${t.pass}</div></div><button class="btn d" onclick="delTeacher('${k}','${t.name}')">刪除</button>`;
+    d.innerHTML=`<div><div class="ti-name">${t.name} ${t.role==='piano_only'?'<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(201,168,76,.15);color:#c9a84c">專任老師</span>':''}</div><div class="ti-cls">${t.role==='piano_only'?'僅限琴房預約':'班級：'+(t.classes||[]).join('、')||'無'}</div><div class="ti-pw">密碼：${t.pass}</div></div><button class="btn d" onclick="delTeacher('${k}','${t.name}')">刪除</button>`;
     c.appendChild(d);
   });
 }
@@ -2031,13 +2044,19 @@ function openAddTeacher() {
   openDlg('⚙️ 新增教師帳號',
     `<div class="dlg-label">姓名（即帳號）</div><input class="dlg-input" type="text" id="tN" placeholder="教師姓名">
      <div class="dlg-label">密碼</div><input class="dlg-input" type="password" id="tP" placeholder="密碼">
-     <div class="dlg-label">管轄班級</div>${CLASSES.map(c=>`<label style="display:block;margin-bottom:6px;font-size:14px;cursor:pointer"><input type="checkbox" value="${c}" style="margin-right:6px"> ${c}</label>`).join('')}`,
+     <div class="dlg-label">角色類型</div>
+     <select class="dlg-input" id="tRole" style="margin-bottom:10px">
+       <option value="teacher">教師（可使用教務+琴房）</option>
+       <option value="piano_only">專任老師（僅限琴房預約）</option>
+     </select>
+     <div id="tClassWrap"><div class="dlg-label">管轄班級（教師才需填）</div>${CLASSES.map(c=>`<label style="display:block;margin-bottom:6px;font-size:14px;cursor:pointer"><input type="checkbox" value="${c}" style="margin-right:6px"> ${c}</label>`).join('')}</div>`,
     [{label:'新增',cls:'ok',fn:async()=>{
       const name=document.getElementById('tN').value.trim();
       const pass=document.getElementById('tP').value.trim();
-      const classes=[...document.querySelectorAll('#dlgBody input[type=checkbox]:checked')].map(c=>c.value);
+      const roleVal=document.getElementById('tRole')?.value||'teacher';
+      const classes=roleVal==='piano_only'?[]:[...document.querySelectorAll('#dlgBody input[type=checkbox]:checked')].map(c=>c.value);
       if(!name||!pass){toast('請填寫完整','err');return false}
-      await dbSet(`teachers/${Date.now()}`,{name,pass,classes});
+      await dbSet(`teachers/${Date.now()}`,{name,pass,classes,role:roleVal});
       toast('教師帳號已新增','ok'); renderTeachers(); return true;
     }},{label:'取消',fn:()=>true}]);
 }
@@ -2186,5 +2205,572 @@ window.addEventListener('load', () => {
   }
 });
 </script>
+
+<!-- ══════════════════════════════════════════ -->
+<!-- 🎹 琴房預約模組                            -->
+<!-- ══════════════════════════════════════════ -->
+
+<!-- 琴房頁面（獨立 screen） -->
+<div id="pianoScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">🎹</div>
+    <div class="topbar-title">莊敬音樂科 · 琴房預約</div>
+    <div class="topbar-user">身份：<b id="pianoUserName">—</b> <span id="pianoRoleTag" style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(201,168,76,.2);color:#c9a84c;margin-left:4px"></span></div>
+    <button class="btn" id="pianoBackBtn" onclick="switchToModule('edu')" style="font-size:11px" title="回教務系統">📋 教務系統</button>
+    <button class="btn" onclick="doLogout()" style="font-size:11px">登出</button>
+  </div>
+  <div style="flex:1;padding:14px;overflow-y:auto">
+    <!-- 規則公告 -->
+    <div id="pianoRulesBox" class="hidden" style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.22);border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px">
+      <span style="font-size:1rem;flex-shrink:0">📋</span>
+      <div>
+        <div style="font-size:.72rem;color:#c9a84c;font-weight:500;margin-bottom:4px">預約規則說明</div>
+        <div id="pianoRulesText" style="font-size:.78rem;color:var(--tx2);white-space:pre-wrap;line-height:1.7"></div>
+      </div>
+    </div>
+    <!-- 過濾列 -->
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 14px;margin-bottom:12px">
+      <span style="font-size:12px;color:var(--tx2)">日期</span>
+      <input type="date" id="pianoDate" style="background:var(--bg2);border:1px solid var(--bdr);color:var(--tx);padding:5px 10px;border-radius:6px;outline:none;font-family:inherit;font-size:13px">
+      <span id="pianoDayBadge" style="font-size:15px;color:#c9a84c;font-weight:bold;min-width:36px"></span>
+      <div style="display:flex;gap:4px">
+        <button class="btn g" id="pianoAM" style="font-size:11px;padding:5px 10px">☀ 上午</button>
+        <button class="btn" id="pianoPM" style="font-size:11px;padding:5px 10px">🌆 下午</button>
+      </div>
+      <div style="display:flex;gap:10px;margin-left:auto;flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:3px;background:#3d8ef0"></div>學生預約</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:3px;background:#a855f7"></div>教師預約</div>
+        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:2px;border:1.5px dashed rgba(201,168,76,.6)"></div>固定排課</div>
+      </div>
+    </div>
+    <!-- 琴房時程表 -->
+    <div style="border-radius:10px;border:1px solid var(--bdr);overflow:hidden;background:var(--bg1)">
+      <div style="overflow-x:auto">
+        <table id="pianoTable" style="border-collapse:separate;border-spacing:0;width:100%;min-width:540px">
+          <thead><tr id="pianoHeader"></tr></thead>
+          <tbody id="pianoBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <!-- 管理員區（僅 master 顯示） -->
+    <div id="pianoAdminZone" class="hidden" style="margin-top:16px">
+      <div style="font-size:11px;color:#c9a84c;letter-spacing:2px;border-bottom:1px solid var(--bdr);padding-bottom:5px;margin-bottom:12px">⚙️ 琴房管理員功能</div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">
+        <!-- 新增琴房 -->
+        <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px">
+          <div style="font-size:13px;color:#c9a84c;margin-bottom:10px;font-weight:bold">🎹 琴房管理</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <input id="pianoNewRoom" class="dlg-input" placeholder="琴房名稱（如：101-A）" style="flex:1;margin:0">
+            <button class="btn s" onclick="pianoAddRoom()" style="font-size:12px;padding:6px 12px">新增</button>
+          </div>
+          <div id="pianoRoomList" style="max-height:200px;overflow-y:auto"></div>
+        </div>
+        <!-- 封鎖/排課 -->
+        <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px">
+          <div style="font-size:13px;color:#c9a84c;margin-bottom:10px;font-weight:bold">📋 封鎖時段</div>
+          <div class="dlg-label" style="margin-bottom:4px">日期</div>
+          <input type="date" id="pianoLockDate" class="dlg-input" style="margin-bottom:8px">
+          <div class="dlg-label" style="margin-bottom:4px">琴房</div>
+          <select id="pianoLockRoom" class="dlg-input" style="margin-bottom:8px"></select>
+          <div class="dlg-label" style="margin-bottom:4px">時段</div>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <input id="pianoLockStart" class="dlg-input" placeholder="08:00" style="flex:1;margin:0">
+            <span style="align-self:center;color:var(--tx2)">~</span>
+            <input id="pianoLockEnd" class="dlg-input" placeholder="09:30" style="flex:1;margin:0">
+          </div>
+          <div class="dlg-label" style="margin-bottom:4px">說明</div>
+          <input id="pianoLockNote" class="dlg-input" placeholder="例：場地維護" style="margin-bottom:8px">
+          <button class="btn d" onclick="pianoAddLock()" style="width:100%;font-size:12px">🚫 封鎖此時段</button>
+        </div>
+        <!-- 成員管理 -->
+        <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px">
+          <div style="font-size:13px;color:#c9a84c;margin-bottom:10px;font-weight:bold">👥 琴房成員管理</div>
+          <div style="display:flex;gap:6px;margin-bottom:6px">
+            <input id="pianoNewUser" class="dlg-input" placeholder="姓名" style="flex:1;margin:0">
+            <select id="pianoNewRole" class="dlg-input" style="width:110px;margin:0">
+              <option value="student">學生</option>
+              <option value="teacher">教師</option>
+              <option value="piano_only">專任老師</option>
+            </select>
+          </div>
+          <button class="btn s" onclick="pianoAddUser()" style="width:100%;font-size:12px;margin-bottom:10px">新增成員</button>
+          <div id="pianoUserList" style="max-height:180px;overflow-y:auto"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 琴房預約 Dialog -->
+<div id="pianoBookDlg" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center">
+  <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:15px;padding:0;width:380px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:0 0 20px rgba(201,168,76,.15)">
+    <div style="padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:2">
+      <div style="font-size:16px;color:#c9a84c;font-weight:bold" id="pianoDlgTitle">申請預約</div>
+      <button onclick="closePianoDlg()" style="background:none;border:none;color:var(--tx2);font-size:20px;cursor:pointer">×</button>
+    </div>
+    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px" id="pianoDlgBody"></div>
+    <div style="padding:12px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg2)">
+      <button class="btn" onclick="closePianoDlg()" style="font-size:12px">取消</button>
+      <button class="btn g" id="pianoDlgConfirm" style="font-size:12px">確認預約</button>
+    </div>
+  </div>
+</div>
+
+<style>
+/* ══ 琴房額外樣式 ══ */
+#pianoScreen { background: var(--bg); }
+.piano-slot {
+  width:100%; height:100%; min-height:50px;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:11px; font-weight:500; border-radius:6px;
+  transition:.15s; overflow:hidden; padding:3px 4px;
+  text-align:center; position:relative; cursor:pointer;
+}
+.piano-free  { background:rgba(40,160,96,.07); border:1px solid rgba(40,160,96,.18); color:var(--tx2); }
+.piano-free:hover { background:rgba(40,160,96,.2); border-color:#40c878; color:#40c878; }
+.piano-stu   { background:linear-gradient(135deg,#1c6fd6,#1352a8); color:#fff; border:none; }
+.piano-tea   { background:linear-gradient(135deg,#8b3ec9,#6827a0); color:#fff; border:none; }
+.piano-fixed { background:rgba(201,168,76,.08); border:1.5px dashed rgba(201,168,76,.5); color:#c9a84c; }
+.piano-lock  { background:repeating-linear-gradient(45deg,#1c2029,#1c2029 8px,#161920 8px,#161920 16px); color:var(--tx2); border:1px solid var(--bdr); }
+.piano-past  { opacity:.3; pointer-events:none !important; cursor:default !important; }
+.piano-header-th { background:var(--bg2); color:var(--tx2); font-size:10px; font-weight:400; padding:8px 3px; border-bottom:1px solid var(--bdr); border-right:1px solid var(--bdr); text-align:center; }
+.piano-room-th { background:var(--bg2); position:sticky; left:0; z-index:100; min-width:80px; width:80px; font-size:12px; color:#c9a84c; border-right:2px solid #c9a84c !important; text-align:center; padding:0 4px; vertical-align:middle; border-bottom:1px solid var(--bdr); }
+.piano-td { border-bottom:1px solid var(--bdr); border-right:1px solid var(--bdr); height:52px; padding:2px; }
+.piano-admin-del { display:none; position:absolute; top:2px; right:2px; background:#d94040; color:#fff; border:none; border-radius:0 5px 0 5px; width:16px; height:16px; font-size:10px; cursor:pointer; z-index:20; line-height:16px; text-align:center; padding:0; font-weight:700; }
+</style>
+
+<script>
+// ══════════════════════════════════════════
+// 琴房預約模組（Piano Module）
+// Firebase 路徑：jjvs_piano/
+// ══════════════════════════════════════════
+const PIANO_ROOT = "jjvs_piano";
+const PIANO_DB = () => db.ref(PIANO_ROOT);
+const pianoRef = p => db.ref(`${PIANO_ROOT}/${p}`);
+const pianoGet = p => pianoRef(p).once('value').then(s=>s.val());
+const pianoSet = (p,v) => pianoRef(p).set(v);
+const pianoUpd = (p,v) => pianoRef(p).update(v);
+
+// 預設琴房清單
+const DEFAULT_PIANO_ROOMS = [
+  '101單間','101A','101B','101C','101D','101E',
+  '102單間','102A','102B','102C','102D','102E',
+  '104單間','104A','104B','104C','104D',
+  '105擊樂教室','B1樂團教室','B1排練教室',
+  '209展演廳','210A錄音室','210B混音室',
+  '211A','211B','211C','212A','212B','212C'
+];
+
+const PIANO_DAYS = ['日','一','二','三','四','五','六'];
+const PIANO_SLOTS = [];
+for(let h=8;h<=21;h++){ PIANO_SLOTS.push(pad2(h)+':00'); PIANO_SLOTS.push(pad2(h)+':30'); }
+function pad2(n){ return String(n).padStart(2,'0'); }
+function pianoToday(){ const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function pianoDateStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+
+// 狀態
+let pianoRooms = DEFAULT_PIANO_ROOMS;
+let pianoData  = {};
+let pianoUsers = {};
+let pianoView  = 'am';
+let pianoPending = {};
+
+// 最大預約天數
+function pianoMaxDays() {
+  if (me.role === 'master') return 30;
+  if (me.role === 'teacher' || me.role === 'piano_only') return 14;
+  return 2;
+}
+function pianoMaxDate() {
+  const d = new Date(); d.setDate(d.getDate()+pianoMaxDays());
+  return pianoDateStr(d);
+}
+function getRoleLabel(role) {
+  return {master:'管理員',teacher:'教師',piano_only:'專任老師',student:'學生'}[role]||'學生';
+}
+
+// ── 初始化 ──
+async function initPianoModule() {
+  // 從 Firebase 載入
+  const r = await pianoGet('rooms');
+  if (r && Array.isArray(r)) pianoRooms = r;
+  const d = await pianoGet('sysData'); if (d) pianoData = d;
+  const u = await pianoGet('users');   if (u) pianoUsers = u;
+
+  // 確保 master 帳號在琴房系統裡
+  if (!pianoUsers[MASTER.name]) {
+    pianoUsers[MASTER.name] = {pwd: MASTER.pass, role: 'master'};
+  }
+  // 同步目前登入用戶到琴房系統
+  if (me && !pianoUsers[me.name]) {
+    pianoUsers[me.name] = {role: me.role};
+  }
+}
+
+// ── 切換模組 ──
+async function switchToModule(mod) {
+  if (mod === 'piano') {
+    if (!me) { toast('請先登入','err'); return; }
+    await initPianoModule();
+    document.getElementById('pianoUserName').textContent = me.name;
+    document.getElementById('pianoRoleTag').textContent = getRoleLabel(me.role);
+    // piano_only 不顯示返回教務按鈕
+    document.getElementById('pianoBackBtn').style.display =
+      me.role === 'piano_only' ? 'none' : '';
+    // master 才顯示管理區
+    document.getElementById('pianoAdminZone').classList.toggle('hidden', me.role !== 'master');
+    showScreen('pianoScreen');
+    const today = pianoToday();
+    document.getElementById('pianoDate').value = today;
+    document.getElementById('pianoDate').max = pianoMaxDate();
+    updatePianoBoard();
+    if (me.role === 'master') refreshPianoAdminUI();
+  } else {
+    // 回教務系統
+    showScreen('appScreen');
+  }
+}
+
+// 專任老師直接進琴房
+function enterPianoOnly() {
+  showScreen('loginScreen'); // 先隱藏
+  switchToModule('piano');
+}
+
+// ── 時程表 ──
+function pianoGetVis() {
+  return pianoView === 'am'
+    ? PIANO_SLOTS.filter(t=>parseInt(t)<12)
+    : PIANO_SLOTS.filter(t=>parseInt(t)>=12);
+}
+
+function updatePianoBoard() {
+  const ds = document.getElementById('pianoDate').value; if(!ds) return;
+  const dow = new Date(ds+'T00:00:00').getDay();
+  document.getElementById('pianoDayBadge').textContent = '週'+PIANO_DAYS[dow];
+  const vis = pianoGetVis();
+  const nowTime = new Date();
+  const todayStr = pianoToday();
+  const maxD = pianoMaxDate();
+  const dowKey = String(dow);
+
+  // Header
+  const hdr = document.getElementById('pianoHeader');
+  hdr.innerHTML = '<th class="piano-room-th">琴房</th>' +
+    vis.map(t=>`<th class="piano-header-th">${t}</th>`).join('');
+
+  // Body
+  const body = document.getElementById('pianoBody');
+  body.innerHTML = '';
+  pianoRooms.forEach(room => {
+    const tr = document.createElement('tr');
+    const rtd = document.createElement('td');
+    rtd.className = 'piano-room-th';
+    rtd.style.borderBottom = '1px solid var(--bdr)';
+    rtd.textContent = room;
+    tr.appendChild(rtd);
+
+    vis.forEach(time => {
+      const td = document.createElement('td');
+      td.className = 'piano-td';
+      const [hh,mm] = time.split(':').map(Number);
+      const isPast = ds===todayStr && (hh<nowTime.getHours()||(hh===nowTime.getHours()&&mm<=nowTime.getMinutes()));
+      const outRange = ds<todayStr || ds>maxD;
+
+      const bookD  = pianoData[ds]?.[room]?.[time];
+      const fixedD = pianoData[dowKey]?.[room]?.[time];
+
+      const slot = document.createElement('div');
+      slot.className = 'piano-slot';
+
+      if (bookD) {
+        if (bookD.type==='lock') {
+          slot.className += ' piano-lock'+(isPast?' piano-past':'');
+          slot.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95%">${esc(bookD.note||'封鎖')}</span>`;
+          if (me.role==='master' && !isPast) {
+            slot.appendChild(makePianoDelBtn(ds,room,time));
+          }
+        } else if (bookD.type==='book') {
+          const isTeacher = pianoUsers[bookD.name]?.role==='teacher'||pianoUsers[bookD.name]?.role==='piano_only'||pianoUsers[bookD.name]?.role==='master';
+          slot.className += (isTeacher?' piano-tea':' piano-stu')+(isPast?' piano-past':'');
+          slot.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95%">${esc(bookD.name)}</span><span style="font-size:10px;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95%">${esc(bookD.note||'')}</span>`;
+          if (!isPast && (me.role==='master'||bookD.name===me.name)) {
+            slot.addEventListener('click',()=>openPianoDeleteDlg(ds,room,time));
+          }
+          if (me.role==='master'&&!isPast) slot.appendChild(makePianoDelBtn(ds,room,time));
+        }
+      } else if (fixedD && fixedD.type==='fixed') {
+        slot.className += ' piano-fixed'+(isPast?' piano-past':'');
+        slot.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95%">${esc(fixedD.teacher||'固定')}</span><span style="font-size:9px;opacity:.7">＋可預約</span>`;
+        if (!isPast && !outRange) {
+          slot.addEventListener('click',()=>openPianoBookDlg(room,time,fixedD));
+        }
+        if (me.role==='master'&&!isPast) slot.appendChild(makePianoDelBtn(dowKey,room,time));
+      } else {
+        if (isPast||outRange) {
+          slot.className += ' piano-free piano-past';
+          slot.innerHTML = '<span>—</span>';
+        } else {
+          slot.className += ' piano-free';
+          slot.innerHTML = '<span style="font-size:14px">＋</span>';
+          slot.addEventListener('click',()=>openPianoBookDlg(room,time,null));
+        }
+      }
+      td.appendChild(slot);
+      tr.appendChild(td);
+    });
+    body.appendChild(tr);
+  });
+}
+
+function makePianoDelBtn(key,room,time) {
+  const btn = document.createElement('button');
+  btn.className = 'piano-admin-del'; btn.textContent = '×';
+  btn.style.display = 'block';
+  btn.addEventListener('click', ev => {
+    ev.stopPropagation();
+    pianoCancelSlot(String(key),room,time);
+  });
+  return btn;
+}
+
+function pianoCancelSlot(key,room,time) {
+  const d = pianoData[key]?.[room]?.[time]; if(!d) return;
+  openDlg('確認刪除', `<div class="dlg-msg">刪除 ${room} ${time} 的${d.type==='lock'?'封鎖':'預約'}？</div>`,
+    [{label:'確認',cls:'del',fn:async()=>{
+      delete pianoData[key][room][time];
+      await pianoUpd('sysData', pianoData);
+      updatePianoBoard(); toast('已刪除','ok'); return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+// ── 預約 Dialog ──
+function openPianoBookDlg(room, time, fixedD) {
+  if (!me) { toast('請先登入','err'); return; }
+  pianoPending = {room, time};
+  const ds = document.getElementById('pianoDate').value;
+  const dow = new Date(ds+'T00:00:00').getDay();
+
+  let noteHtml = `
+    <div class="dlg-label">預約類型</div>
+    <select class="dlg-input" id="pianoNoteType">
+      <option value="自主練習">自主練習</option>
+      <option value="課程練習">課程練習</option>
+      <option value="合奏排練">合奏排練</option>
+      <option value="other">其他</option>
+    </select>
+    <div id="pianoNoteOtherWrap" style="display:none">
+      <div class="dlg-label" style="margin-top:8px">備注說明</div>
+      <input class="dlg-input" id="pianoNoteOther" placeholder="請填寫說明">
+    </div>`;
+
+  // 可選時段
+  let slotsHtml = '<div class="dlg-label" style="margin-top:4px">選擇時段（可複選）</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">';
+  const nowTime = new Date(); const todayStr = pianoToday();
+  PIANO_SLOTS.forEach(ts => {
+    const bD = pianoData[ds]?.[room]?.[ts];
+    const occ = bD && bD.type!=='fixed';
+    const [hh,mm] = ts.split(':').map(Number);
+    const past = ds===todayStr&&(hh<nowTime.getHours()||(hh===nowTime.getHours()&&mm<=nowTime.getMinutes()));
+    const dis = occ||past;
+    const checked = ts===time&&!dis;
+    slotsHtml += `<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:${dis?'not-allowed':'pointer'};opacity:${dis?.4:1};padding:3px 5px;border-radius:4px;background:var(--bg1)"><input type="checkbox" name="pianoTs" value="${ts}"${checked?' checked':''}${dis?' disabled':''}><span>${ts}</span></label>`;
+  });
+  slotsHtml += '</div>';
+
+  const infoHtml = `
+    <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:13px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">琴房</span><span style="color:#c9a84c;font-weight:bold">${esc(room)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">日期</span><span>${ds}（週${PIANO_DAYS[dow]}）</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">預約人</span><span>${esc(me.name)} · ${getRoleLabel(me.role)}</span></div>
+      ${fixedD?`<div style="padding:5px 8px;background:rgba(201,168,76,.08);border-radius:5px;font-size:12px;color:#c9a84c;margin-top:2px">📌 固定排課：${esc(fixedD.teacher||'')}</div>`:''}
+    </div>`;
+
+  document.getElementById('pianoDlgBody').innerHTML = infoHtml + noteHtml + slotsHtml;
+  document.getElementById('pianoNoteType').addEventListener('change', function(){
+    document.getElementById('pianoNoteOtherWrap').style.display = this.value==='other'?'':'none';
+  });
+  document.getElementById('pianoDlgConfirm').onclick = confirmPianoBook;
+  document.getElementById('pianoDlgTitle').textContent = '申請預約';
+  document.getElementById('pianoBookDlg').style.display = 'flex';
+}
+
+async function confirmPianoBook() {
+  const ds = document.getElementById('pianoDate').value;
+  let note = document.getElementById('pianoNoteType')?.value || '自主練習';
+  if (note==='other') {
+    note = document.getElementById('pianoNoteOther')?.value.trim();
+    if (!note) { toast('請填寫備注說明','err'); return; }
+  }
+  const sel = [...document.querySelectorAll('input[name="pianoTs"]:checked')].map(e=>e.value);
+  if (!sel.length) { toast('請至少選擇一個時段','err'); return; }
+  const {room} = pianoPending;
+  if (!pianoData[ds]) pianoData[ds] = {};
+  if (!pianoData[ds][room]) pianoData[ds][room] = {};
+  const conflicts = sel.filter(t=>{ const d=pianoData[ds][room][t]; return d&&d.type!=='fixed'; });
+  if (conflicts.length) { toast(`時段 ${conflicts.join('、')} 已被佔用`,'err'); return; }
+  sel.forEach(t=>{
+    pianoData[ds][room][t] = {name:me.name, note, type:'book', role:me.role};
+  });
+  await pianoUpd('sysData', pianoData);
+  closePianoDlg(); updatePianoBoard();
+  toast(`${room} 預約成功（${sel.length}個時段）`,'ok');
+}
+
+function openPianoDeleteDlg(ds, room, time) {
+  const d = pianoData[ds]?.[room]?.[time]; if(!d||!d.name) return;
+  pianoPending = {ds, room, time};
+  const body = `
+    <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:13px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">琴房</span><span style="color:#c9a84c;font-weight:bold">${esc(room)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">時段</span><span>${ds} ${time}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">預約人</span><span>${esc(d.name)}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">備注</span><span>${esc(d.note||'—')}</span></div>
+    </div>
+    ${me.role!=='master'&&d.name===me.name?`<div><div class="dlg-label">確認密碼</div><input class="dlg-input" type="password" id="pianoCancelPwd" placeholder="請輸入您的密碼"></div>`:''}`;
+
+  document.getElementById('pianoDlgBody').innerHTML = body;
+  document.getElementById('pianoDlgTitle').textContent = '取消預約';
+  document.getElementById('pianoDlgConfirm').textContent = '確認取消';
+  document.getElementById('pianoDlgConfirm').className = 'btn d';
+  document.getElementById('pianoDlgConfirm').onclick = async () => {
+    const {ds,room,time} = pianoPending;
+    const d2 = pianoData[ds]?.[room]?.[time]; if(!d2) return;
+    if (me.role!=='master') {
+      const pwd = document.getElementById('pianoCancelPwd')?.value;
+      // 驗證密碼：先查琴房users，再查教務users
+      const storedPwd = pianoUsers[me.name]?.pwd || (await dbGet(`students/${me.stuId||'x'}`))?.password || MASTER.pass;
+      if (me.role==='master') {} // master 不需密碼
+      else if (!pwd) { toast('請輸入密碼','err'); return; }
+    }
+    delete pianoData[ds][room][time];
+    await pianoUpd('sysData', pianoData);
+    closePianoDlg(); updatePianoBoard(); toast('預約已取消','ok');
+  };
+  document.getElementById('pianoBookDlg').style.display = 'flex';
+}
+
+function closePianoDlg() {
+  document.getElementById('pianoBookDlg').style.display = 'none';
+  document.getElementById('pianoDlgConfirm').textContent = '確認預約';
+  document.getElementById('pianoDlgConfirm').className = 'btn g';
+  document.getElementById('pianoDlgConfirm').onclick = confirmPianoBook;
+}
+
+// ── 管理員功能 ──
+function refreshPianoAdminUI() {
+  // 琴房清單
+  const rl = document.getElementById('pianoRoomList');
+  rl.innerHTML = pianoRooms.map((r,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg1);border:1px solid var(--bdr);border-radius:5px;margin-bottom:4px;font-size:12px">
+      <span>${esc(r)}</span>
+      <button class="btn d" onclick="pianoDelRoom(${i})" style="font-size:10px;padding:2px 7px">✕</button>
+    </div>`).join('');
+  // 封鎖選單的琴房
+  const rs = document.getElementById('pianoLockRoom');
+  rs.innerHTML = pianoRooms.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join('');
+  // 成員清單
+  refreshPianoUserList();
+}
+
+async function pianoAddRoom() {
+  const name = document.getElementById('pianoNewRoom').value.trim();
+  if (!name) { toast('請輸入琴房名稱','err'); return; }
+  if (pianoRooms.includes(name)) { toast('名稱已存在','err'); return; }
+  pianoRooms.push(name);
+  await pianoSet('rooms', pianoRooms);
+  document.getElementById('pianoNewRoom').value = '';
+  refreshPianoAdminUI(); updatePianoBoard();
+  toast(`已新增 ${name}`,'ok');
+}
+
+async function pianoDelRoom(i) {
+  const name = pianoRooms[i];
+  pianoRooms.splice(i,1);
+  await pianoSet('rooms', pianoRooms);
+  refreshPianoAdminUI(); updatePianoBoard();
+  toast(`已刪除 ${name}`);
+}
+
+async function pianoAddLock() {
+  const date = document.getElementById('pianoLockDate').value;
+  const room = document.getElementById('pianoLockRoom').value;
+  const start = document.getElementById('pianoLockStart').value.trim();
+  const end   = document.getElementById('pianoLockEnd').value.trim();
+  const note  = document.getElementById('pianoLockNote').value.trim() || '封鎖';
+  if (!date||!room||!start||!end) { toast('請填寫完整資訊','err'); return; }
+  if (!pianoData[date]) pianoData[date] = {};
+  if (!pianoData[date][room]) pianoData[date][room] = {};
+  // 產生半小時slot
+  const [sh,sm] = start.split(':').map(Number);
+  const [eh,em] = end.split(':').map(Number);
+  let cur = sh*60+sm;
+  const stop = eh*60+em;
+  let count = 0;
+  while(cur<stop) {
+    const ts = `${pad2(Math.floor(cur/60))}:${pad2(cur%60)}`;
+    if (PIANO_SLOTS.includes(ts)) {
+      pianoData[date][room][ts] = {note, type:'lock'};
+      count++;
+    }
+    cur += 30;
+  }
+  await pianoUpd('sysData', pianoData);
+  updatePianoBoard(); toast(`已封鎖 ${count} 個時段`,'ok');
+}
+
+async function pianoAddUser() {
+  const name = document.getElementById('pianoNewUser').value.trim();
+  const role = document.getElementById('pianoNewRole').value;
+  if (!name) { toast('請輸入姓名','err'); return; }
+  pianoUsers[name] = {role, pwd:'0000'};
+  await pianoSet('users', pianoUsers);
+  document.getElementById('pianoNewUser').value = '';
+  refreshPianoUserList(); toast(`已新增 ${name}（${getRoleLabel(role)}）`,'ok');
+}
+
+function refreshPianoUserList() {
+  const el = document.getElementById('pianoUserList');
+  el.innerHTML = Object.entries(pianoUsers).map(([name,u])=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px solid var(--bdr);font-size:12px;color:var(--tx2)">
+      <div style="display:flex;align-items:center;gap:6px">
+        <span>${esc(name)}</span>
+        <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(201,168,76,.15);color:#c9a84c">${getRoleLabel(u.role)}</span>
+      </div>
+      ${name!==MASTER.name?`<button class="btn d" onclick="pianoDelUser('${esc(name)}')" style="font-size:10px;padding:2px 7px">刪除</button>`:''}
+    </div>`).join('');
+}
+
+async function pianoDelUser(name) {
+  delete pianoUsers[name];
+  await pianoSet('users', pianoUsers);
+  refreshPianoUserList(); toast(`已刪除 ${name}`);
+}
+
+// ── 日期/視角切換 ──
+document.addEventListener('DOMContentLoaded',()=>{
+  const pd = document.getElementById('pianoDate');
+  if (pd) pd.addEventListener('change', updatePianoBoard);
+  const pam = document.getElementById('pianoAM');
+  const ppm = document.getElementById('pianoPM');
+  if (pam) pam.addEventListener('click',()=>{
+    pianoView='am';
+    pam.className='btn g'; pam.style.fontSize='11px'; pam.style.padding='5px 10px';
+    ppm.className='btn';   ppm.style.fontSize='11px'; ppm.style.padding='5px 10px';
+    updatePianoBoard();
+  });
+  if (ppm) ppm.addEventListener('click',()=>{
+    pianoView='pm';
+    pam.className='btn';  pam.style.fontSize='11px'; pam.style.padding='5px 10px';
+    ppm.className='btn g'; ppm.style.fontSize='11px'; ppm.style.padding='5px 10px';
+    updatePianoBoard();
+  });
+  // 關閉 pianoBookDlg
+  document.getElementById('pianoBookDlg')?.addEventListener('click', e=>{
+    if(e.target===document.getElementById('pianoBookDlg')) closePianoDlg();
+  });
+});
+</script>
+
 </body>
 </html>
