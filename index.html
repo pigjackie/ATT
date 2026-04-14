@@ -17,7 +17,6 @@
   --green:#2ECC71;--yellow:#F1C40F;--red:#E74C3C;--blue:#3498DB;
   --bdr:rgba(212,175,55,.2);--bdr2:rgba(212,175,55,.5);
   --r:12px;--r2:8px;
-  /* 動態陰影與背景變數 */
   --shadow-strong: rgba(0,0,0,.6);
   --shadow-mid: rgba(0,0,0,.5);
   --topbar-bg: rgba(10,10,12,.96);
@@ -33,27 +32,28 @@
   --vip-card: linear-gradient(135deg,#0d1530,#141e40,#0d1530);
 }
 
-[data-theme="parchment"] {
-  --bg:#F4EED8; --bg1:#FDFBEE; --bg2:#EAE3C8;
-  --tx:#3E2723; --tx2:#6D4C41; --tx3:#8D6E63;
-  --gold:#B8860B; --gold-l:#D4AF37; --gold-d:#8B6508;
-  --bdr:rgba(184,134,11,.25); --bdr2:rgba(184,134,11,.5);
-  --shadow-strong: rgba(60,40,20,.15);
-  --shadow-mid: rgba(60,40,20,.1);
-  --topbar-bg: rgba(244,238,216,.96);
-  --vip-card: linear-gradient(135deg,#F5EFDB,#EBE1C0,#F5EFDB);
-  --dlg-overlay: rgba(60,40,20,.6);
+[data-theme="milktea"] {
+  --bg:#F4EBE1; --bg1:#FCF7F1; --bg2:#EAE0D4;
+  --tx:#4A3F35; --tx2:#7A6859; --tx3:#A08C7A;
+  --gold:#C49A6C; --gold-l:#DEBA92; --gold-d:#9E754B;
+  --bdr:rgba(196,154,108,.3); --bdr2:rgba(196,154,108,.6);
+  --shadow-strong: rgba(74,63,53,.15);
+  --shadow-mid: rgba(74,63,53,.08);
+  --topbar-bg: rgba(244,235,225,.96);
+  --vip-card: linear-gradient(135deg,#F7EFE6,#EADDCD,#F7EFE6);
+  --dlg-overlay: rgba(74,63,53,.6);
 }
 
-[data-theme="light"] {
-  --bg:#F8F9FA; --bg1:#FFFFFF; --bg2:#E9ECEF;
-  --tx:#212529; --tx2:#495057; --tx3:#868E96;
-  --bdr:rgba(0,0,0,.1); --bdr2:rgba(0,0,0,.2);
-  --shadow-strong: rgba(0,0,0,.12);
-  --shadow-mid: rgba(0,0,0,.08);
-  --topbar-bg: rgba(248,249,250,.96);
-  --vip-card: linear-gradient(135deg,#FFFFFF,#F1F3F5,#FFFFFF);
-  --dlg-overlay: rgba(0,0,0,.4);
+[data-theme="pink"] {
+  --bg:#FFF0F3; --bg1:#FFF5F7; --bg2:#FFE3E8;
+  --tx:#5C3A41; --tx2:#8A5A65; --tx3:#B37D89;
+  --gold:#D88C9A; --gold-l:#F4AABC; --gold-d:#B56977;
+  --bdr:rgba(216,140,154,.3); --bdr2:rgba(216,140,154,.6);
+  --shadow-strong: rgba(92,58,65,.15);
+  --shadow-mid: rgba(92,58,65,.08);
+  --topbar-bg: rgba(255,240,243,.96);
+  --vip-card: linear-gradient(135deg,#FFF5F7,#FFE3E8,#FFF5F7);
+  --dlg-overlay: rgba(92,58,65,.6);
 }
 
 html,body,div,span,h1,h2,h3,h4,h5,h6,p,a,img,ul,li,table,tr,td,th,form,label,input,button,select,textarea,iframe{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -64,41 +64,23 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .screen{display:none;min-height:100vh;flex-direction:column}
 #loginScreen{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,rgba(212,175,55,.08),transparent 60%); position:relative;}
 
-/* 風格切換器 UI */
-.theme-switch-wrap {
-  position: absolute;
-  top: 24px;
-  right: 24px;
-  display: flex;
-  gap: 12px;
-  background: var(--bg1);
-  padding: 8px 12px;
-  border: 1px solid var(--bdr);
-  border-radius: 20px;
-  box-shadow: 0 4px 15px var(--shadow-mid);
-  z-index: 100;
-  transition: .3s;
-}
-.ts-btn {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  cursor: pointer;
-  transition: .2s;
-}
-.ts-btn:hover { transform: scale(1.15); }
-.ts-btn.active { border-color: var(--gold); box-shadow: 0 0 8px var(--gold); }
-.ts-black { background: #0A0A0C; border: 1px solid #333; }
-.ts-navy { background: #0A1128; border: 1px solid #1A2345; }
-.ts-parchment { background: #F4EED8; border: 1px solid #D4C08D; }
-.ts-light { background: #FFFFFF; border: 1px solid #CCC; }
-
-.lbox{background:var(--bg1);border:1px solid var(--bdr);border-radius:20px;padding:48px 52px;width:420px;max-width:95vw;box-shadow:0 0 30px rgba(212,175,55,.12),0 8px 32px var(--shadow-strong);position:relative;transition: .3s;}
+.lbox{background:var(--bg1);border:1px solid var(--bdr);border-radius:20px;padding:44px 48px;width:420px;max-width:95vw;box-shadow:0 0 30px rgba(212,175,55,.12),0 8px 32px var(--shadow-strong);position:relative;transition: .3s;}
 .lbox::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:20px 20px 0 0}
 .llogo{text-align:center;font-size:52px;margin-bottom:8px;filter:drop-shadow(0 0 14px rgba(212,175,55,.5))}
 .ltitle{text-align:center;font-size:22px;color:var(--gold);letter-spacing:2px;margin-bottom:4px}
-.lsub{text-align:center;font-size:13px;color:var(--tx2);margin-bottom:28px;letter-spacing:1px}
+.lsub{text-align:center;font-size:13px;color:var(--tx2);margin-bottom:20px;letter-spacing:1px}
+
+/* 文字按鈕風格切換器 */
+.theme-tabs {
+  display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap;
+}
+.t-tab {
+  padding: 6px 14px; font-size: 13px; background: transparent; border: 1px solid var(--bdr);
+  color: var(--tx2); border-radius: 20px; cursor: pointer; font-family: inherit; transition: .2s;
+}
+.t-tab:hover { border-color: var(--gold); color: var(--gold); }
+.t-tab.active { background: var(--gold); color: #000; border-color: var(--gold); font-weight: bold; }
+
 .ltabs{display:flex;border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:24px}
 .ltab{flex:1;padding:10px;background:transparent;border:none;color:var(--tx2);cursor:pointer;font-size:14px;font-family:inherit;transition:.2s}
 .ltab.on{background:var(--gold);color:#000;font-weight:bold}
@@ -302,17 +284,18 @@ select:focus{border-color:var(--gold)}
 </div>
 
 <div id="loginScreen" class="screen">
-  <div class="theme-switch-wrap">
-    <button class="ts-btn ts-black" data-t="black" onclick="setTheme('black')" title="尊爵黑"></button>
-    <button class="ts-btn ts-navy" data-t="navy" onclick="setTheme('navy')" title="學院湛藍"></button>
-    <button class="ts-btn ts-parchment" data-t="parchment" onclick="setTheme('parchment')" title="典雅羊皮紙"></button>
-    <button class="ts-btn ts-light" data-t="light" onclick="setTheme('light')" title="晨曦亮白"></button>
-  </div>
-
   <div class="lbox">
     <div class="llogo">🎼</div>
     <div class="ltitle">莊敬高職音樂科</div>
     <div class="lsub">教務管理系統 · Royal Edition</div>
+    
+    <div class="theme-tabs">
+      <button class="t-tab" data-t="black" onclick="setTheme('black')">尊爵黑</button>
+      <button class="t-tab" data-t="navy" onclick="setTheme('navy')">學術藍</button>
+      <button class="t-tab" data-t="milktea" onclick="setTheme('milktea')">奶茶棕</button>
+      <button class="t-tab" data-t="pink" onclick="setTheme('pink')">粉紅</button>
+    </div>
+
     <div class="ltabs">
       <button class="ltab on" onclick="switchLTab('teacher')">教師登入</button>
       <button class="ltab" onclick="switchLTab('student')">學生登入</button>
@@ -569,7 +552,7 @@ select:focus{border-color:var(--gold)}
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   try { localStorage.setItem('jjvs_theme', t); } catch(e){}
-  document.querySelectorAll('.ts-btn').forEach(b => {
+  document.querySelectorAll('.t-tab').forEach(b => {
     b.classList.toggle('active', b.dataset.t === t);
   });
 }
