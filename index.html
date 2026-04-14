@@ -24,14 +24,43 @@
   --dlg-overlay: rgba(0,0,0,.72);
 }
 
+/* 降低飽和度的學術藍 (Slate Navy) */
 [data-theme="navy"] {
-  --bg:#0A1128; --bg1:#111936; --bg2:#1A2345;
-  --tx:#F0F4F8; --tx2:#A0B0C0; --tx3:#607080;
-  --bdr:rgba(212,175,55,.25); --bdr2:rgba(212,175,55,.5);
-  --topbar-bg: rgba(10,17,40,.96);
-  --vip-card: linear-gradient(135deg,#0d1530,#141e40,#0d1530);
+  --bg:#141824; --bg1:#1B202D; --bg2:#252B3A;
+  --tx:#E2E8F0; --tx2:#94A3B8; --tx3:#64748B;
+  --gold:#C2A064; --gold-l:#E0C18A; --gold-d:#997A42;
+  --bdr:rgba(194,160,100,.2); --bdr2:rgba(194,160,100,.5);
+  --topbar-bg: rgba(20,24,36,.96);
+  --vip-card: linear-gradient(135deg,#191E2D,#242A3D,#191E2D);
 }
 
+/* 北卡藍 (UNC Blue) */
+[data-theme="uncblue"] {
+  --bg:#F0F4F8; --bg1:#FFFFFF; --bg2:#E2EBF2;
+  --tx:#1E293B; --tx2:#475569; --tx3:#94A3B8;
+  --gold:#7BAFD4; --gold-l:#9BC4E3; --gold-d:#5A92BA;
+  --bdr:rgba(123,175,212,.3); --bdr2:rgba(123,175,212,.6);
+  --shadow-strong: rgba(30,41,59,.15);
+  --shadow-mid: rgba(30,41,59,.08);
+  --topbar-bg: rgba(240,244,248,.96);
+  --vip-card: linear-gradient(135deg,#FFFFFF,#F1F5F9,#FFFFFF);
+  --dlg-overlay: rgba(30,41,59,.6);
+}
+
+/* 蒂芬妮湖水綠 (Tiffany Green) */
+[data-theme="tiffany"] {
+  --bg:#F0FAF9; --bg1:#FFFFFF; --bg2:#E0F5F3;
+  --tx:#1B302F; --tx2:#456361; --tx3:#7B9E9C;
+  --gold:#0ABAB5; --gold-l:#4EDBD7; --gold-d:#088C88;
+  --bdr:rgba(10,186,181,.3); --bdr2:rgba(10,186,181,.6);
+  --shadow-strong: rgba(27,48,47,.15);
+  --shadow-mid: rgba(27,48,47,.08);
+  --topbar-bg: rgba(240,250,249,.96);
+  --vip-card: linear-gradient(135deg,#FFFFFF,#E6F7F6,#FFFFFF);
+  --dlg-overlay: rgba(27,48,47,.6);
+}
+
+/* 奶茶棕 (Milk Tea) */
 [data-theme="milktea"] {
   --bg:#F4EBE1; --bg1:#FCF7F1; --bg2:#EAE0D4;
   --tx:#4A3F35; --tx2:#7A6859; --tx3:#A08C7A;
@@ -44,6 +73,7 @@
   --dlg-overlay: rgba(74,63,53,.6);
 }
 
+/* 玫瑰粉紅 (Pink) */
 [data-theme="pink"] {
   --bg:#FFF0F3; --bg1:#FFF5F7; --bg2:#FFE3E8;
   --tx:#5C3A41; --tx2:#8A5A65; --tx3:#B37D89;
@@ -292,6 +322,8 @@ select:focus{border-color:var(--gold)}
     <div class="theme-tabs">
       <button class="t-tab" data-t="black" onclick="setTheme('black')">尊爵黑</button>
       <button class="t-tab" data-t="navy" onclick="setTheme('navy')">學術藍</button>
+      <button class="t-tab" data-t="uncblue" onclick="setTheme('uncblue')">北卡藍</button>
+      <button class="t-tab" data-t="tiffany" onclick="setTheme('tiffany')">湖水綠</button>
       <button class="t-tab" data-t="milktea" onclick="setTheme('milktea')">奶茶棕</button>
       <button class="t-tab" data-t="pink" onclick="setTheme('pink')">粉紅</button>
     </div>
@@ -797,6 +829,9 @@ async function checkAuthSession() {
     if (saved) {
       const data = JSON.parse(saved);
       me = data;
+      // 修復「重新整理登出」的關鍵：確保 classes 陣列一定存在
+      me.classes = me.classes || [];
+      
       if (me.role === 'student') {
         const stu = STUDENTS.find(s => s.id === me.stuId);
         if (stu) {
@@ -813,7 +848,11 @@ async function checkAuthSession() {
       showScreen('loginScreen');
     }
   } catch(e) {
-    localStorage.removeItem('jjvs_session');
+    console.error("Auth session restore failed:", e);
+    // 若真的是 JSON 格式損壞才清除，防止一般渲染錯誤導致被登出
+    if (e instanceof SyntaxError) {
+      localStorage.removeItem('jjvs_session');
+    }
     showScreen('loginScreen');
   }
   const loader = document.getElementById('globalLoader');
@@ -857,8 +896,16 @@ function enterApp() {
   document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
   showScreen('appScreen');
   pendAtt = {};  
+  
+  // 修復「重新整理登出」的關鍵：確保 classes 陣列一定存在
+  me.classes = me.classes || [];
   buildClsBtns('clsBtns', switchCls);
-  switchCls(me.classes[0]);
+  
+  // 只有當老師真的有分配班級時，才切換到第一個班級
+  if (me.classes.length > 0) {
+    switchCls(me.classes[0]);
+  }
+  
   startApplyListener();
   startMsgListener();
 }
