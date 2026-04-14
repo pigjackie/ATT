@@ -3,14 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>莊敬音樂科 · 綜合管理系統</title>
-<!-- PWA：讓這個網頁可以加到手機主畫面像 APP 一樣使用 -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="莊敬系統">
-<meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#0A0A0C">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230A0A0C' rx='20'/><text y='.9em' font-size='72' x='50%' text-anchor='middle'>🎼</text></svg>">
+<title>莊敬音樂科教務管理系統</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -25,16 +18,14 @@
   --bdr:rgba(212,175,55,.2);--bdr2:rgba(212,175,55,.5);
   --r:12px;--r2:8px;
 }
-*{box-sizing:border-box;margin:0;padding:0; -webkit-tap-highlight-color: transparent;}
+html,body,div,span,h1,h2,h3,h4,h5,h6,p,a,img,ul,li,table,tr,td,th,form,label,input,button,select,textarea,iframe{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{width:100%;min-height:100vh;background:var(--bg);color:var(--tx);font-family:'Noto Serif TC',Georgia,serif;overflow-x:hidden}
 body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,var(--gold),transparent);z-index:1000;pointer-events:none}
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:3px}
 
-/* ── SCREENS ── */
 .screen{display:none;min-height:100vh;flex-direction:column}
 #loginScreen{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,rgba(212,175,55,.08),transparent 60%)}
 
-/* ── LOGIN ── */
 .lbox{background:var(--bg1);border:1px solid var(--bdr);border-radius:20px;padding:48px 52px;width:420px;max-width:95vw;box-shadow:0 0 30px rgba(212,175,55,.12),0 8px 32px rgba(0,0,0,.6);position:relative}
 .lbox::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:20px 20px 0 0}
 .llogo{text-align:center;font-size:52px;margin-bottom:8px;filter:drop-shadow(0 0 14px rgba(212,175,55,.5))}
@@ -50,14 +41,12 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .btn-pri{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-l));border:none;border-radius:var(--r2);color:#000;font-size:16px;font-weight:bold;cursor:pointer;letter-spacing:2px;font-family:inherit;transition:.2s;box-shadow:0 4px 15px rgba(212,175,55,.3)}
 .btn-pri:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,175,55,.4)}
 
-/* ── TOPBAR ── */
 .topbar{position:sticky;top:0;z-index:200;background:rgba(10,10,12,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;align-items:center;gap:12px;height:58px;flex-shrink:0}
 .topbar-logo{font-size:22px}
 .topbar-title{font-size:17px;color:var(--gold);letter-spacing:1px;flex:1}
 .topbar-user{font-size:12px;color:var(--tx2)}
 .topbar-user b{color:var(--gold)}
 
-/* ── BUTTONS ── */
 .btn{padding:6px 13px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx2);cursor:pointer;font-size:12px;font-family:inherit;transition:.2s;white-space:nowrap}
 .btn:hover{border-color:var(--gold);color:var(--gold)}
 .btn.g{background:var(--gold);color:#000;border-color:var(--gold);font-weight:bold}
@@ -67,40 +56,33 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .btn.s{border-color:rgba(46,204,113,.5);color:var(--green)}
 .btn.s:hover{background:rgba(46,204,113,.1)}
 
-/* ── NOTIF BELL ── */
 .notif-btn{position:relative;padding:6px 10px;background:transparent;border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx2);cursor:pointer;font-size:18px;transition:.2s}
 .notif-btn:hover{border-color:var(--gold);color:var(--gold)}
 .notif-dot{position:absolute;top:2px;right:2px;width:10px;height:10px;background:var(--red);border-radius:50%;display:none;border:2px solid var(--bg)}
 .notif-dot.on{display:block;animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
 
-/* ── NAVTABS ── */
 .navtabs{display:flex;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 16px;overflow-x:auto;flex-shrink:0}
 .navtab{padding:13px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--tx2);cursor:pointer;font-size:13px;white-space:nowrap;font-family:inherit;transition:.2s;position:relative}
 .navtab:hover{color:var(--gold)}
 .navtab.on{color:var(--gold);border-bottom-color:var(--gold)}
 .nbadge{display:inline-block;background:var(--red);color:#fff;font-size:10px;padding:1px 5px;border-radius:10px;margin-left:4px;vertical-align:top;animation:pulse 1.5s infinite}
 
-/* ── CONTENT ── */
 .content{flex:1;padding:16px}
 
-/* ── CLASS SELECTOR ── */
 .clsbtns{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
 .clsbtn{padding:7px 16px;background:var(--bg1);border:1px solid var(--bdr);border-radius:20px;color:var(--tx2);cursor:pointer;font-size:13px;font-family:inherit;transition:.2s}
 .clsbtn:hover{border-color:var(--gold);color:var(--gold)}
 .clsbtn.on{background:var(--gold);color:#000;border-color:var(--gold);font-weight:bold}
 
-/* ── TOOLBAR ── */
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
 .legend{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-left:auto}
 .ldot{width:9px;height:9px;border-radius:50%}
 .litem{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)}
 
-/* ── BATCH TOOLBAR ── */
 #batchBar{display:none;margin-bottom:12px;padding:10px 14px;background:var(--bg1);border:1px solid var(--gold-d);border-radius:var(--r);gap:8px;flex-wrap:wrap;align-items:center}
 #batchBar.on{display:flex}
 
-/* ── STUDENT GRID ── */
 .sgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 @media(max-width:640px){.sgrid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:360px){.sgrid{grid-template-columns:1fr}}
@@ -122,7 +104,6 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .sc-medals{font-size:12px;color:var(--tx2)}
 .sc-hint{font-size:10px;color:var(--tx3);margin-top:3px}
 
-/* ── DETAIL PANEL ── */
 #detailPanel{position:fixed;top:0;right:-500px;width:480px;height:100vh;background:var(--bg2);border-left:1px solid var(--bdr);z-index:300;overflow-y:auto;padding:20px;box-shadow:-8px 0 32px rgba(0,0,0,.5);transition:right .3s ease}
 #detailPanel.open{right:0}
 @media(max-width:500px){#detailPanel{width:100%;right:-100%}}
@@ -134,7 +115,6 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .dp-sec{margin-bottom:18px}
 .dp-sec-t{font-size:11px;color:var(--gold);letter-spacing:2px;border-bottom:1px solid var(--bdr);padding-bottom:5px;margin-bottom:10px}
 
-/* ── POINTS CARD ── */
 .pts-card{background:linear-gradient(135deg,#1a1608,#221c09,#1a1608);border:1px solid var(--gold-d);border-radius:13px;padding:13px 15px 10px;margin-bottom:8px;box-shadow:inset 0 1px 0 rgba(212,175,55,.15),0 4px 14px rgba(0,0,0,.5);position:relative}
 .pts-card::before{content:'⭐ 集點卡';position:absolute;top:7px;right:11px;font-size:10px;color:var(--gold-d);letter-spacing:1px}
 .pts-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
@@ -145,13 +125,11 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .pts-info{font-size:13px;color:var(--tx2);text-align:center;margin-top:8px}
 .pts-info b{color:var(--gold);font-size:17px}
 
-/* ── MEDALS ── */
 .medals-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-end}
 .mcoin{width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff5a0,#F0C840 30%,#D4AF37 55%,#8B6914 80%,#5a4009 100%);box-shadow:0 4px 10px rgba(0,0,0,.6),0 1px 0 rgba(255,255,180,.5) inset,0 -2px 4px rgba(0,0,0,.4) inset;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;overflow:hidden;border:2px solid #a07a10;transition:.2s;cursor:default}
 .mcoin::before{content:'';position:absolute;top:10%;left:14%;width:33%;height:22%;background:rgba(255,255,255,.28);border-radius:50%;transform:rotate(-32deg)}
 .mcoin:hover{transform:translateY(-3px) rotate(8deg);box-shadow:0 8px 18px rgba(212,175,55,.45)}
 
-/* ── ATT HISTORY ── */
 .att-sum{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:8px}
 .att-si{font-size:12px}
 .att-hgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:4px}
@@ -163,28 +141,23 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .att-day.s缺{border-color:rgba(231,76,60,.4);background:rgba(231,76,60,.08)}.att-day.s缺 .dv{color:var(--red)}
 .att-day.s假{border-color:rgba(52,152,219,.4);background:rgba(52,152,219,.08)}.att-day.s假 .dv{color:var(--blue)}
 
-/* ── TASKS ── */
 .task-item{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 11px;margin-bottom:7px}
 .task-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
 .task-bar{height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
 .task-fill{height:100%;background:var(--gold);transition:width .3s}
 
-/* ── LOG ── */
 .log-item{font-size:12px;padding:7px 9px;border-left:2px solid var(--bdr);margin-bottom:5px;color:var(--tx2)}
 .log-item.add{border-left-color:var(--green)}.log-item.sub{border-left-color:var(--red)}.log-item.med{border-left-color:var(--gold)}
 .log-t{color:var(--tx3);font-size:10px}
 
-/* ── PASSWORD ── */
 .pw-box{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);padding:9px 13px;font-family:monospace;font-size:16px;color:var(--gold);letter-spacing:2px}
 
-/* ── APPLY LIST ── */
 .apply-item{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ai-info{flex:1}
 .ai-name{font-size:15px;font-weight:bold;margin-bottom:3px}
 .ai-reason{font-size:13px;color:var(--tx2)}
 .ai-time{font-size:11px;color:var(--tx3)}
 
-/* ── MESSAGES ── */
 .msg-item{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 15px;margin-bottom:9px;position:relative}
 .msg-item.unread{border-left:3px solid var(--red)}
 .msg-item.punish{border-left:3px solid var(--yellow)}
@@ -198,26 +171,22 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .msg-tag.deduct{background:rgba(231,76,60,.2);color:var(--red)}
 .msg-read{font-size:11px}
 
-/* ── STUDENT MSG BANNER ── */
 #stuBanner{display:none;background:rgba(231,76,60,.1);border-bottom:1px solid rgba(231,76,60,.25);padding:10px 16px;max-height:70vh;overflow-y:auto}
 .stu-msg-item{background:rgba(231,76,60,.07);border-radius:7px;padding:8px 11px;margin-bottom:6px;font-size:13px}
 .stu-msg-from{font-size:10px;color:var(--tx3);margin-bottom:2px}
 .stu-msg-type-notice{color:var(--blue)}.stu-msg-type-punishment{color:var(--yellow)}
 
-/* ── STATS GRID ── */
 .statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
 @media(max-width:480px){.statgrid{grid-template-columns:repeat(2,1fr)}}
 .statcard{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px;text-align:center}
 .stat-n{font-size:30px;font-weight:bold;color:var(--gold)}
 .stat-l{font-size:12px;color:var(--tx2);margin-top:3px}
 
-/* ── TEACHER LIST ── */
 .titem{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:13px 16px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
 .ti-name{font-size:15px;font-weight:bold;margin-bottom:2px}
 .ti-cls{font-size:12px;color:var(--tx2)}
 .ti-pw{font-size:11px;color:var(--tx3)}
 
-/* ── EXIT PASS ── */
 #exitPass{display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;background:#1a9e50;z-index:9999;flex-direction:column;align-items:center;justify-content:center;color:#fff;text-align:center}
 #exitPass.on{display:flex}
 .ep-title{font-size:64px;font-weight:bold;letter-spacing:4px;margin-bottom:16px}
@@ -225,7 +194,6 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .ep-info{font-size:22px;opacity:.85;margin-bottom:5px}
 .ep-close{margin-top:36px;padding:13px 38px;background:#fff;color:#1a9e50;border:none;border-radius:30px;font-size:17px;font-weight:bold;cursor:pointer}
 
-/* ── DIALOG ── */
 #dlgOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center}
 #dlgOverlay.on{display:flex}
 .dlg{background:var(--bg2);border:1px solid var(--bdr);border-radius:15px;padding:28px;width:380px;max-width:92vw;box-shadow:0 0 20px rgba(212,175,55,.15),0 8px 30px rgba(0,0,0,.6);position:relative}
@@ -242,13 +210,11 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .dlg-btn.ok:hover{background:var(--gold-l)}
 .dlg-btn.del{background:var(--red);color:#fff;border-color:var(--red);font-weight:bold}
 
-/* ── TOAST ── */
 #toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--bdr);border-radius:30px;padding:10px 22px;font-size:13px;color:var(--tx);box-shadow:0 4px 20px rgba(0,0,0,.6);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 #toast.on{opacity:1}
 #toast.ok{border-color:var(--green);color:var(--green)}
 #toast.err{border-color:var(--red);color:var(--red)}
 
-/* ── MISC ── */
 .empty{text-align:center;padding:50px 20px;color:var(--tx3);font-size:15px}
 .sep{border:none;border-top:1px solid var(--bdr);margin:14px 0}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -262,7 +228,6 @@ select:focus{border-color:var(--gold)}
 </head>
 <body>
 
-<!-- ══ LOGIN ══ -->
 <div id="globalLoader" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;">
   <div class="spin" style="width:30px;height:30px;border-width:3px;"></div>
   <div style="margin-top:15px;color:var(--gold);font-size:14px;letter-spacing:1px;">系統初始化中...</div>
@@ -272,7 +237,7 @@ select:focus{border-color:var(--gold)}
   <div class="lbox">
     <div class="llogo">🎼</div>
     <div class="ltitle">莊敬高職音樂科</div>
-    <div class="lsub">教務 · 琴房預約 · 綜合管理系統</div>
+    <div class="lsub">教務管理系統 · Royal Edition</div>
     <div class="ltabs">
       <button class="ltab on" onclick="switchLTab('teacher')">教師登入</button>
       <button class="ltab" onclick="switchLTab('student')">學生登入</button>
@@ -290,14 +255,12 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ TEACHER APP ══ -->
 <div id="appScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
     <div class="topbar-title">莊敬音樂科教務系統</div>
     <div class="topbar-user">身份：<b id="curUser">—</b></div>
     <button class="btn" onclick="teacherChangePw()" style="font-size:11px">🔑 改密碼</button>
-    <button class="btn" onclick="switchToModule('piano')" style="font-size:11px;border-color:rgba(201,168,76,.4);color:#c9a84c" title="切換到琴房預約">🎹 琴房預約</button>
     <button class="notif-btn" onclick="switchTab('inbox')" title="訊息中心">💬<span class="notif-dot" id="teacherNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
@@ -308,9 +271,9 @@ select:focus{border-color:var(--gold)}
     <button class="navtab" onclick="switchTab('inbox')" id="tab-inbox">💬 訊息<span class="nbadge" id="inboxBadge" style="display:none">0</span></button>
     <button class="navtab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
+    <button class="navtab" onclick="switchTab('piano')" id="tab-piano">🎹 琴房系統</button>
   </div>
   <div class="content">
-    <!-- 點名 -->
     <div id="tabAtt">
       <div class="clsbtns" id="clsBtns"></div>
       <div class="toolbar">
@@ -341,12 +304,12 @@ select:focus{border-color:var(--gold)}
       </div>
       <div class="sgrid" id="stuGrid"></div>
     </div>
-    <!-- 外出申請 -->
+    
     <div id="tabApply" style="display:none">
       <h3 style="color:var(--gold);margin-bottom:14px">🚪 第八節外出申請審核</h3>
       <div id="applyList"><div class="empty">目前無待審核申請</div></div>
     </div>
-    <!-- 外出紀錄日誌 -->
+    
     <div id="tabExitLog" style="display:none">
       <div class="row" style="margin-bottom:14px">
         <h3 style="color:var(--gold)">📋 第八節外出申請日誌</h3>
@@ -370,7 +333,6 @@ select:focus{border-color:var(--gold)}
       <div id="exitLogList"><div class="empty">載入中...</div></div>
     </div>
 
-    <!-- 訊息中心 -->
     <div id="tabInbox" style="display:none">
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px">
         <h3 style="color:var(--gold)">💬 訊息中心</h3>
@@ -384,7 +346,7 @@ select:focus{border-color:var(--gold)}
       </div>
       <div id="inboxList"><div class="empty">尚無訊息</div></div>
     </div>
-    <!-- 報表 -->
+    
     <div id="tabReport" style="display:none">
       <div class="statgrid" id="statGrid"></div>
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap">
@@ -398,7 +360,7 @@ select:focus{border-color:var(--gold)}
       <h3 style="color:var(--red);margin-bottom:12px">🔴 扣分記錄（近期）</h3>
       <div id="deductLog"><div class="empty">載入中...</div></div>
     </div>
-    <!-- 教師管理 -->
+    
     <div id="tabTeachers" style="display:none">
       <div class="row" style="margin-bottom:14px">
         <h3 style="color:var(--gold)">⚙️ 教師帳號管理</h3>
@@ -406,10 +368,13 @@ select:focus{border-color:var(--gold)}
       </div>
       <div id="teacherList"></div>
     </div>
+
+    <div id="tabPiano" style="display:none; height:calc(100vh - 120px); margin:-16px;">
+      <iframe id="pianoFrame" style="width:100%; height:100%; border:none;" src=""></iframe>
+    </div>
   </div>
 </div>
 
-<!-- ══ STUDENT SCREEN ══ -->
 <div id="studentScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
@@ -418,7 +383,6 @@ select:focus{border-color:var(--gold)}
     <button class="notif-btn" id="stuNotifBtn" onclick="toggleStuBanner()" title="訊息通知">🔔<span class="notif-dot" id="stuNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
-  <!-- 訊息橫幅 -->
   <div id="stuBanner">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-size:13px;color:var(--red);font-weight:bold">🔔 訊息通知</div>
@@ -435,7 +399,6 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ DETAIL PANEL ══ -->
 <div id="detailPanel">
   <div class="dp-hd">
     <div>
@@ -505,7 +468,6 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ EXIT PASS ══ -->
 <div id="exitPass">
   <div class="ep-title">✅ 准予外出</div>
   <div class="ep-name" id="epName">—</div>
@@ -517,7 +479,6 @@ select:focus{border-color:var(--gold)}
   <button class="ep-close" onclick="document.getElementById('exitPass').classList.remove('on')">關閉</button>
 </div>
 
-<!-- ══ DIALOG ══ -->
 <div id="dlgOverlay" onclick="if(event.target===this)closeDlg()">
   <div class="dlg">
     <div class="dlg-title" id="dlgTitle"></div>
@@ -526,13 +487,9 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
-<!-- ══ TOAST ══ -->
 <div id="toast"></div>
 
 <script>
-// ══════════════════════════════════════════
-// FIREBASE
-// ══════════════════════════════════════════
 const FBC = {
   apiKey:"AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
   authDomain:"jjvs-att.firebaseapp.com",
@@ -550,12 +507,8 @@ const dbGet = p => ref(p).once('value').then(s=>s.val());
 const dbSet = (p,v) => ref(p).set(v);
 const dbUpd = (p,v) => ref(p).update(v);
 
-// ══════════════════════════════════════════
-// STUDENT DATA
-// ══════════════════════════════════════════
 const CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
 const STUDENTS = [
-  // 音三莊 40人
   {id:"M3-01",name:"毛語程",cls:"音三莊"},{id:"M3-02",name:"林叡成",cls:"音三莊"},
   {id:"M3-03",name:"田宇紘",cls:"音三莊"},{id:"M3-04",name:"吳昆達",cls:"音三莊"},
   {id:"M3-05",name:"吳宥良",cls:"音三莊"},{id:"M3-06",name:"黃崇恩",cls:"音三莊"},
@@ -576,7 +529,6 @@ const STUDENTS = [
   {id:"M3-35",name:"陳芃瑾",cls:"音三莊"},{id:"M3-36",name:"陳雨彤",cls:"音三莊"},
   {id:"M3-37",name:"陳宥安",cls:"音三莊"},{id:"M3-38",name:"陳圓卿",cls:"音三莊"},
   {id:"M3-39",name:"傅克諳",cls:"音三莊"},{id:"M3-40",name:"曾妘湘",cls:"音三莊"},
-  // 演三莊 14人
   {id:"P3-02",name:"王玟茜",cls:"演三莊"},{id:"P3-03",name:"王語舒",cls:"演三莊"},
   {id:"P3-04",name:"姚宥湘",cls:"演三莊"},{id:"P3-05",name:"陳思妤",cls:"演三莊"},
   {id:"P3-06",name:"楊鎔慈",cls:"演三莊"},{id:"P3-09",name:"王偉家",cls:"演三莊"},
@@ -584,7 +536,6 @@ const STUDENTS = [
   {id:"P3-13",name:"郭庭傑",cls:"演三莊"},{id:"P3-14",name:"陳泊源",cls:"演三莊"},
   {id:"P3-15",name:"陳軍任",cls:"演三莊"},{id:"P3-16",name:"黃治容",cls:"演三莊"},
   {id:"P3-17",name:"盧宥辰",cls:"演三莊"},{id:"P3-18",name:"謝行知",cls:"演三莊"},
-  // 音二莊 44人
   {id:"M2-01",name:"程冠中",cls:"音二莊"},{id:"M2-02",name:"李安恬",cls:"音二莊"},
   {id:"M2-03",name:"吳芊逸",cls:"音二莊"},{id:"M2-04",name:"林辰欣",cls:"音二莊"},
   {id:"M2-05",name:"林孟蓁",cls:"音二莊"},{id:"M2-06",name:"林采妮",cls:"音二莊"},
@@ -607,9 +558,7 @@ const STUDENTS = [
   {id:"M2-39",name:"盧宇杰",cls:"音二莊"},{id:"M2-40",name:"江德凱",cls:"音二莊"},
   {id:"M2-41",name:"李奕德",cls:"音二莊"},{id:"M2-42",name:"林品傑",cls:"音二莊"},
   {id:"M2-43",name:"陳元熙",cls:"音二莊"},{id:"M2-44",name:"丁婷婷",cls:"音二莊"},
-  // 演二樸 2人
   {id:"P2-02",name:"簡佳嫻",cls:"演二樸"},{id:"P2-03",name:"黃品妤",cls:"演二樸"},
-  // 音一莊 33人
   {id:"M1-01",name:"任恩予",cls:"音一莊"},{id:"M1-02",name:"李孟臻",cls:"音一莊"},
   {id:"M1-03",name:"潘縈汐",cls:"音一莊"},{id:"M1-04",name:"謝幸芙",cls:"音一莊"},
   {id:"M1-05",name:"李昕柔",cls:"音一莊"},{id:"M1-06",name:"盧丞菲",cls:"音一莊"},
@@ -631,20 +580,14 @@ const STUDENTS = [
 const MASTER = {name:"蕭旭成", pass:"0902"};
 const STATUS = ['未','出','遲','缺','假'];
 
-// ══════════════════════════════════════════
-// STATE
-// ══════════════════════════════════════════
-let me = null;         // current user
-let curCls = null;     // current class
-let curStu = null;     // detail panel student
-let pendAtt = {};      // unsaved attendance
+let me = null;
+let curCls = null;
+let curStu = null;
+let pendAtt = {};
 let batchMode = false;
 let batchSel = new Set();
 let stuBannerOpen = false;
 
-// ══════════════════════════════════════════
-// UTILS
-// ══════════════════════════════════════════
 const now = () => new Date().toLocaleString('zh-TW',{hour12:false});
 const WEEKDAYS = ['日','一','二','三','四','五','六'];
 const nowWithDay = () => {
@@ -652,7 +595,6 @@ const nowWithDay = () => {
   return d.toLocaleString('zh-TW',{hour12:false}) + '（' + WEEKDAYS[d.getDay()] + '）';
 };
 const dateWithDay = (dateStr) => {
-  // dateStr 可能是 "2025/4/9 下午5:00:00" 或 now() 格式
   try {
     const d = dateStr ? new Date(dateStr.replace(/\//g,'-')) : new Date();
     const wd = WEEKDAYS[d.getDay()];
@@ -670,9 +612,6 @@ function toast(msg, type='') {
   clearTimeout(t._t); t._t = setTimeout(()=>t.className='', 3000);
 }
 
-// ══════════════════════════════════════════
-// SCREEN MANAGEMENT
-// ══════════════════════════════════════════
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.style.display = 'none');
   const el = document.getElementById(id);
@@ -687,9 +626,6 @@ function showScreen(id) {
   window.scrollTo(0,0);
 }
 
-// ══════════════════════════════════════════
-// LOGIN
-// ══════════════════════════════════════════
 function switchLTab(t) {
   document.querySelectorAll('.ltab').forEach((b,i)=>b.classList.toggle('on',(t==='teacher'&&i===0)||(t==='student'&&i===1)));
   document.getElementById('teacherForm').style.display = t==='teacher'?'':'none';
@@ -715,10 +651,8 @@ async function doLogin() {
       for (const k of Object.keys(teachers)) {
         const t = teachers[k];
         if (t.name===name && t.pass===pass) {
-          me = {name, role: t.role==='piano_only'?'piano_only':'teacher', classes:t.classes||[]};
-          saveAuthSession(me);
-          if (me.role==='piano_only') { enterPianoOnly(); } else { enterApp(); }
-          return;
+          me = {name, role:'teacher', classes:t.classes||[]};
+          enterApp(); return;
         }
       }
     }
@@ -772,7 +706,6 @@ function teacherChangePw() {
       const n2 = document.getElementById('tpNew2').value;
       if(!n1){toast('新密碼不能為空','err');return false}
       if(n1!==n2){toast('兩次密碼不一致','err');return false}
-      // 找老師的key
       const teachers = await dbGet('teachers')||{};
       const entry = Object.entries(teachers).find(([,t])=>t.name===me.name);
       if (!entry){toast('找不到帳號資料','err');return false}
@@ -781,9 +714,7 @@ function teacherChangePw() {
       toast('密碼已更新','ok'); return true;
     }},{label:'取消',fn:()=>true}]);
 }
-// ══════════════════════════════════════════
-// SESSION PERSISTENCE
-// ══════════════════════════════════════════
+
 function saveAuthSession(userData) {
   try { localStorage.setItem('jjvs_session', JSON.stringify(userData)); } catch(e){}
 }
@@ -803,8 +734,6 @@ async function checkAuthSession() {
           localStorage.removeItem('jjvs_session');
           showScreen('loginScreen');
         }
-      } else if (me.role === 'piano_only') {
-        enterPianoOnly();
       } else {
         enterApp();
       }
@@ -820,7 +749,6 @@ async function checkAuthSession() {
 }
 
 async function refreshStuView(stuId) {
-  // stuId 可能來自 innerHTML onclick 字串，優先用全域變數
   const id = stuId || _currentStuId;
   if (!id) return;
   const stu = byId(id);
@@ -852,15 +780,11 @@ function doLogout() {
   location.reload();
 }
 
-// ══════════════════════════════════════════
-// ENTER APP
-// ══════════════════════════════════════════
 function enterApp() {
-  if (me.role === 'piano_only') { enterPianoOnly(); return; }
   document.getElementById('curUser').textContent = me.name;
   document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
   showScreen('appScreen');
-  pendAtt = {};  // 每次進入都清空，避免跨日殘留
+  pendAtt = {};  
   buildClsBtns('clsBtns', switchCls);
   switchCls(me.classes[0]);
   startApplyListener();
@@ -869,36 +793,37 @@ function enterApp() {
 
 function enterStudentView(stu) {
   document.getElementById('stuUserName').textContent = stu.name;
-  _currentStuId = stu.id;   // 全域記錄，供 refreshStuView 使用
+  _currentStuId = stu.id;   
   showScreen('studentScreen');
   loadStuView(stu);
   loadStuMsgs(stu.id);
 }
 
-// ══════════════════════════════════════════
-// TABS
-// ══════════════════════════════════════════
 function switchTab(t) {
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
-  ['att','apply','exitlog','inbox','report','teachers'].forEach(id=>{
+  ['att','apply','exitlog','inbox','report','teachers','piano'].forEach(id=>{
     const el = document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));
     if (el) el.style.display = 'none';
   });
   document.getElementById('tab-'+t).classList.add('on');
-  // map tab id to content div
-  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers'};
+  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano'};
   document.getElementById(map[t]).style.display = '';
+  
   if (t==='att') renderGrid();
   if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); loadDeductLog(); }
   if (t==='teachers') renderTeachers();
   if (t==='inbox') renderInbox();
   if (t==='exitlog') loadExitLog();
-  if (t==='apply') {} // already live
+  if (t==='apply') {} 
+  if (t==='piano') {
+    const frame = document.getElementById('pianoFrame');
+    if (!frame.src || frame.src === window.location.href) {
+      const authData = btoa(encodeURIComponent(JSON.stringify(me)));
+      frame.src = `https://jjvsmusic.github.io/musicbooking/?sso=${authData}`;
+    }
+  }
 }
 
-// ══════════════════════════════════════════
-// CLASS SELECTOR
-// ══════════════════════════════════════════
 function buildClsBtns(containerId, clickFn) {
   const c = document.getElementById(containerId);
   if (!c) return;
@@ -919,9 +844,6 @@ function buildClsBtns(containerId, clickFn) {
 function switchCls(cls) { curCls = cls; renderGrid(); }
 function switchClsR(cls) { curCls = cls; renderRpt(); }
 
-// ══════════════════════════════════════════
-// STUDENT GRID
-// ══════════════════════════════════════════
 async function renderGrid() {
   if (!curCls) return;
   const grid = document.getElementById('stuGrid');
@@ -952,7 +874,6 @@ async function renderGrid() {
         <div class="sc-medals">${medals>0?'🎖️×'+medals:''}</div>
       </div>
       <div class="sc-hint">${batchMode?'👆點擊勾選':'👆名字查詳情'}</div>`;
-    // restore sel visual
     if (sel) card.classList.add('sel');
     grid.appendChild(card);
   });
@@ -967,12 +888,10 @@ function handleCardClick(e, id) {
 
 function cycleAtt(e, id) {
   e.stopPropagation();
-  // 顯示快速選單，不再循環切換（避免誤觸遲到自動扣點）
   showAttMenu(e, id);
 }
 
 function showAttMenu(e, id) {
-  // 移除已有選單
   const old = document.getElementById('attMenu');
   if (old) old.remove();
 
@@ -1002,7 +921,6 @@ function showAttMenu(e, id) {
     menu.appendChild(btn);
   });
 
-  // 定位選單
   const rect = e.target.getBoundingClientRect();
   const menuW = 140, menuH = 180;
   let top = rect.bottom + 4;
@@ -1014,7 +932,6 @@ function showAttMenu(e, id) {
 
   document.body.appendChild(menu);
 
-  // 點其他地方關閉
   setTimeout(() => {
     document.addEventListener('click', function closer() {
       menu.remove();
@@ -1031,7 +948,6 @@ function setAtt(id, att) {
     const badge = card.querySelector('.sbadge');
     if (badge) { badge.className=`sbadge ${att}`; badge.textContent=att; }
   }
-  // 遲到：詢問是否扣點，不自動扣
   if (att==='遲') {
     const stu = byId(id);
     const stuName = stu?.name || id;
@@ -1052,7 +968,6 @@ async function autoDeductLate(id) {
     points:pts,
     [`log/${lk}`]:{time:now(),action:'遲到自動扣點',reason:'遲到扣1點',teacher:me.name,delta:-1}
   });
-  // 發送記點通知給學生
   await sendNotifToStudent(id, stu?.name||id, '遲到自動扣1點', 'notice');
   toast(`${byId(id)?.name} 遲到，自動扣1點`);
 }
@@ -1069,7 +984,6 @@ async function saveAtt() {
   }
   if (!count) { toast('無變更需儲存'); return; }
   await db.ref('/').update(upd);
-  // 清除已儲存班級的 pendAtt
   byCls(curCls).forEach(s=>{ delete pendAtt[s.id]; });
   toast(`已儲存 ${count} 筆點名記錄`,'ok');
   renderGrid();
@@ -1080,9 +994,6 @@ function setAllAtt(att) {
   renderGrid();
 }
 
-// ══════════════════════════════════════════
-// BATCH MODE
-// ══════════════════════════════════════════
 function toggleBatch() {
   batchMode = !batchMode;
   batchSel.clear();
@@ -1141,7 +1052,6 @@ async function batchPts(delta) {
         const lk = Date.now()+'_'+id;
         upd[`${ROOT}/students/${id}/points`] = pts;
         upd[`${ROOT}/students/${id}/log/${lk}`] = {time:now(),action:delta>0?'批次加點':'批次扣點',reason,teacher:me.name,delta};
-        // 發通知
         const stu = byId(id);
         if (stu) upd[`${ROOT}/stuMsgs/${id}/${lk}`] = {from:me.name,content:`${delta>0?'獲得':'扣除'}1點 — ${reason}`,type:'notice',time:now(),read:false};
       }
@@ -1200,9 +1110,6 @@ async function batchAddTask() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ══════════════════════════════════════════
-// DETAIL PANEL
-// ══════════════════════════════════════════
 async function openDetail(stu) {
   curStu = stu;
   const d = (await dbGet(`students/${stu.id}`))||{};
@@ -1210,11 +1117,9 @@ async function openDetail(stu) {
   document.getElementById('dpName').textContent = stu.name;
   document.getElementById('dpCls').textContent = stu.cls+' · '+stu.id;
   document.getElementById('dpPw').textContent = d.password||'0000';
-  // 今日狀態
   const att = d.attendance?.[td]||'未';
   const attColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[att]||'var(--tx2)';
   document.getElementById('dpStatus').innerHTML = `<span style="color:${attColor}">${att}</span>`;
-  // 出勤歷史
   const attH = d.attendance||{};
   const days = Object.keys(attH).sort().slice(-21);
   const sum = {出:0,遲:0,缺:0,假:0};
@@ -1231,7 +1136,6 @@ async function openDetail(stu) {
       const sd=day.replace(/^\d+\//,'').replace('/','/');
       return `<div class="att-day s${v}"><div class="dl">${sd}</div><div class="dv">${v}</div></div>`;
     }).join('')}</div>`;
-  // 點數
   const pts = d.points||0;
   document.getElementById('dpPtsNum').textContent = pts;
   document.getElementById('redeemBtn').disabled = pts<5;
@@ -1243,16 +1147,13 @@ async function openDetail(stu) {
     c.textContent=i<pts?'⭐':'';
     pg.appendChild(c);
   }
-  // 金牌
   const medals = d.medals||0;
   document.getElementById('dpMedalsN').textContent = medals;
   const mr = document.getElementById('dpMedals');
   mr.innerHTML = medals>0
     ? Array(Math.min(medals,12)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>12?`<span style="color:var(--gold);font-size:18px;align-self:center">+${medals-12}</span>`:'')
     : '<span style="color:var(--tx3);font-size:13px;font-style:italic">尚無金牌</span>';
-  // 任務
   renderTasks(d.tasks||{});
-  // 日誌
   renderLog(d.log||{});
   document.getElementById('detailPanel').classList.add('open');
 }
@@ -1267,7 +1168,7 @@ function renderTasks(tasks) {
   const ents = Object.entries(tasks);
   if (!ents.length) { c.innerHTML='<div style="color:var(--tx3);font-size:13px">暫無任務</div>'; return; }
   c.innerHTML = ents.map(([k,t])=>{
-    const pct = Math.min(100,Math.round((t.done/t.total)*100));
+    const pct = Math.min(100,Math.round((t.done/t.total)/0.01));
     return `<div class="task-item">
       <div class="task-hd">
         <div style="font-size:14px">${t.name}</div>
@@ -1296,7 +1197,6 @@ function renderLog(log) {
   }).join('');
 }
 
-// ── POINTS ──
 async function chgPts(delta) {
   if (!curStu) return;
   openDlg(delta>0?'＋ 加點':'－ 扣點',
@@ -1341,7 +1241,6 @@ async function chgMedal(delta) {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── TASKS ──
 function openAddTask() {
   if (!curStu) return;
   openDlg('📝 新增處罰任務',
@@ -1368,7 +1267,6 @@ function openAddCopy() {
       if(!name||!total||total<1){toast('請填寫完整','err');return false}
       const k=Date.now()+'';
       await dbUpd(`students/${curStu.id}`,{[`tasks/${k}`]:{name:'📝罰抄：'+name,total,done:0,type:'copy'}});
-      // 自動發通知
       await sendNotifToStudent(curStu.id,curStu.name,`新增罰抄任務：${name}（共${total}行）`,'punishment');
       toast('罰抄任務已新增'); openDetail(curStu); return true;
     }},{label:'取消',fn:()=>true}]);
@@ -1392,7 +1290,6 @@ async function delTask(k) {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── RESET ──
 async function resetPts() {
   if (!curStu) return;
   openDlg('⚠️ 重置點數',`<div class="dlg-msg">確認將「${curStu.name}」點數歸零？</div>`,
@@ -1465,12 +1362,6 @@ async function resetAllDlg() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ══════════════════════════════════════════
-// EXIT APPLY
-// ══════════════════════════════════════════
-// ══════════════════════════════════════════
-// EXIT LOG（所有老師可查）
-// ══════════════════════════════════════════
 let _allExitData = {};
 let _exitLogFilter = 'all';
 let _exitLogCls = 'all';
@@ -1577,7 +1468,6 @@ async function approveExit(k, name) {
   const stu = byName(name);
   if (stu) {
     const lk = Date.now()+'';
-    // 寫入學生日誌
     await dbUpd(`students/${stu.id}`,{
       [`log/${lk}`]:{time:t, action:'第八節外出核可', reason:applyData?.reason||'', teacher:me.name, delta:0}
     });
@@ -1649,9 +1539,6 @@ function showExitPass(name, teacher, time, applyTime, outTime, retTime) {
   document.getElementById('exitPass').classList.add('on');
 }
 
-// ══════════════════════════════════════════
-// MESSAGE SYSTEM
-// ══════════════════════════════════════════
 async function sendNotifToStudent(stuId, stuName, content, type='notice') {
   const k = Date.now()+'_auto';
   await db.ref(`${ROOT}/stuMsgs/${stuId}/${k}`).set({
@@ -1660,7 +1547,6 @@ async function sendNotifToStudent(stuId, stuName, content, type='notice') {
 }
 
 function startMsgListener() {
-  // 監聽老師端發出的訊息未讀數
   ref('messages').on('value', snap => {
     renderInbox(snap.val()||{});
   });
@@ -1756,7 +1642,6 @@ function openSendMsg() {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生端訊息（簡潔可靠版） ──
 let _currentStuId = null;
 
 async function loadStuMsgs(stuId) {
@@ -1769,11 +1654,9 @@ async function _renderStuMsgs(stuId) {
   const all = Object.entries(data).sort((a,b)=>b[0].localeCompare(a[0]));
   const unread = all.filter(([,m])=>!m.read);
 
-  // 更新紅點
   const dot = document.getElementById('stuNotifDot');
   if (dot) dot.classList.toggle('on', unread.length>0);
 
-  // 更新 banner 內容
   const list = document.getElementById('stuBannerList');
   if (!list) return;
 
@@ -1824,8 +1707,6 @@ async function markRead(stuId, k) {
   }
 }
 
-
-// ── 學生自己兌換金牌 ──
 async function stuRedeemMedal(stuId, pts) {
   if (pts < 5) { toast('點數不足5點','err'); return; }
   openDlg('🎖️ 兌換金牌',
@@ -1842,7 +1723,6 @@ async function stuRedeemMedal(stuId, pts) {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ── 學生修改密碼 ──
 function stuChangePw(stuId) {
   openDlg('🔑 修改密碼',
     `<div class="dlg-label">目前密碼</div><input class="dlg-input" type="password" id="cpOld" placeholder="目前密碼">
@@ -1862,13 +1742,9 @@ function stuChangePw(stuId) {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ══════════════════════════════════════════
-// STUDENT VIEW (self)
-// ══════════════════════════════════════════
-let _stuViewListener = null;  // Firebase 即時監聽器
+let _stuViewListener = null;  
 
 async function loadStuView(stu) {
-  // 設定即時監聽（點名更新後自動重新渲染）
   if (_stuViewListener) {
     ref(`students/${_stuViewListener}`).off('value');
   }
@@ -1876,7 +1752,6 @@ async function loadStuView(stu) {
   ref(`students/${stu.id}`).on('value', snap => {
     _renderStuView(stu, snap.val()||{});
   });
-  // 監聽外出申請
   listenMyApprovalStu(stu.name);
 }
 
@@ -1891,11 +1766,10 @@ function _renderStuView(stu, d) {
   const attColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[att]||'var(--tx2)';
   const taskEntries = Object.entries(tasks);
 
-  // 任務 HTML
   const tasksHtml = taskEntries.length === 0
     ? '<div style="color:var(--tx3);font-size:13px;padding:6px 0">目前無任務 ✓</div>'
     : taskEntries.map(([k,t])=>{
-        const pct = Math.min(100, Math.round(((t.done||0)/t.total)*100));
+        const pct = Math.min(100, Math.round(((t.done||0)/t.total)/0.01));
         const done = t.done||0;
         const isDone = done >= t.total;
         return `<div style="background:var(--bg2);border:1px solid ${isDone?'var(--green)':'var(--bdr)'};border-radius:8px;padding:10px 12px;margin-bottom:8px">
@@ -1913,7 +1787,6 @@ function _renderStuView(stu, d) {
         </div>`;
       }).join('');
 
-  // 日誌 HTML
   const logHtml = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,10).map(([,e])=>`
     <div class="log-item ${e.delta>0?'add':e.delta<0?'sub':''}">
       <div class="log-t">${e.time||''}</div>
@@ -1922,8 +1795,6 @@ function _renderStuView(stu, d) {
 
   el.innerHTML = `
     <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:18px;padding:24px;box-shadow:0 0 20px rgba(212,175,55,.1)">
-
-      <!-- 頭部：名字 + 今日出勤 -->
       <div style="text-align:center;margin-bottom:16px">
         <div style="font-size:12px;color:var(--tx2)">${stu.cls} · ${stu.id}</div>
         <div style="font-size:32px;font-weight:bold;color:var(--gold);margin:6px 0">${stu.name}</div>
@@ -1933,7 +1804,6 @@ function _renderStuView(stu, d) {
 
       <hr class="sep">
 
-      <!-- 集點卡 -->
       <div class="dp-sec-t">⭐ 點數集點卡</div>
       <div class="pts-card" style="margin-bottom:10px">
         <div class="pts-grid">${Array(10).fill(0).map((_,i)=>`<div class="pc ${i<pts?'on':'off'}">${i<pts?'⭐':''}</div>`).join('')}</div>
@@ -1945,7 +1815,6 @@ function _renderStuView(stu, d) {
 
       <hr class="sep">
 
-      <!-- 金牌 -->
       <div class="dp-sec-t">🎖️ 金牌庫存</div>
       <div class="medals-row" style="margin-bottom:6px">${medals>0
         ? Array(Math.min(medals,10)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>10?`<span style="color:var(--gold);font-size:16px;align-self:center">+${medals-10}</span>`:'')
@@ -1954,19 +1823,16 @@ function _renderStuView(stu, d) {
 
       <hr class="sep">
 
-      <!-- 待完成任務（罰抄） -->
       <div class="dp-sec-t">📝 待完成任務（罰抄）</div>
       ${tasksHtml}
 
       <hr class="sep">
 
-      <!-- 修改密碼 -->
       <div class="dp-sec-t" style="margin-bottom:8px">🔑 帳號設定</div>
       <button class="btn" onclick="stuChangePw('${stu.id}')" style="width:100%;padding:9px;font-size:13px">🔑 修改我的密碼</button>
 
       <hr class="sep">
 
-      <!-- 最近異動記錄 -->
       <div class="dp-sec-t">📜 最近記錄</div>
       ${logHtml}
     </div>`;
@@ -1983,10 +1849,8 @@ function listenMyApprovalStu(name) {
     const area = document.getElementById('stuPassArea');
     if (!area) return;
 
-    // 今日核可的通行證
     const approvedToday = myApps.find(([,a])=>a.status==='approved' && (a.approvedTime||'').startsWith(td.replace(/\//g,'/')));
 
-    // 歷史申請記錄（最近10筆）
     const histHtml = myApps.slice(0,10).map(([,a])=>{
       const statusColor = {approved:'var(--green)',rejected:'var(--red)',pending:'var(--yellow)'}[a.status]||'var(--tx2)';
       const statusLabel = {approved:'✅ 已核可',rejected:'✕ 已拒絕',pending:'⏳ 待審核'}[a.status]||a.status;
@@ -2024,9 +1888,6 @@ async function stuDelTask(stuId, taskKey) {
     }},{label:'取消',fn:()=>true}]);
 }
 
-// ══════════════════════════════════════════
-// TEACHER MANAGEMENT
-// ══════════════════════════════════════════
 async function renderTeachers() {
   const c = document.getElementById('teacherList');
   c.innerHTML = '<div class="spin"></div>';
@@ -2035,7 +1896,7 @@ async function renderTeachers() {
   Object.entries(teachers).forEach(([k,t])=>{
     const d=document.createElement('div');
     d.className='titem';
-    d.innerHTML=`<div><div class="ti-name">${t.name} ${t.role==='piano_only'?'<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(201,168,76,.15);color:#c9a84c">專任老師</span>':''}</div><div class="ti-cls">${t.role==='piano_only'?'僅限琴房預約':'班級：'+(t.classes||[]).join('、')||'無'}</div><div class="ti-pw">密碼：${t.pass}</div></div><button class="btn d" onclick="delTeacher('${k}','${t.name}')">刪除</button>`;
+    d.innerHTML=`<div><div class="ti-name">${t.name}</div><div class="ti-cls">班級：${(t.classes||[]).join('、')||'無'}</div><div class="ti-pw">密碼：${t.pass}</div></div><button class="btn d" onclick="delTeacher('${k}','${t.name}')">刪除</button>`;
     c.appendChild(d);
   });
 }
@@ -2044,19 +1905,13 @@ function openAddTeacher() {
   openDlg('⚙️ 新增教師帳號',
     `<div class="dlg-label">姓名（即帳號）</div><input class="dlg-input" type="text" id="tN" placeholder="教師姓名">
      <div class="dlg-label">密碼</div><input class="dlg-input" type="password" id="tP" placeholder="密碼">
-     <div class="dlg-label">角色類型</div>
-     <select class="dlg-input" id="tRole" style="margin-bottom:10px">
-       <option value="teacher">教師（可使用教務+琴房）</option>
-       <option value="piano_only">專任老師（僅限琴房預約）</option>
-     </select>
-     <div id="tClassWrap"><div class="dlg-label">管轄班級（教師才需填）</div>${CLASSES.map(c=>`<label style="display:block;margin-bottom:6px;font-size:14px;cursor:pointer"><input type="checkbox" value="${c}" style="margin-right:6px"> ${c}</label>`).join('')}</div>`,
+     <div class="dlg-label">管轄班級</div>${CLASSES.map(c=>`<label style="display:block;margin-bottom:6px;font-size:14px;cursor:pointer"><input type="checkbox" value="${c}" style="margin-right:6px"> ${c}</label>`).join('')}`,
     [{label:'新增',cls:'ok',fn:async()=>{
       const name=document.getElementById('tN').value.trim();
       const pass=document.getElementById('tP').value.trim();
-      const roleVal=document.getElementById('tRole')?.value||'teacher';
-      const classes=roleVal==='piano_only'?[]:[...document.querySelectorAll('#dlgBody input[type=checkbox]:checked')].map(c=>c.value);
+      const classes=[...document.querySelectorAll('#dlgBody input[type=checkbox]:checked')].map(c=>c.value);
       if(!name||!pass){toast('請填寫完整','err');return false}
-      await dbSet(`teachers/${Date.now()}`,{name,pass,classes,role:roleVal});
+      await dbSet(`teachers/${Date.now()}`,{name,pass,classes});
       toast('教師帳號已新增','ok'); renderTeachers(); return true;
     }},{label:'取消',fn:()=>true}]);
 }
@@ -2066,14 +1921,10 @@ async function delTeacher(k, name) {
     [{label:'刪除',cls:'del',fn:async()=>{ await db.ref(`${ROOT}/teachers/${k}`).remove(); toast('已刪除'); renderTeachers(); return true; }},{label:'取消',fn:()=>true}]);
 }
 
-// ══════════════════════════════════════════
-// REPORT & EXPORT
-// ══════════════════════════════════════════
 async function loadDeductLog() {
   const el = document.getElementById('deductLog');
   if (!el) return;
   el.innerHTML = '<div class="spin"></div>';
-  // 讀取所有學生log中 delta<0 的記錄
   const stus = me.classes.flatMap(c=>byCls(c));
   const all = [];
   for (const s of stus) {
@@ -2161,9 +2012,6 @@ async function exportPdf() {
   toast('PDF 已下載','ok');
 }
 
-// ══════════════════════════════════════════
-// DIALOG
-// ══════════════════════════════════════════
 function openDlg(title, bodyHtml, actions) {
   document.getElementById('dlgTitle').textContent = title;
   document.getElementById('dlgBody').innerHTML = bodyHtml;
@@ -2182,9 +2030,6 @@ function openDlg(title, bodyHtml, actions) {
 
 function closeDlg() { document.getElementById('dlgOverlay').classList.remove('on'); }
 
-// ══════════════════════════════════════════
-// INIT
-// ══════════════════════════════════════════
 window.addEventListener('beforeunload', (e) => {
   if (me && me.role !== 'student' && Object.keys(pendAtt).length > 0) {
     e.preventDefault();
@@ -2205,572 +2050,5 @@ window.addEventListener('load', () => {
   }
 });
 </script>
-
-<!-- ══════════════════════════════════════════ -->
-<!-- 🎹 琴房預約模組                            -->
-<!-- ══════════════════════════════════════════ -->
-
-<!-- 琴房頁面（獨立 screen） -->
-<div id="pianoScreen" class="screen">
-  <div class="topbar">
-    <div class="topbar-logo">🎹</div>
-    <div class="topbar-title">莊敬音樂科 · 琴房預約</div>
-    <div class="topbar-user">身份：<b id="pianoUserName">—</b> <span id="pianoRoleTag" style="font-size:10px;padding:2px 8px;border-radius:10px;background:rgba(201,168,76,.2);color:#c9a84c;margin-left:4px"></span></div>
-    <button class="btn" id="pianoBackBtn" onclick="switchToModule('edu')" style="font-size:11px" title="回教務系統">📋 教務系統</button>
-    <button class="btn" onclick="doLogout()" style="font-size:11px">登出</button>
-  </div>
-  <div style="flex:1;padding:14px;overflow-y:auto">
-    <!-- 規則公告 -->
-    <div id="pianoRulesBox" class="hidden" style="background:rgba(201,168,76,.06);border:1px solid rgba(201,168,76,.22);border-radius:10px;padding:12px 16px;margin-bottom:12px;display:flex;align-items:flex-start;gap:10px">
-      <span style="font-size:1rem;flex-shrink:0">📋</span>
-      <div>
-        <div style="font-size:.72rem;color:#c9a84c;font-weight:500;margin-bottom:4px">預約規則說明</div>
-        <div id="pianoRulesText" style="font-size:.78rem;color:var(--tx2);white-space:pre-wrap;line-height:1.7"></div>
-      </div>
-    </div>
-    <!-- 過濾列 -->
-    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:10px 14px;margin-bottom:12px">
-      <span style="font-size:12px;color:var(--tx2)">日期</span>
-      <input type="date" id="pianoDate" style="background:var(--bg2);border:1px solid var(--bdr);color:var(--tx);padding:5px 10px;border-radius:6px;outline:none;font-family:inherit;font-size:13px">
-      <span id="pianoDayBadge" style="font-size:15px;color:#c9a84c;font-weight:bold;min-width:36px"></span>
-      <div style="display:flex;gap:4px">
-        <button class="btn g" id="pianoAM" style="font-size:11px;padding:5px 10px">☀ 上午</button>
-        <button class="btn" id="pianoPM" style="font-size:11px;padding:5px 10px">🌆 下午</button>
-      </div>
-      <div style="display:flex;gap:10px;margin-left:auto;flex-wrap:wrap">
-        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:3px;background:#3d8ef0"></div>學生預約</div>
-        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:3px;background:#a855f7"></div>教師預約</div>
-        <div style="display:flex;align-items:center;gap:4px;font-size:11px;color:var(--tx2)"><div style="width:10px;height:10px;border-radius:2px;border:1.5px dashed rgba(201,168,76,.6)"></div>固定排課</div>
-      </div>
-    </div>
-    <!-- 琴房時程表 -->
-    <div style="border-radius:10px;border:1px solid var(--bdr);overflow:hidden;background:var(--bg1)">
-      <div style="overflow-x:auto">
-        <table id="pianoTable" style="border-collapse:separate;border-spacing:0;width:100%;min-width:540px">
-          <thead><tr id="pianoHeader"></tr></thead>
-          <tbody id="pianoBody"></tbody>
-        </table>
-      </div>
-    </div>
-    <!-- 管理員區（僅 master 顯示） -->
-    <div id="pianoAdminZone" class="hidden" style="margin-top:16px">
-      <div style="font-size:11px;color:#c9a84c;letter-spacing:2px;border-bottom:1px solid var(--bdr);padding-bottom:5px;margin-bottom:12px">⚙️ 琴房管理員功能</div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px">
-        <!-- 新增琴房 -->
-        <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px">
-          <div style="font-size:13px;color:#c9a84c;margin-bottom:10px;font-weight:bold">🎹 琴房管理</div>
-          <div style="display:flex;gap:8px;margin-bottom:8px">
-            <input id="pianoNewRoom" class="dlg-input" placeholder="琴房名稱（如：101-A）" style="flex:1;margin:0">
-            <button class="btn s" onclick="pianoAddRoom()" style="font-size:12px;padding:6px 12px">新增</button>
-          </div>
-          <div id="pianoRoomList" style="max-height:200px;overflow-y:auto"></div>
-        </div>
-        <!-- 封鎖/排課 -->
-        <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px">
-          <div style="font-size:13px;color:#c9a84c;margin-bottom:10px;font-weight:bold">📋 封鎖時段</div>
-          <div class="dlg-label" style="margin-bottom:4px">日期</div>
-          <input type="date" id="pianoLockDate" class="dlg-input" style="margin-bottom:8px">
-          <div class="dlg-label" style="margin-bottom:4px">琴房</div>
-          <select id="pianoLockRoom" class="dlg-input" style="margin-bottom:8px"></select>
-          <div class="dlg-label" style="margin-bottom:4px">時段</div>
-          <div style="display:flex;gap:6px;margin-bottom:8px">
-            <input id="pianoLockStart" class="dlg-input" placeholder="08:00" style="flex:1;margin:0">
-            <span style="align-self:center;color:var(--tx2)">~</span>
-            <input id="pianoLockEnd" class="dlg-input" placeholder="09:30" style="flex:1;margin:0">
-          </div>
-          <div class="dlg-label" style="margin-bottom:4px">說明</div>
-          <input id="pianoLockNote" class="dlg-input" placeholder="例：場地維護" style="margin-bottom:8px">
-          <button class="btn d" onclick="pianoAddLock()" style="width:100%;font-size:12px">🚫 封鎖此時段</button>
-        </div>
-        <!-- 成員管理 -->
-        <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:16px">
-          <div style="font-size:13px;color:#c9a84c;margin-bottom:10px;font-weight:bold">👥 琴房成員管理</div>
-          <div style="display:flex;gap:6px;margin-bottom:6px">
-            <input id="pianoNewUser" class="dlg-input" placeholder="姓名" style="flex:1;margin:0">
-            <select id="pianoNewRole" class="dlg-input" style="width:110px;margin:0">
-              <option value="student">學生</option>
-              <option value="teacher">教師</option>
-              <option value="piano_only">專任老師</option>
-            </select>
-          </div>
-          <button class="btn s" onclick="pianoAddUser()" style="width:100%;font-size:12px;margin-bottom:10px">新增成員</button>
-          <div id="pianoUserList" style="max-height:180px;overflow-y:auto"></div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- 琴房預約 Dialog -->
-<div id="pianoBookDlg" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center">
-  <div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:15px;padding:0;width:380px;max-width:92vw;max-height:90vh;overflow-y:auto;box-shadow:0 0 20px rgba(201,168,76,.15)">
-    <div style="padding:18px 20px 14px;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:var(--bg2);z-index:2">
-      <div style="font-size:16px;color:#c9a84c;font-weight:bold" id="pianoDlgTitle">申請預約</div>
-      <button onclick="closePianoDlg()" style="background:none;border:none;color:var(--tx2);font-size:20px;cursor:pointer">×</button>
-    </div>
-    <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px" id="pianoDlgBody"></div>
-    <div style="padding:12px 20px;border-top:1px solid var(--bdr);display:flex;gap:8px;justify-content:flex-end;position:sticky;bottom:0;background:var(--bg2)">
-      <button class="btn" onclick="closePianoDlg()" style="font-size:12px">取消</button>
-      <button class="btn g" id="pianoDlgConfirm" style="font-size:12px">確認預約</button>
-    </div>
-  </div>
-</div>
-
-<style>
-/* ══ 琴房額外樣式 ══ */
-#pianoScreen { background: var(--bg); }
-.piano-slot {
-  width:100%; height:100%; min-height:50px;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  font-size:11px; font-weight:500; border-radius:6px;
-  transition:.15s; overflow:hidden; padding:3px 4px;
-  text-align:center; position:relative; cursor:pointer;
-}
-.piano-free  { background:rgba(40,160,96,.07); border:1px solid rgba(40,160,96,.18); color:var(--tx2); }
-.piano-free:hover { background:rgba(40,160,96,.2); border-color:#40c878; color:#40c878; }
-.piano-stu   { background:linear-gradient(135deg,#1c6fd6,#1352a8); color:#fff; border:none; }
-.piano-tea   { background:linear-gradient(135deg,#8b3ec9,#6827a0); color:#fff; border:none; }
-.piano-fixed { background:rgba(201,168,76,.08); border:1.5px dashed rgba(201,168,76,.5); color:#c9a84c; }
-.piano-lock  { background:repeating-linear-gradient(45deg,#1c2029,#1c2029 8px,#161920 8px,#161920 16px); color:var(--tx2); border:1px solid var(--bdr); }
-.piano-past  { opacity:.3; pointer-events:none !important; cursor:default !important; }
-.piano-header-th { background:var(--bg2); color:var(--tx2); font-size:10px; font-weight:400; padding:8px 3px; border-bottom:1px solid var(--bdr); border-right:1px solid var(--bdr); text-align:center; }
-.piano-room-th { background:var(--bg2); position:sticky; left:0; z-index:100; min-width:80px; width:80px; font-size:12px; color:#c9a84c; border-right:2px solid #c9a84c !important; text-align:center; padding:0 4px; vertical-align:middle; border-bottom:1px solid var(--bdr); }
-.piano-td { border-bottom:1px solid var(--bdr); border-right:1px solid var(--bdr); height:52px; padding:2px; }
-.piano-admin-del { display:none; position:absolute; top:2px; right:2px; background:#d94040; color:#fff; border:none; border-radius:0 5px 0 5px; width:16px; height:16px; font-size:10px; cursor:pointer; z-index:20; line-height:16px; text-align:center; padding:0; font-weight:700; }
-</style>
-
-<script>
-// ══════════════════════════════════════════
-// 琴房預約模組（Piano Module）
-// Firebase 路徑：jjvs_piano/
-// ══════════════════════════════════════════
-const PIANO_ROOT = "jjvs_piano";
-const PIANO_DB = () => db.ref(PIANO_ROOT);
-const pianoRef = p => db.ref(`${PIANO_ROOT}/${p}`);
-const pianoGet = p => pianoRef(p).once('value').then(s=>s.val());
-const pianoSet = (p,v) => pianoRef(p).set(v);
-const pianoUpd = (p,v) => pianoRef(p).update(v);
-
-// 預設琴房清單
-const DEFAULT_PIANO_ROOMS = [
-  '101單間','101A','101B','101C','101D','101E',
-  '102單間','102A','102B','102C','102D','102E',
-  '104單間','104A','104B','104C','104D',
-  '105擊樂教室','B1樂團教室','B1排練教室',
-  '209展演廳','210A錄音室','210B混音室',
-  '211A','211B','211C','212A','212B','212C'
-];
-
-const PIANO_DAYS = ['日','一','二','三','四','五','六'];
-const PIANO_SLOTS = [];
-for(let h=8;h<=21;h++){ PIANO_SLOTS.push(pad2(h)+':00'); PIANO_SLOTS.push(pad2(h)+':30'); }
-function pad2(n){ return String(n).padStart(2,'0'); }
-function pianoToday(){ const d=new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
-function pianoDateStr(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
-
-// 狀態
-let pianoRooms = DEFAULT_PIANO_ROOMS;
-let pianoData  = {};
-let pianoUsers = {};
-let pianoView  = 'am';
-let pianoPending = {};
-
-// 最大預約天數
-function pianoMaxDays() {
-  if (me.role === 'master') return 30;
-  if (me.role === 'teacher' || me.role === 'piano_only') return 14;
-  return 2;
-}
-function pianoMaxDate() {
-  const d = new Date(); d.setDate(d.getDate()+pianoMaxDays());
-  return pianoDateStr(d);
-}
-function getRoleLabel(role) {
-  return {master:'管理員',teacher:'教師',piano_only:'專任老師',student:'學生'}[role]||'學生';
-}
-
-// ── 初始化 ──
-async function initPianoModule() {
-  // 從 Firebase 載入
-  const r = await pianoGet('rooms');
-  if (r && Array.isArray(r)) pianoRooms = r;
-  const d = await pianoGet('sysData'); if (d) pianoData = d;
-  const u = await pianoGet('users');   if (u) pianoUsers = u;
-
-  // 確保 master 帳號在琴房系統裡
-  if (!pianoUsers[MASTER.name]) {
-    pianoUsers[MASTER.name] = {pwd: MASTER.pass, role: 'master'};
-  }
-  // 同步目前登入用戶到琴房系統
-  if (me && !pianoUsers[me.name]) {
-    pianoUsers[me.name] = {role: me.role};
-  }
-}
-
-// ── 切換模組 ──
-async function switchToModule(mod) {
-  if (mod === 'piano') {
-    if (!me) { toast('請先登入','err'); return; }
-    await initPianoModule();
-    document.getElementById('pianoUserName').textContent = me.name;
-    document.getElementById('pianoRoleTag').textContent = getRoleLabel(me.role);
-    // piano_only 不顯示返回教務按鈕
-    document.getElementById('pianoBackBtn').style.display =
-      me.role === 'piano_only' ? 'none' : '';
-    // master 才顯示管理區
-    document.getElementById('pianoAdminZone').classList.toggle('hidden', me.role !== 'master');
-    showScreen('pianoScreen');
-    const today = pianoToday();
-    document.getElementById('pianoDate').value = today;
-    document.getElementById('pianoDate').max = pianoMaxDate();
-    updatePianoBoard();
-    if (me.role === 'master') refreshPianoAdminUI();
-  } else {
-    // 回教務系統
-    showScreen('appScreen');
-  }
-}
-
-// 專任老師直接進琴房
-function enterPianoOnly() {
-  showScreen('loginScreen'); // 先隱藏
-  switchToModule('piano');
-}
-
-// ── 時程表 ──
-function pianoGetVis() {
-  return pianoView === 'am'
-    ? PIANO_SLOTS.filter(t=>parseInt(t)<12)
-    : PIANO_SLOTS.filter(t=>parseInt(t)>=12);
-}
-
-function updatePianoBoard() {
-  const ds = document.getElementById('pianoDate').value; if(!ds) return;
-  const dow = new Date(ds+'T00:00:00').getDay();
-  document.getElementById('pianoDayBadge').textContent = '週'+PIANO_DAYS[dow];
-  const vis = pianoGetVis();
-  const nowTime = new Date();
-  const todayStr = pianoToday();
-  const maxD = pianoMaxDate();
-  const dowKey = String(dow);
-
-  // Header
-  const hdr = document.getElementById('pianoHeader');
-  hdr.innerHTML = '<th class="piano-room-th">琴房</th>' +
-    vis.map(t=>`<th class="piano-header-th">${t}</th>`).join('');
-
-  // Body
-  const body = document.getElementById('pianoBody');
-  body.innerHTML = '';
-  pianoRooms.forEach(room => {
-    const tr = document.createElement('tr');
-    const rtd = document.createElement('td');
-    rtd.className = 'piano-room-th';
-    rtd.style.borderBottom = '1px solid var(--bdr)';
-    rtd.textContent = room;
-    tr.appendChild(rtd);
-
-    vis.forEach(time => {
-      const td = document.createElement('td');
-      td.className = 'piano-td';
-      const [hh,mm] = time.split(':').map(Number);
-      const isPast = ds===todayStr && (hh<nowTime.getHours()||(hh===nowTime.getHours()&&mm<=nowTime.getMinutes()));
-      const outRange = ds<todayStr || ds>maxD;
-
-      const bookD  = pianoData[ds]?.[room]?.[time];
-      const fixedD = pianoData[dowKey]?.[room]?.[time];
-
-      const slot = document.createElement('div');
-      slot.className = 'piano-slot';
-
-      if (bookD) {
-        if (bookD.type==='lock') {
-          slot.className += ' piano-lock'+(isPast?' piano-past':'');
-          slot.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95%">${esc(bookD.note||'封鎖')}</span>`;
-          if (me.role==='master' && !isPast) {
-            slot.appendChild(makePianoDelBtn(ds,room,time));
-          }
-        } else if (bookD.type==='book') {
-          const isTeacher = pianoUsers[bookD.name]?.role==='teacher'||pianoUsers[bookD.name]?.role==='piano_only'||pianoUsers[bookD.name]?.role==='master';
-          slot.className += (isTeacher?' piano-tea':' piano-stu')+(isPast?' piano-past':'');
-          slot.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95%">${esc(bookD.name)}</span><span style="font-size:10px;opacity:.8;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95%">${esc(bookD.note||'')}</span>`;
-          if (!isPast && (me.role==='master'||bookD.name===me.name)) {
-            slot.addEventListener('click',()=>openPianoDeleteDlg(ds,room,time));
-          }
-          if (me.role==='master'&&!isPast) slot.appendChild(makePianoDelBtn(ds,room,time));
-        }
-      } else if (fixedD && fixedD.type==='fixed') {
-        slot.className += ' piano-fixed'+(isPast?' piano-past':'');
-        slot.innerHTML = `<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:95%">${esc(fixedD.teacher||'固定')}</span><span style="font-size:9px;opacity:.7">＋可預約</span>`;
-        if (!isPast && !outRange) {
-          slot.addEventListener('click',()=>openPianoBookDlg(room,time,fixedD));
-        }
-        if (me.role==='master'&&!isPast) slot.appendChild(makePianoDelBtn(dowKey,room,time));
-      } else {
-        if (isPast||outRange) {
-          slot.className += ' piano-free piano-past';
-          slot.innerHTML = '<span>—</span>';
-        } else {
-          slot.className += ' piano-free';
-          slot.innerHTML = '<span style="font-size:14px">＋</span>';
-          slot.addEventListener('click',()=>openPianoBookDlg(room,time,null));
-        }
-      }
-      td.appendChild(slot);
-      tr.appendChild(td);
-    });
-    body.appendChild(tr);
-  });
-}
-
-function makePianoDelBtn(key,room,time) {
-  const btn = document.createElement('button');
-  btn.className = 'piano-admin-del'; btn.textContent = '×';
-  btn.style.display = 'block';
-  btn.addEventListener('click', ev => {
-    ev.stopPropagation();
-    pianoCancelSlot(String(key),room,time);
-  });
-  return btn;
-}
-
-function pianoCancelSlot(key,room,time) {
-  const d = pianoData[key]?.[room]?.[time]; if(!d) return;
-  openDlg('確認刪除', `<div class="dlg-msg">刪除 ${room} ${time} 的${d.type==='lock'?'封鎖':'預約'}？</div>`,
-    [{label:'確認',cls:'del',fn:async()=>{
-      delete pianoData[key][room][time];
-      await pianoUpd('sysData', pianoData);
-      updatePianoBoard(); toast('已刪除','ok'); return true;
-    }},{label:'取消',fn:()=>true}]);
-}
-
-// ── 預約 Dialog ──
-function openPianoBookDlg(room, time, fixedD) {
-  if (!me) { toast('請先登入','err'); return; }
-  pianoPending = {room, time};
-  const ds = document.getElementById('pianoDate').value;
-  const dow = new Date(ds+'T00:00:00').getDay();
-
-  let noteHtml = `
-    <div class="dlg-label">預約類型</div>
-    <select class="dlg-input" id="pianoNoteType">
-      <option value="自主練習">自主練習</option>
-      <option value="課程練習">課程練習</option>
-      <option value="合奏排練">合奏排練</option>
-      <option value="other">其他</option>
-    </select>
-    <div id="pianoNoteOtherWrap" style="display:none">
-      <div class="dlg-label" style="margin-top:8px">備注說明</div>
-      <input class="dlg-input" id="pianoNoteOther" placeholder="請填寫說明">
-    </div>`;
-
-  // 可選時段
-  let slotsHtml = '<div class="dlg-label" style="margin-top:4px">選擇時段（可複選）</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:4px">';
-  const nowTime = new Date(); const todayStr = pianoToday();
-  PIANO_SLOTS.forEach(ts => {
-    const bD = pianoData[ds]?.[room]?.[ts];
-    const occ = bD && bD.type!=='fixed';
-    const [hh,mm] = ts.split(':').map(Number);
-    const past = ds===todayStr&&(hh<nowTime.getHours()||(hh===nowTime.getHours()&&mm<=nowTime.getMinutes()));
-    const dis = occ||past;
-    const checked = ts===time&&!dis;
-    slotsHtml += `<label style="display:flex;align-items:center;gap:4px;font-size:12px;cursor:${dis?'not-allowed':'pointer'};opacity:${dis?.4:1};padding:3px 5px;border-radius:4px;background:var(--bg1)"><input type="checkbox" name="pianoTs" value="${ts}"${checked?' checked':''}${dis?' disabled':''}><span>${ts}</span></label>`;
-  });
-  slotsHtml += '</div>';
-
-  const infoHtml = `
-    <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:13px">
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">琴房</span><span style="color:#c9a84c;font-weight:bold">${esc(room)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">日期</span><span>${ds}（週${PIANO_DAYS[dow]}）</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">預約人</span><span>${esc(me.name)} · ${getRoleLabel(me.role)}</span></div>
-      ${fixedD?`<div style="padding:5px 8px;background:rgba(201,168,76,.08);border-radius:5px;font-size:12px;color:#c9a84c;margin-top:2px">📌 固定排課：${esc(fixedD.teacher||'')}</div>`:''}
-    </div>`;
-
-  document.getElementById('pianoDlgBody').innerHTML = infoHtml + noteHtml + slotsHtml;
-  document.getElementById('pianoNoteType').addEventListener('change', function(){
-    document.getElementById('pianoNoteOtherWrap').style.display = this.value==='other'?'':'none';
-  });
-  document.getElementById('pianoDlgConfirm').onclick = confirmPianoBook;
-  document.getElementById('pianoDlgTitle').textContent = '申請預約';
-  document.getElementById('pianoBookDlg').style.display = 'flex';
-}
-
-async function confirmPianoBook() {
-  const ds = document.getElementById('pianoDate').value;
-  let note = document.getElementById('pianoNoteType')?.value || '自主練習';
-  if (note==='other') {
-    note = document.getElementById('pianoNoteOther')?.value.trim();
-    if (!note) { toast('請填寫備注說明','err'); return; }
-  }
-  const sel = [...document.querySelectorAll('input[name="pianoTs"]:checked')].map(e=>e.value);
-  if (!sel.length) { toast('請至少選擇一個時段','err'); return; }
-  const {room} = pianoPending;
-  if (!pianoData[ds]) pianoData[ds] = {};
-  if (!pianoData[ds][room]) pianoData[ds][room] = {};
-  const conflicts = sel.filter(t=>{ const d=pianoData[ds][room][t]; return d&&d.type!=='fixed'; });
-  if (conflicts.length) { toast(`時段 ${conflicts.join('、')} 已被佔用`,'err'); return; }
-  sel.forEach(t=>{
-    pianoData[ds][room][t] = {name:me.name, note, type:'book', role:me.role};
-  });
-  await pianoUpd('sysData', pianoData);
-  closePianoDlg(); updatePianoBoard();
-  toast(`${room} 預約成功（${sel.length}個時段）`,'ok');
-}
-
-function openPianoDeleteDlg(ds, room, time) {
-  const d = pianoData[ds]?.[room]?.[time]; if(!d||!d.name) return;
-  pianoPending = {ds, room, time};
-  const body = `
-    <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:4px;font-size:13px">
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">琴房</span><span style="color:#c9a84c;font-weight:bold">${esc(room)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">時段</span><span>${ds} ${time}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">預約人</span><span>${esc(d.name)}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--tx2)">備注</span><span>${esc(d.note||'—')}</span></div>
-    </div>
-    ${me.role!=='master'&&d.name===me.name?`<div><div class="dlg-label">確認密碼</div><input class="dlg-input" type="password" id="pianoCancelPwd" placeholder="請輸入您的密碼"></div>`:''}`;
-
-  document.getElementById('pianoDlgBody').innerHTML = body;
-  document.getElementById('pianoDlgTitle').textContent = '取消預約';
-  document.getElementById('pianoDlgConfirm').textContent = '確認取消';
-  document.getElementById('pianoDlgConfirm').className = 'btn d';
-  document.getElementById('pianoDlgConfirm').onclick = async () => {
-    const {ds,room,time} = pianoPending;
-    const d2 = pianoData[ds]?.[room]?.[time]; if(!d2) return;
-    if (me.role!=='master') {
-      const pwd = document.getElementById('pianoCancelPwd')?.value;
-      // 驗證密碼：先查琴房users，再查教務users
-      const storedPwd = pianoUsers[me.name]?.pwd || (await dbGet(`students/${me.stuId||'x'}`))?.password || MASTER.pass;
-      if (me.role==='master') {} // master 不需密碼
-      else if (!pwd) { toast('請輸入密碼','err'); return; }
-    }
-    delete pianoData[ds][room][time];
-    await pianoUpd('sysData', pianoData);
-    closePianoDlg(); updatePianoBoard(); toast('預約已取消','ok');
-  };
-  document.getElementById('pianoBookDlg').style.display = 'flex';
-}
-
-function closePianoDlg() {
-  document.getElementById('pianoBookDlg').style.display = 'none';
-  document.getElementById('pianoDlgConfirm').textContent = '確認預約';
-  document.getElementById('pianoDlgConfirm').className = 'btn g';
-  document.getElementById('pianoDlgConfirm').onclick = confirmPianoBook;
-}
-
-// ── 管理員功能 ──
-function refreshPianoAdminUI() {
-  // 琴房清單
-  const rl = document.getElementById('pianoRoomList');
-  rl.innerHTML = pianoRooms.map((r,i)=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:5px 8px;background:var(--bg1);border:1px solid var(--bdr);border-radius:5px;margin-bottom:4px;font-size:12px">
-      <span>${esc(r)}</span>
-      <button class="btn d" onclick="pianoDelRoom(${i})" style="font-size:10px;padding:2px 7px">✕</button>
-    </div>`).join('');
-  // 封鎖選單的琴房
-  const rs = document.getElementById('pianoLockRoom');
-  rs.innerHTML = pianoRooms.map(r=>`<option value="${esc(r)}">${esc(r)}</option>`).join('');
-  // 成員清單
-  refreshPianoUserList();
-}
-
-async function pianoAddRoom() {
-  const name = document.getElementById('pianoNewRoom').value.trim();
-  if (!name) { toast('請輸入琴房名稱','err'); return; }
-  if (pianoRooms.includes(name)) { toast('名稱已存在','err'); return; }
-  pianoRooms.push(name);
-  await pianoSet('rooms', pianoRooms);
-  document.getElementById('pianoNewRoom').value = '';
-  refreshPianoAdminUI(); updatePianoBoard();
-  toast(`已新增 ${name}`,'ok');
-}
-
-async function pianoDelRoom(i) {
-  const name = pianoRooms[i];
-  pianoRooms.splice(i,1);
-  await pianoSet('rooms', pianoRooms);
-  refreshPianoAdminUI(); updatePianoBoard();
-  toast(`已刪除 ${name}`);
-}
-
-async function pianoAddLock() {
-  const date = document.getElementById('pianoLockDate').value;
-  const room = document.getElementById('pianoLockRoom').value;
-  const start = document.getElementById('pianoLockStart').value.trim();
-  const end   = document.getElementById('pianoLockEnd').value.trim();
-  const note  = document.getElementById('pianoLockNote').value.trim() || '封鎖';
-  if (!date||!room||!start||!end) { toast('請填寫完整資訊','err'); return; }
-  if (!pianoData[date]) pianoData[date] = {};
-  if (!pianoData[date][room]) pianoData[date][room] = {};
-  // 產生半小時slot
-  const [sh,sm] = start.split(':').map(Number);
-  const [eh,em] = end.split(':').map(Number);
-  let cur = sh*60+sm;
-  const stop = eh*60+em;
-  let count = 0;
-  while(cur<stop) {
-    const ts = `${pad2(Math.floor(cur/60))}:${pad2(cur%60)}`;
-    if (PIANO_SLOTS.includes(ts)) {
-      pianoData[date][room][ts] = {note, type:'lock'};
-      count++;
-    }
-    cur += 30;
-  }
-  await pianoUpd('sysData', pianoData);
-  updatePianoBoard(); toast(`已封鎖 ${count} 個時段`,'ok');
-}
-
-async function pianoAddUser() {
-  const name = document.getElementById('pianoNewUser').value.trim();
-  const role = document.getElementById('pianoNewRole').value;
-  if (!name) { toast('請輸入姓名','err'); return; }
-  pianoUsers[name] = {role, pwd:'0000'};
-  await pianoSet('users', pianoUsers);
-  document.getElementById('pianoNewUser').value = '';
-  refreshPianoUserList(); toast(`已新增 ${name}（${getRoleLabel(role)}）`,'ok');
-}
-
-function refreshPianoUserList() {
-  const el = document.getElementById('pianoUserList');
-  el.innerHTML = Object.entries(pianoUsers).map(([name,u])=>`
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 8px;border-bottom:1px solid var(--bdr);font-size:12px;color:var(--tx2)">
-      <div style="display:flex;align-items:center;gap:6px">
-        <span>${esc(name)}</span>
-        <span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(201,168,76,.15);color:#c9a84c">${getRoleLabel(u.role)}</span>
-      </div>
-      ${name!==MASTER.name?`<button class="btn d" onclick="pianoDelUser('${esc(name)}')" style="font-size:10px;padding:2px 7px">刪除</button>`:''}
-    </div>`).join('');
-}
-
-async function pianoDelUser(name) {
-  delete pianoUsers[name];
-  await pianoSet('users', pianoUsers);
-  refreshPianoUserList(); toast(`已刪除 ${name}`);
-}
-
-// ── 日期/視角切換 ──
-document.addEventListener('DOMContentLoaded',()=>{
-  const pd = document.getElementById('pianoDate');
-  if (pd) pd.addEventListener('change', updatePianoBoard);
-  const pam = document.getElementById('pianoAM');
-  const ppm = document.getElementById('pianoPM');
-  if (pam) pam.addEventListener('click',()=>{
-    pianoView='am';
-    pam.className='btn g'; pam.style.fontSize='11px'; pam.style.padding='5px 10px';
-    ppm.className='btn';   ppm.style.fontSize='11px'; ppm.style.padding='5px 10px';
-    updatePianoBoard();
-  });
-  if (ppm) ppm.addEventListener('click',()=>{
-    pianoView='pm';
-    pam.className='btn';  pam.style.fontSize='11px'; pam.style.padding='5px 10px';
-    ppm.className='btn g'; ppm.style.fontSize='11px'; ppm.style.padding='5px 10px';
-    updatePianoBoard();
-  });
-  // 關閉 pianoBookDlg
-  document.getElementById('pianoBookDlg')?.addEventListener('click', e=>{
-    if(e.target===document.getElementById('pianoBookDlg')) closePianoDlg();
-  });
-});
-</script>
-
 </body>
 </html>
