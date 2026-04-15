@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>莊敬音樂科 · 綜合管理系統</title>
+<title>莊敬音樂科 綜合管理系統</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="莊敬系統">
@@ -293,7 +293,7 @@ select:focus{border-color:var(--gold)}
   <div class="lbox">
     <div class="llogo">🎼</div>
     <div class="ltitle">莊敬高職音樂科</div>
-    <div class="lsub">教務 · 琴房預約 · 綜合管理系統</div>
+    <div class="lsub">教務綜合管理系統</div>
 
     <div class="theme-tabs">
       <button class="t-tab" data-t="black" onclick="setTheme('black')">尊爵黑</button>
@@ -327,7 +327,6 @@ select:focus{border-color:var(--gold)}
     <div class="topbar-title">莊敬音樂科教務系統</div>
     <div class="topbar-user">身份：<b id="curUser">—</b></div>
     <button class="btn" onclick="teacherChangePw()" style="font-size:11px">🔑 改密碼</button>
-    <button class="btn" onclick="window.open('https://jjvsmusic.github.io/musicbooking/','_blank')" style="font-size:11px;border-color:rgba(201,168,76,.4);color:#c9a84c" title="琴房預約系統">🎹 琴房預約</button>
     <button class="notif-btn" onclick="switchTab('inbox')" title="訊息中心">💬<span class="notif-dot" id="teacherNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
@@ -337,6 +336,7 @@ select:focus{border-color:var(--gold)}
     <button class="navtab" onclick="switchTab('exitlog')" id="tab-exitlog">📋 外出日誌</button>
     <button class="navtab" onclick="switchTab('inbox')" id="tab-inbox">💬 訊息<span class="nbadge" id="inboxBadge" style="display:none">0</span></button>
     <button class="navtab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
+    <button class="navtab" onclick="switchTab('piano')" id="tab-piano">🎹 琴房預約</button>
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
   </div>
   <div class="content">
@@ -423,6 +423,9 @@ select:focus{border-color:var(--gold)}
       <h3 style="color:var(--red);margin-bottom:12px">🔴 扣分記錄（近期）</h3>
       <div id="deductLog"><div class="empty">載入中...</div></div>
     </div>
+    <div id="tabPiano" style="display:none; height:calc(100vh - 120px); margin:-16px;">
+      <iframe id="pianoFrame" style="width:100%; height:100%; border:none;" src=""></iframe>
+    </div>
     <div id="tabTeachers" style="display:none">
       <div class="row" style="margin-bottom:14px">
         <h3 style="color:var(--gold)">⚙️ 教師帳號管理</h3>
@@ -439,7 +442,6 @@ select:focus{border-color:var(--gold)}
     <div class="topbar-title">學生個人資料</div>
     <div class="topbar-user">學生：<b id="stuUserName">—</b></div>
     <button class="notif-btn" id="stuNotifBtn" onclick="toggleStuBanner()" title="訊息通知">🔔<span class="notif-dot" id="stuNotifDot"></span></button>
-    <button class="btn" onclick="window.open('https://jjvsmusic.github.io/musicbooking/','_blank')" style="font-size:11px;border-color:rgba(201,168,76,.4);color:#c9a84c" title="琴房預約系統">🎹 琴房預約</button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
   <div id="stuBanner">
@@ -451,11 +453,20 @@ select:focus{border-color:var(--gold)}
   </div>
   <div class="content">
     <div id="stuCard" style="max-width:600px;margin:0 auto"></div>
-    <div style="max-width:600px;margin:16px auto 0">
-      <button class="btn g" onclick="openApplyExit()" style="width:100%;padding:13px;font-size:15px">🚪 申請第八節外出</button>
+    <div style="max-width:600px;margin:16px auto 0; display:flex; gap:10px;">
+      <button class="btn g" onclick="openApplyExit()" style="flex:1;padding:13px;font-size:15px">🚪 申請第八節外出</button>
+      <button class="btn s" onclick="openStuPiano()" style="flex:1;padding:13px;font-size:15px;border-width:2px;font-weight:bold">🎹 預約琴房</button>
     </div>
     <div id="stuPassArea" style="max-width:600px;margin:10px auto 0"></div>
   </div>
+</div>
+
+<div id="stuPianoOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:var(--bg); z-index:9999; flex-direction:column;">
+  <div style="height:58px; background:rgba(10,10,12,.96); display:flex; align-items:center; padding:0 16px; border-bottom:1px solid var(--bdr);">
+    <div style="flex:1; font-weight:bold; color:var(--gold); font-size:17px; letter-spacing:1px">🎹 琴房預約系統</div>
+    <button class="btn d" onclick="document.getElementById('stuPianoOverlay').style.display='none'">✕ 關閉系統</button>
+  </div>
+  <iframe id="stuPianoFrame" style="flex:1; width:100%; border:none;"></iframe>
 </div>
 
 <div id="detailPanel">
@@ -903,19 +914,28 @@ function enterStudentView(stu) {
 
 function switchTab(t) {
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
-  ['att','apply','exitlog','inbox','report','teachers'].forEach(id=>{
+  ['att','apply','exitlog','inbox','report','teachers','piano'].forEach(id=>{
     const el = document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));
     if (el) el.style.display = 'none';
   });
-  document.getElementById('tab-'+t).classList.add('on');
-  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers'};
-  document.getElementById(map[t]).style.display = '';
+  const btn = document.getElementById('tab-'+t);
+  if (btn) btn.classList.add('on');
+  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano'};
+  const content = document.getElementById(map[t]);
+  if (content) content.style.display = '';
+
   if (t==='att') renderGrid();
   if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); loadDeductLog(); }
   if (t==='teachers') renderTeachers();
   if (t==='inbox') renderInbox();
   if (t==='exitlog') loadExitLog();
-  if (t==='apply') {} 
+  if (t==='piano') {
+    const frame = document.getElementById('pianoFrame');
+    if (!frame.src || frame.src === window.location.href) {
+      const authData = btoa(encodeURIComponent(JSON.stringify(me)));
+      frame.src = `https://jjvsmusic.github.io/musicbooking/?sso=${authData}`;
+    }
+  }
 }
 
 function buildClsBtns(containerId, clickFn) {
@@ -1275,7 +1295,7 @@ function renderBolts(bolts) {
   disp.innerHTML = html;
   if (penalties > 0) {
     pen.style.display = 'block';
-    pen.textContent = `⚠️ 已累積 ${penalties} 次懲罰（每3個閃電觸發一次）`;
+    pen.innerHTML = `⚠️ 已累積 ${penalties} 次懲罰（每3個閃電觸發一次）<button class="btn d" onclick="resetBolts()" style="margin-top:6px;width:100%;padding:6px;font-size:13px;border-width:2px;font-weight:bold">🗑️ 閃電歸零</button>`;
   } else {
     pen.style.display = 'none';
   }
@@ -1283,24 +1303,72 @@ function renderBolts(bolts) {
 
 async function chgBolt(delta) {
   if (!curStu) return;
-  const d = await dbGet(`students/${curStu.id}`);
-  const cur = Math.max(0, (d?.bolts||0) + delta);
-  const prevPenalties = Math.floor((d?.bolts||0)/3);
-  const newPenalties  = Math.floor(cur/3);
-  const lk = Date.now()+'';
-  const action = delta > 0 ? '⚡ 新增閃電警告' : '移除閃電';
-  await dbUpd(`students/${curStu.id}`, {
-    bolts: cur,
-    [`log/${lk}`]: {time:now(), action, reason:`閃電：${d?.bolts||0} → ${cur}`, teacher:me.name, delta:0}
-  });
-  if (newPenalties > prevPenalties) {
-    await sendNotifToStudent(curStu.id, curStu.name,
-      `⚡ 閃電警告累積達 ${cur} 個，觸發第 ${newPenalties} 次懲罰！`, 'punishment');
-    toast(`⚠️ ${curStu.name} 累積 ${newPenalties} 次懲罰！`, 'err');
+  if (delta > 0) {
+    openDlg('⚡ 新增閃電警告',
+      `<div class="dlg-msg" style="color:var(--red);margin-bottom:10px;font-size:13px">注意：若該生有點數(⭐)，將自動先扣除 1 點。</div>
+       <div class="dlg-label">原因</div><input class="dlg-input" type="text" id="boltReason" placeholder="請輸入原因">`,
+      [{label:'確認新增',cls:'ok',fn:async()=>{
+        const reason = document.getElementById('boltReason').value.trim();
+        if(!reason){toast('請填寫原因','err');return false;}
+        const d = await dbGet(`students/${curStu.id}`);
+        const curBolts = (d?.bolts||0) + 1;
+        const curPts = d?.points||0;
+        let deductMsg = '';
+        const upd = {};
+        const t = Date.now();
+
+        if (curPts > 0) {
+          upd[`students/${curStu.id}/points`] = curPts - 1;
+          upd[`students/${curStu.id}/log/${t}_pt`] = {time:now(), action:'閃電扣點', reason:'因新增閃電自動扣點', teacher:me.name, delta:-1};
+          deductMsg = '，並自動扣除 1 點';
+        }
+
+        upd[`students/${curStu.id}/bolts`] = curBolts;
+        upd[`students/${curStu.id}/log/${t}_bolt`] = {time:now(), action:'⚡ 新增閃電警告', reason, teacher:me.name, delta:0};
+        await db.ref('/').update(upd);
+
+        const newPen = Math.floor(curBolts/3);
+        const oldPen = Math.floor((curBolts-1)/3);
+
+        if (newPen > oldPen) {
+          await sendNotifToStudent(curStu.id, curStu.name, `⚡ 閃電達 ${curBolts} 個，觸發懲罰！原因：${reason}`, 'punishment');
+          toast(`⚠️ 累積 ${newPen} 次懲罰${deductMsg}！`, 'err');
+        } else {
+          await sendNotifToStudent(curStu.id, curStu.name, `⚡ 新增閃電警告！原因：${reason}`, 'punishment');
+          toast(`閃電已新增${deductMsg}`);
+        }
+        openDetail(curStu); return true;
+      }},{label:'取消',fn:()=>true}]
+    );
   } else {
-    toast(`閃電已${delta>0?'新增':'移除'}`);
+    const d = await dbGet(`students/${curStu.id}`);
+    const curBolts = Math.max(0, (d?.bolts||0) - 1);
+    await dbUpd(`students/${curStu.id}`, {
+      bolts: curBolts,
+      [`log/${Date.now()}`]: {time:now(), action:'移除閃電', reason:'老師手動移除', teacher:me.name, delta:0}
+    });
+    toast('閃電已移除');
+    openDetail(curStu);
   }
-  openDetail(curStu);
+}
+
+async function resetBolts() {
+  if (!curStu) return;
+  openDlg('🗑️ 閃電歸零',
+    `<div class="dlg-msg">將清除所有閃電紀錄，並重新計算。</div>
+     <div class="dlg-label">歸零原因</div><input class="dlg-input" type="text" id="resetBoltReason" placeholder="例：已完成懲罰任務">`,
+    [{label:'確認歸零',cls:'del',fn:async()=>{
+      const reason = document.getElementById('resetBoltReason').value.trim();
+      if(!reason){toast('請填寫原因','err');return false;}
+      const lk = Date.now()+'';
+      await dbUpd(`students/${curStu.id}`, {
+        bolts: 0,
+        [`log/${lk}`]: {time:now(), action:'閃電歸零', reason, teacher:me.name, delta:0}
+      });
+      toast('閃電已歸零','ok');
+      openDetail(curStu); return true;
+    }},{label:'取消',fn:()=>true}]
+  );
 }
 
 function renderTasks(tasks) {
@@ -1893,6 +1961,16 @@ async function loadStuView(stu) {
     _renderStuView(stu, snap.val()||{});
   });
   listenMyApprovalStu(stu.name);
+}
+
+function openStuPiano() {
+  const overlay = document.getElementById('stuPianoOverlay');
+  const frame = document.getElementById('stuPianoFrame');
+  overlay.style.display = 'flex';
+  if (!frame.src || frame.src === window.location.href) {
+    const authData = btoa(encodeURIComponent(JSON.stringify(me)));
+    frame.src = `https://jjvsmusic.github.io/musicbooking/?sso=${authData}`;
+  }
 }
 
 function _renderStuView(stu, d) {
