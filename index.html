@@ -3,87 +3,57 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>莊敬音樂科教務管理系統</title>
+<title>莊敬音樂科 · 綜合管理系統</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="莊敬系統">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0A0A0C">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%230A0A0C' rx='20'/><text y='.9em' font-size='72' x='50%' text-anchor='middle'>🎼</text></svg>">
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.6.0/jspdf.plugin.autotable.min.js"></script>
 <style>
-:root {
+:root{
   --gold:#D4AF37;--gold-l:#F0D060;--gold-d:#A8891C;
   --bg:#0A0A0C;--bg1:#111115;--bg2:#161619;
   --tx:#F0E8D0;--tx2:#A09070;--tx3:#604030;
   --green:#2ECC71;--yellow:#F1C40F;--red:#E74C3C;--blue:#3498DB;
   --bdr:rgba(212,175,55,.2);--bdr2:rgba(212,175,55,.5);
   --r:12px;--r2:8px;
-  --shadow-strong: rgba(0,0,0,.6);
-  --shadow-mid: rgba(0,0,0,.5);
-  --topbar-bg: rgba(10,10,12,.96);
-  --vip-card: linear-gradient(135deg,#1a1608,#221c09,#1a1608);
-  --dlg-overlay: rgba(0,0,0,.72);
 }
 
-/* 降低飽和度的學術藍 (Slate Navy) */
 [data-theme="navy"] {
   --bg:#141824; --bg1:#1B202D; --bg2:#252B3A;
   --tx:#E2E8F0; --tx2:#94A3B8; --tx3:#64748B;
   --gold:#C2A064; --gold-l:#E0C18A; --gold-d:#997A42;
   --bdr:rgba(194,160,100,.2); --bdr2:rgba(194,160,100,.5);
-  --topbar-bg: rgba(20,24,36,.96);
-  --vip-card: linear-gradient(135deg,#191E2D,#242A3D,#191E2D);
 }
-
-/* 北卡藍 (UNC Blue) */
 [data-theme="uncblue"] {
   --bg:#F0F4F8; --bg1:#FFFFFF; --bg2:#E2EBF2;
   --tx:#1E293B; --tx2:#475569; --tx3:#94A3B8;
   --gold:#7BAFD4; --gold-l:#9BC4E3; --gold-d:#5A92BA;
   --bdr:rgba(123,175,212,.3); --bdr2:rgba(123,175,212,.6);
-  --shadow-strong: rgba(30,41,59,.15);
-  --shadow-mid: rgba(30,41,59,.08);
-  --topbar-bg: rgba(240,244,248,.96);
-  --vip-card: linear-gradient(135deg,#FFFFFF,#F1F5F9,#FFFFFF);
-  --dlg-overlay: rgba(30,41,59,.6);
 }
-
-/* 蒂芬妮湖水綠 (Tiffany Green) */
 [data-theme="tiffany"] {
   --bg:#F0FAF9; --bg1:#FFFFFF; --bg2:#E0F5F3;
   --tx:#1B302F; --tx2:#456361; --tx3:#7B9E9C;
   --gold:#0ABAB5; --gold-l:#4EDBD7; --gold-d:#088C88;
   --bdr:rgba(10,186,181,.3); --bdr2:rgba(10,186,181,.6);
-  --shadow-strong: rgba(27,48,47,.15);
-  --shadow-mid: rgba(27,48,47,.08);
-  --topbar-bg: rgba(240,250,249,.96);
-  --vip-card: linear-gradient(135deg,#FFFFFF,#E6F7F6,#FFFFFF);
-  --dlg-overlay: rgba(27,48,47,.6);
 }
-
-/* 奶茶棕 (Milk Tea) */
 [data-theme="milktea"] {
   --bg:#F4EBE1; --bg1:#FCF7F1; --bg2:#EAE0D4;
   --tx:#4A3F35; --tx2:#7A6859; --tx3:#A08C7A;
   --gold:#C49A6C; --gold-l:#DEBA92; --gold-d:#9E754B;
   --bdr:rgba(196,154,108,.3); --bdr2:rgba(196,154,108,.6);
-  --shadow-strong: rgba(74,63,53,.15);
-  --shadow-mid: rgba(74,63,53,.08);
-  --topbar-bg: rgba(244,235,225,.96);
-  --vip-card: linear-gradient(135deg,#F7EFE6,#EADDCD,#F7EFE6);
-  --dlg-overlay: rgba(74,63,53,.6);
 }
-
-/* 玫瑰粉紅 (Pink) */
 [data-theme="pink"] {
   --bg:#FFF0F3; --bg1:#FFF5F7; --bg2:#FFE3E8;
   --tx:#5C3A41; --tx2:#8A5A65; --tx3:#B37D89;
   --gold:#D88C9A; --gold-l:#F4AABC; --gold-d:#B56977;
   --bdr:rgba(216,140,154,.3); --bdr2:rgba(216,140,154,.6);
-  --shadow-strong: rgba(92,58,65,.15);
-  --shadow-mid: rgba(92,58,65,.08);
-  --topbar-bg: rgba(255,240,243,.96);
-  --vip-card: linear-gradient(135deg,#FFF5F7,#FFE3E8,#FFF5F7);
-  --dlg-overlay: rgba(92,58,65,.6);
 }
 
 html,body,div,span,h1,h2,h3,h4,h5,h6,p,a,img,ul,li,table,tr,td,th,form,label,input,button,select,textarea,iframe{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -92,15 +62,14 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--gold-d);border-radius:3px}
 
 .screen{display:none;min-height:100vh;flex-direction:column}
-#loginScreen{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,rgba(212,175,55,.08),transparent 60%); position:relative;}
+#loginScreen{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at 50% 30%,rgba(212,175,55,.08),transparent 60%)}
 
-.lbox{background:var(--bg1);border:1px solid var(--bdr);border-radius:20px;padding:44px 48px;width:420px;max-width:95vw;box-shadow:0 0 30px rgba(212,175,55,.12),0 8px 32px var(--shadow-strong);position:relative;transition: .3s;}
+.lbox{background:var(--bg1);border:1px solid var(--bdr);border-radius:20px;padding:48px 52px;width:420px;max-width:95vw;box-shadow:0 0 30px rgba(212,175,55,.12),0 8px 32px rgba(0,0,0,.6);position:relative}
 .lbox::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:20px 20px 0 0}
 .llogo{text-align:center;font-size:52px;margin-bottom:8px;filter:drop-shadow(0 0 14px rgba(212,175,55,.5))}
 .ltitle{text-align:center;font-size:22px;color:var(--gold);letter-spacing:2px;margin-bottom:4px}
-.lsub{text-align:center;font-size:13px;color:var(--tx2);margin-bottom:20px;letter-spacing:1px}
+.lsub{text-align:center;font-size:13px;color:var(--tx2);margin-bottom:28px;letter-spacing:1px}
 
-/* 文字按鈕風格切換器 */
 .theme-tabs {
   display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; flex-wrap: wrap;
 }
@@ -121,7 +90,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .btn-pri{width:100%;padding:13px;background:linear-gradient(135deg,var(--gold-d),var(--gold),var(--gold-l));border:none;border-radius:var(--r2);color:#000;font-size:16px;font-weight:bold;cursor:pointer;letter-spacing:2px;font-family:inherit;transition:.2s;box-shadow:0 4px 15px rgba(212,175,55,.3)}
 .btn-pri:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,175,55,.4)}
 
-.topbar{position:sticky;top:0;z-index:200;background:var(--topbar-bg);backdrop-filter:blur(10px);border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;align-items:center;gap:12px;height:58px;flex-shrink:0;transition:.3s}
+.topbar{position:sticky;top:0;z-index:200;background:rgba(10,10,12,.96);backdrop-filter:blur(10px);border-bottom:1px solid var(--bdr);padding:0 16px;display:flex;align-items:center;gap:12px;height:58px;flex-shrink:0}
 .topbar-logo{font-size:22px}
 .topbar-title{font-size:17px;color:var(--gold);letter-spacing:1px;flex:1}
 .topbar-user{font-size:12px;color:var(--tx2)}
@@ -142,7 +111,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .notif-dot.on{display:block;animation:pulse 1.5s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.3)}}
 
-.navtabs{display:flex;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 16px;overflow-x:auto;flex-shrink:0;transition:.3s}
+.navtabs{display:flex;background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 16px;overflow-x:auto;flex-shrink:0}
 .navtab{padding:13px 18px;background:transparent;border:none;border-bottom:2px solid transparent;color:var(--tx2);cursor:pointer;font-size:13px;white-space:nowrap;font-family:inherit;transition:.2s;position:relative}
 .navtab:hover{color:var(--gold)}
 .navtab.on{color:var(--gold);border-bottom-color:var(--gold)}
@@ -184,7 +153,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .sc-medals{font-size:12px;color:var(--tx2)}
 .sc-hint{font-size:10px;color:var(--tx3);margin-top:3px}
 
-#detailPanel{position:fixed;top:0;right:-500px;width:480px;height:100vh;background:var(--bg2);border-left:1px solid var(--bdr);z-index:300;overflow-y:auto;padding:20px;box-shadow:-8px 0 32px var(--shadow-mid);transition:right .3s ease, background .3s}
+#detailPanel{position:fixed;top:0;right:-500px;width:480px;height:100vh;background:var(--bg2);border-left:1px solid var(--bdr);z-index:300;overflow-y:auto;padding:20px;box-shadow:-8px 0 32px rgba(0,0,0,.5);transition:right .3s ease}
 #detailPanel.open{right:0}
 @media(max-width:500px){#detailPanel{width:100%;right:-100%}}
 .dp-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
@@ -195,18 +164,18 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .dp-sec{margin-bottom:18px}
 .dp-sec-t{font-size:11px;color:var(--gold);letter-spacing:2px;border-bottom:1px solid var(--bdr);padding-bottom:5px;margin-bottom:10px}
 
-.pts-card{background:var(--vip-card);border:1px solid var(--gold-d);border-radius:13px;padding:13px 15px 10px;margin-bottom:8px;box-shadow:inset 0 1px 0 rgba(212,175,55,.15),0 4px 14px var(--shadow-mid);position:relative;transition:.3s}
+.pts-card{background:linear-gradient(135deg,#1a1608,#221c09,#1a1608);border:1px solid var(--gold-d);border-radius:13px;padding:13px 15px 10px;margin-bottom:8px;box-shadow:inset 0 1px 0 rgba(212,175,55,.15),0 4px 14px rgba(0,0,0,.5);position:relative}
 .pts-card::before{content:'⭐ 集點卡';position:absolute;top:7px;right:11px;font-size:10px;color:var(--gold-d);letter-spacing:1px}
 .pts-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:7px}
 .pc{aspect-ratio:1;border-radius:9px;border:1.5px solid rgba(212,175,55,.2);display:flex;align-items:center;justify-content:center;font-size:20px;position:relative;overflow:hidden;transition:.25s}
 .pc.on{background:radial-gradient(circle at 38% 33%,#fff5a0,#D4AF37 55%,#a07c10 100%);border-color:#ffe066;box-shadow:0 0 10px rgba(212,175,55,.5),inset 0 1px 0 rgba(255,255,200,.4)}
 .pc.on::after{content:'';position:absolute;top:12%;left:14%;width:32%;height:20%;background:rgba(255,255,255,.28);border-radius:50%;transform:rotate(-32deg)}
-.pc.off{background:rgba(0,0,0,.15)}
+.pc.off{background:rgba(0,0,0,.3)}
 .pts-info{font-size:13px;color:var(--tx2);text-align:center;margin-top:8px}
 .pts-info b{color:var(--gold);font-size:17px}
 
 .medals-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:flex-end}
-.mcoin{width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff5a0,#F0C840 30%,#D4AF37 55%,#8B6914 80%,#5a4009 100%);box-shadow:0 4px 10px var(--shadow-strong),0 1px 0 rgba(255,255,180,.5) inset,0 -2px 4px rgba(0,0,0,.4) inset;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;overflow:hidden;border:2px solid #a07a10;transition:.2s;cursor:default}
+.mcoin{width:48px;height:48px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff5a0,#F0C840 30%,#D4AF37 55%,#8B6914 80%,#5a4009 100%);box-shadow:0 4px 10px rgba(0,0,0,.6),0 1px 0 rgba(255,255,180,.5) inset,0 -2px 4px rgba(0,0,0,.4) inset;display:flex;align-items:center;justify-content:center;font-size:22px;position:relative;overflow:hidden;border:2px solid #a07a10;transition:.2s;cursor:default}
 .mcoin::before{content:'';position:absolute;top:10%;left:14%;width:33%;height:22%;background:rgba(255,255,255,.28);border-radius:50%;transform:rotate(-32deg)}
 .mcoin:hover{transform:translateY(-3px) rotate(8deg);box-shadow:0 8px 18px rgba(212,175,55,.45)}
 
@@ -274,9 +243,9 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .ep-info{font-size:22px;opacity:.85;margin-bottom:5px}
 .ep-close{margin-top:36px;padding:13px 38px;background:#fff;color:#1a9e50;border:none;border-radius:30px;font-size:17px;font-weight:bold;cursor:pointer}
 
-#dlgOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:var(--dlg-overlay);z-index:1000;align-items:center;justify-content:center;transition:background .3s}
+#dlgOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center}
 #dlgOverlay.on{display:flex}
-.dlg{background:var(--bg2);border:1px solid var(--bdr);border-radius:15px;padding:28px;width:380px;max-width:92vw;box-shadow:0 0 20px rgba(212,175,55,.15),0 8px 30px var(--shadow-strong);position:relative;transition:.3s}
+.dlg{background:var(--bg2);border:1px solid var(--bdr);border-radius:15px;padding:28px;width:380px;max-width:92vw;box-shadow:0 0 20px rgba(212,175,55,.15),0 8px 30px rgba(0,0,0,.6);position:relative}
 .dlg::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:15px 15px 0 0}
 .dlg-title{font-size:17px;font-weight:bold;color:var(--gold);margin-bottom:18px}
 .dlg-label{font-size:11px;color:var(--tx2);margin-bottom:5px;letter-spacing:1px}
@@ -290,10 +259,17 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .dlg-btn.ok:hover{background:var(--gold-l)}
 .dlg-btn.del{background:var(--red);color:#fff;border-color:var(--red);font-weight:bold}
 
-#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--bdr);border-radius:30px;padding:10px 22px;font-size:13px;color:var(--tx);box-shadow:0 4px 20px var(--shadow-strong);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
+#toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:var(--bg2);border:1px solid var(--bdr);border-radius:30px;padding:10px 22px;font-size:13px;color:var(--tx);box-shadow:0 4px 20px rgba(0,0,0,.6);z-index:9999;opacity:0;transition:opacity .3s;pointer-events:none;white-space:nowrap}
 #toast.on{opacity:1}
 #toast.ok{border-color:var(--green);color:var(--green)}
 #toast.err{border-color:var(--red);color:var(--red)}
+
+.lightning-bar{display:flex;align-items:center;gap:4px;margin-top:5px}
+.bolt{font-size:18px;filter:grayscale(1);opacity:.3;transition:.2s}
+.bolt.on{filter:none;opacity:1;animation:boltPop .3s ease}
+@keyframes boltPop{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1)}}
+.bolt-penalty{background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.4);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--red);margin-top:4px}
+.sc-bolts{font-size:14px;letter-spacing:-2px;margin-top:2px}
 
 .empty{text-align:center;padding:50px 20px;color:var(--tx3);font-size:15px}
 .sep{border:none;border-top:1px solid var(--bdr);margin:14px 0}
@@ -308,7 +284,7 @@ select:focus{border-color:var(--gold)}
 </head>
 <body>
 
-<div id="globalLoader" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:background .3s;">
+<div id="globalLoader" style="position:fixed;top:0;left:0;width:100%;height:100%;background:var(--bg);z-index:10000;display:flex;align-items:center;justify-content:center;flex-direction:column;">
   <div class="spin" style="width:30px;height:30px;border-width:3px;"></div>
   <div style="margin-top:15px;color:var(--gold);font-size:14px;letter-spacing:1px;">系統初始化中...</div>
 </div>
@@ -317,8 +293,8 @@ select:focus{border-color:var(--gold)}
   <div class="lbox">
     <div class="llogo">🎼</div>
     <div class="ltitle">莊敬高職音樂科</div>
-    <div class="lsub">教務管理系統 · Royal Edition</div>
-    
+    <div class="lsub">教務 · 琴房預約 · 綜合管理系統</div>
+
     <div class="theme-tabs">
       <button class="t-tab" data-t="black" onclick="setTheme('black')">尊爵黑</button>
       <button class="t-tab" data-t="navy" onclick="setTheme('navy')">學術藍</button>
@@ -351,6 +327,7 @@ select:focus{border-color:var(--gold)}
     <div class="topbar-title">莊敬音樂科教務系統</div>
     <div class="topbar-user">身份：<b id="curUser">—</b></div>
     <button class="btn" onclick="teacherChangePw()" style="font-size:11px">🔑 改密碼</button>
+    <button class="btn" onclick="window.open('https://jjvsmusic.github.io/musicbooking/','_blank')" style="font-size:11px;border-color:rgba(201,168,76,.4);color:#c9a84c" title="琴房預約系統">🎹 琴房預約</button>
     <button class="notif-btn" onclick="switchTab('inbox')" title="訊息中心">💬<span class="notif-dot" id="teacherNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
@@ -361,7 +338,6 @@ select:focus{border-color:var(--gold)}
     <button class="navtab" onclick="switchTab('inbox')" id="tab-inbox">💬 訊息<span class="nbadge" id="inboxBadge" style="display:none">0</span></button>
     <button class="navtab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
-    <button class="navtab" onclick="switchTab('piano')" id="tab-piano">🎹 琴房系統</button>
   </div>
   <div class="content">
     <div id="tabAtt">
@@ -394,12 +370,10 @@ select:focus{border-color:var(--gold)}
       </div>
       <div class="sgrid" id="stuGrid"></div>
     </div>
-    
     <div id="tabApply" style="display:none">
       <h3 style="color:var(--gold);margin-bottom:14px">🚪 第八節外出申請審核</h3>
       <div id="applyList"><div class="empty">目前無待審核申請</div></div>
     </div>
-    
     <div id="tabExitLog" style="display:none">
       <div class="row" style="margin-bottom:14px">
         <h3 style="color:var(--gold)">📋 第八節外出申請日誌</h3>
@@ -436,7 +410,6 @@ select:focus{border-color:var(--gold)}
       </div>
       <div id="inboxList"><div class="empty">尚無訊息</div></div>
     </div>
-    
     <div id="tabReport" style="display:none">
       <div class="statgrid" id="statGrid"></div>
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap">
@@ -450,17 +423,12 @@ select:focus{border-color:var(--gold)}
       <h3 style="color:var(--red);margin-bottom:12px">🔴 扣分記錄（近期）</h3>
       <div id="deductLog"><div class="empty">載入中...</div></div>
     </div>
-    
     <div id="tabTeachers" style="display:none">
       <div class="row" style="margin-bottom:14px">
         <h3 style="color:var(--gold)">⚙️ 教師帳號管理</h3>
         <button class="btn g" style="margin-left:auto" onclick="openAddTeacher()">＋ 新增</button>
       </div>
       <div id="teacherList"></div>
-    </div>
-
-    <div id="tabPiano" style="display:none; height:calc(100vh - 120px); margin:-16px;">
-      <iframe id="pianoFrame" style="width:100%; height:100%; border:none;" src=""></iframe>
     </div>
   </div>
 </div>
@@ -471,6 +439,7 @@ select:focus{border-color:var(--gold)}
     <div class="topbar-title">學生個人資料</div>
     <div class="topbar-user">學生：<b id="stuUserName">—</b></div>
     <button class="notif-btn" id="stuNotifBtn" onclick="toggleStuBanner()" title="訊息通知">🔔<span class="notif-dot" id="stuNotifDot"></span></button>
+    <button class="btn" onclick="window.open('https://jjvsmusic.github.io/musicbooking/','_blank')" style="font-size:11px;border-color:rgba(201,168,76,.4);color:#c9a84c" title="琴房預約系統">🎹 琴房預約</button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
   <div id="stuBanner">
@@ -517,6 +486,15 @@ select:focus{border-color:var(--gold)}
       <button class="btn s" onclick="chgPts(1)">＋ 加1點</button>
       <button class="btn d" onclick="chgPts(-1)">－ 扣1點</button>
       <button class="btn g" onclick="redeemMedal()" id="redeemBtn">🎖️ 兌換金牌</button>
+    </div>
+  </div>
+  <div class="dp-sec">
+    <div class="dp-sec-t">⚡ 閃電警告</div>
+    <div id="dpBoltDisplay" style="margin-bottom:10px"></div>
+    <div id="dpBoltPenalty" class="bolt-penalty" style="display:none"></div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn d" onclick="chgBolt(1)" style="flex:1">⚡ +1 閃電</button>
+      <button class="btn s" onclick="chgBolt(-1)" style="flex:1">－ 移除閃電</button>
     </div>
   </div>
   <div class="dp-sec">
@@ -580,7 +558,6 @@ select:focus{border-color:var(--gold)}
 <div id="toast"></div>
 
 <script>
-// --- 風格切換初始化 ---
 function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   try { localStorage.setItem('jjvs_theme', t); } catch(e){}
@@ -592,7 +569,6 @@ try {
   const savedTheme = localStorage.getItem('jjvs_theme') || 'black';
   setTheme(savedTheme);
 } catch(e){}
-// -----------------------
 
 const FBC = {
   apiKey:"AIzaSyC-_lE6oDtZMqGK_JQOx7StGTkzjqU1LQw",
@@ -694,6 +670,16 @@ let stuBannerOpen = false;
 
 const now = () => new Date().toLocaleString('zh-TW',{hour12:false});
 const WEEKDAYS = ['日','一','二','三','四','五','六'];
+
+function getBoltDisplay(bolts) {
+  const cur = (bolts||0) % 3;
+  const total = bolts||0;
+  if (total === 0) return '';
+  let s = '';
+  for (let i=0;i<3;i++) s += `<span style="font-size:13px;opacity:${i<cur?1:.2}">⚡</span>`;
+  if (total >= 3) s += `<span style="font-size:10px;color:var(--red);margin-left:2px">x${Math.floor(total/3)}</span>`;
+  return s;
+}
 const nowWithDay = () => {
   const d = new Date();
   return d.toLocaleString('zh-TW',{hour12:false}) + '（' + WEEKDAYS[d.getDay()] + '）';
@@ -756,6 +742,7 @@ async function doLogin() {
         const t = teachers[k];
         if (t.name===name && t.pass===pass) {
           me = {name, role:'teacher', classes:t.classes||[]};
+          saveAuthSession(me);
           enterApp(); return;
         }
       }
@@ -824,38 +811,42 @@ function saveAuthSession(userData) {
 }
 
 async function checkAuthSession() {
+  const loader = document.getElementById('globalLoader');
   try {
     const saved = localStorage.getItem('jjvs_session');
-    if (saved) {
-      const data = JSON.parse(saved);
-      me = data;
-      // 修復「重新整理登出」的關鍵：確保 classes 陣列一定存在
-      me.classes = me.classes || [];
-      
-      if (me.role === 'student') {
-        const stu = STUDENTS.find(s => s.id === me.stuId);
-        if (stu) {
-          _currentStuId = stu.id;
-          enterStudentView(stu);
-        } else {
-          localStorage.removeItem('jjvs_session');
-          showScreen('loginScreen');
-        }
+    if (!saved) {
+      showScreen('loginScreen');
+      if (loader) loader.style.display = 'none';
+      return;
+    }
+    const data = JSON.parse(saved);
+    me = data;
+
+    await new Promise(resolve => {
+      const timeout = setTimeout(resolve, 6000);
+      db.ref('.info/connected').once('value', snap => {
+        clearTimeout(timeout);
+        resolve();
+      });
+    });
+
+    if (me.role === 'student') {
+      const stu = STUDENTS.find(s => s.id === me.stuId);
+      if (stu) {
+        _currentStuId = stu.id;
+        enterStudentView(stu);
       } else {
-        enterApp();
+        localStorage.removeItem('jjvs_session');
+        showScreen('loginScreen');
       }
     } else {
-      showScreen('loginScreen');
+      enterApp();
     }
   } catch(e) {
-    console.error("Auth session restore failed:", e);
-    // 若真的是 JSON 格式損壞才清除，防止一般渲染錯誤導致被登出
-    if (e instanceof SyntaxError) {
-      localStorage.removeItem('jjvs_session');
-    }
+    console.error('Session restore error:', e);
+    localStorage.removeItem('jjvs_session');
     showScreen('loginScreen');
   }
-  const loader = document.getElementById('globalLoader');
   if (loader) loader.style.display = 'none';
 }
 
@@ -896,16 +887,8 @@ function enterApp() {
   document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
   showScreen('appScreen');
   pendAtt = {};  
-  
-  // 修復「重新整理登出」的關鍵：確保 classes 陣列一定存在
-  me.classes = me.classes || [];
   buildClsBtns('clsBtns', switchCls);
-  
-  // 只有當老師真的有分配班級時，才切換到第一個班級
-  if (me.classes.length > 0) {
-    switchCls(me.classes[0]);
-  }
-  
+  switchCls(me.classes[0]);
   startApplyListener();
   startMsgListener();
 }
@@ -920,27 +903,19 @@ function enterStudentView(stu) {
 
 function switchTab(t) {
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
-  ['att','apply','exitlog','inbox','report','teachers','piano'].forEach(id=>{
+  ['att','apply','exitlog','inbox','report','teachers'].forEach(id=>{
     const el = document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));
     if (el) el.style.display = 'none';
   });
   document.getElementById('tab-'+t).classList.add('on');
-  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano'};
+  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers'};
   document.getElementById(map[t]).style.display = '';
-  
   if (t==='att') renderGrid();
   if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); loadDeductLog(); }
   if (t==='teachers') renderTeachers();
   if (t==='inbox') renderInbox();
   if (t==='exitlog') loadExitLog();
   if (t==='apply') {} 
-  if (t==='piano') {
-    const frame = document.getElementById('pianoFrame');
-    if (!frame.src || frame.src === window.location.href) {
-      const authData = btoa(encodeURIComponent(JSON.stringify(me)));
-      frame.src = `https://jjvsmusic.github.io/musicbooking/?sso=${authData}`;
-    }
-  }
 }
 
 function buildClsBtns(containerId, clickFn) {
@@ -977,6 +952,7 @@ async function renderGrid() {
     const att = pendAtt[s.id] || d.attendance?.[td] || '未';
     const pts = d.points||0;
     const medals = d.medals||0;
+    const bolts = d.bolts||0;
     const stars = Math.min(pts,10);
     const sel = batchSel.has(s.id);
     const card = document.createElement('div');
@@ -990,9 +966,10 @@ async function renderGrid() {
       <div class="sc-name" onclick="handleCardClick(event,'${s.id}')"><span style='font-size:11px;color:var(--tx3);margin-right:3px'>${s.id.split('-')[1]||''}</span>${s.name}</div>
       <div class="sc-pts">
         <div class="sc-stars">${'★'.repeat(stars)}${'☆'.repeat(10-stars)}</div>
-        <div class="sc-medals">${medals>0?'🎖️×'+medals:''}</div>
+        <div class="sc-medals">${medals>0?'🎖️x'+medals:''}</div>
       </div>
-      <div class="sc-hint">${batchMode?'👆點擊勾選':'👆名字查詳情'}</div>`;
+      ${bolts>0?`<div class="sc-bolts">${getBoltDisplay(bolts)}</div>`:''}
+      <div class="sc-hint">${batchMode?'👆點擊勾選':'名字查詳情 · 狀態點選'}</div>`;
     if (sel) card.classList.add('sel');
     grid.appendChild(card);
   });
@@ -1024,7 +1001,7 @@ function showAttMenu(e, id) {
 
   const menu = document.createElement('div');
   menu.id = 'attMenu';
-  menu.style.cssText = `position:fixed;z-index:999;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;box-shadow:0 8px 24px var(--shadow-strong);overflow:hidden;min-width:120px`;
+  menu.style.cssText = `position:fixed;z-index:999;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.6);overflow:hidden;min-width:120px`;
 
   options.forEach(opt => {
     const btn = document.createElement('button');
@@ -1272,6 +1249,7 @@ async function openDetail(stu) {
   mr.innerHTML = medals>0
     ? Array(Math.min(medals,12)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>12?`<span style="color:var(--gold);font-size:18px;align-self:center">+${medals-12}</span>`:'')
     : '<span style="color:var(--tx3);font-size:13px;font-style:italic">尚無金牌</span>';
+  renderBolts(d.bolts||0);
   renderTasks(d.tasks||{});
   renderLog(d.log||{});
   document.getElementById('detailPanel').classList.add('open');
@@ -1280,6 +1258,49 @@ async function openDetail(stu) {
 function closeDetail() {
   document.getElementById('detailPanel').classList.remove('open');
   curStu = null;
+}
+
+function renderBolts(bolts) {
+  const disp = document.getElementById('dpBoltDisplay');
+  const pen  = document.getElementById('dpBoltPenalty');
+  if (!disp) return;
+  const cur = bolts % 3;
+  const penalties = Math.floor(bolts / 3);
+  let html = '<div style="display:flex;gap:8px;margin-bottom:6px">';
+  for (let i=0;i<3;i++) {
+    html += `<div style="flex:1;height:36px;border-radius:8px;border:2px solid ${i<cur?'var(--yellow)':'var(--bdr)'};background:${i<cur?'rgba(241,196,15,.2)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:20px;transition:.2s">${i<cur?'⚡':'　'}</div>`;
+  }
+  html += '</div>';
+  html += `<div style="font-size:12px;color:var(--tx2)">累計 <b style="color:var(--yellow)">${bolts}</b> 個閃電 · <b style="color:${penalties>0?'var(--red)':'var(--tx2)'}">${penalties}</b> 次懲罰已觸發</div>`;
+  disp.innerHTML = html;
+  if (penalties > 0) {
+    pen.style.display = 'block';
+    pen.textContent = `⚠️ 已累積 ${penalties} 次懲罰（每3個閃電觸發一次）`;
+  } else {
+    pen.style.display = 'none';
+  }
+}
+
+async function chgBolt(delta) {
+  if (!curStu) return;
+  const d = await dbGet(`students/${curStu.id}`);
+  const cur = Math.max(0, (d?.bolts||0) + delta);
+  const prevPenalties = Math.floor((d?.bolts||0)/3);
+  const newPenalties  = Math.floor(cur/3);
+  const lk = Date.now()+'';
+  const action = delta > 0 ? '⚡ 新增閃電警告' : '移除閃電';
+  await dbUpd(`students/${curStu.id}`, {
+    bolts: cur,
+    [`log/${lk}`]: {time:now(), action, reason:`閃電：${d?.bolts||0} → ${cur}`, teacher:me.name, delta:0}
+  });
+  if (newPenalties > prevPenalties) {
+    await sendNotifToStudent(curStu.id, curStu.name,
+      `⚡ 閃電警告累積達 ${cur} 個，觸發第 ${newPenalties} 次懲罰！`, 'punishment');
+    toast(`⚠️ ${curStu.name} 累積 ${newPenalties} 次懲罰！`, 'err');
+  } else {
+    toast(`閃電已${delta>0?'新增':'移除'}`);
+  }
+  openDetail(curStu);
 }
 
 function renderTasks(tasks) {
@@ -1942,6 +1963,10 @@ function _renderStuView(stu, d) {
 
       <hr class="sep">
 
+      <hr class="sep">
+      <div class="dp-sec-t">⚡ 閃電警告</div>
+      ${(()=>{const b=d.bolts||0,cur=b%3,pen=Math.floor(b/3);if(!b)return'<div style="font-size:13px;color:var(--tx3);padding:4px 0">目前無警告 ✓</div>';let bar='<div style="display:flex;gap:6px;margin-bottom:6px">';for(let i=0;i<3;i++)bar+=`<div style="flex:1;height:28px;border-radius:6px;border:2px solid ${i<cur?'var(--yellow)':'var(--bdr)'};background:${i<cur?'rgba(241,196,15,.15)':'transparent'};display:flex;align-items:center;justify-content:center">${i<cur?'⚡':''}</div>`;return bar+'</div>'+(pen>0?`<div style="font-size:12px;color:var(--red);padding:5px 8px;background:rgba(231,76,60,.1);border-radius:6px">⚠️ 已觸發 ${pen} 次懲罰</div>`:`<div style="font-size:12px;color:var(--tx2)">⚡ ${cur}/3，集滿3個觸發懲罰</div>`);})()}
+      <hr class="sep">
       <div class="dp-sec-t">📝 待完成任務（罰抄）</div>
       ${tasksHtml}
 
@@ -2015,7 +2040,7 @@ async function renderTeachers() {
   Object.entries(teachers).forEach(([k,t])=>{
     const d=document.createElement('div');
     d.className='titem';
-    d.innerHTML=`<div><div class="ti-name">${t.name}</div><div class="ti-cls">班級：${(t.classes||[]).join('、')||'無'}</div><div class="ti-pw">密碼：${t.pass}</div></div><button class="btn d" onclick="delTeacher('${k}','${t.name}')">刪除</button>`;
+    d.innerHTML=`<div><div class="ti-name">${t.name} ${t.role==='piano_only'?'<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(201,168,76,.15);color:#c9a84c">專任老師</span>':''}</div><div class="ti-cls">${t.role==='piano_only'?'僅限琴房預約':'班級：'+(t.classes||[]).join('、')||'無'}</div><div class="ti-pw">密碼：${t.pass}</div></div><button class="btn d" onclick="delTeacher('${k}','${t.name}')">刪除</button>`;
     c.appendChild(d);
   });
 }
@@ -2024,13 +2049,19 @@ function openAddTeacher() {
   openDlg('⚙️ 新增教師帳號',
     `<div class="dlg-label">姓名（即帳號）</div><input class="dlg-input" type="text" id="tN" placeholder="教師姓名">
      <div class="dlg-label">密碼</div><input class="dlg-input" type="password" id="tP" placeholder="密碼">
-     <div class="dlg-label">管轄班級</div>${CLASSES.map(c=>`<label style="display:block;margin-bottom:6px;font-size:14px;cursor:pointer"><input type="checkbox" value="${c}" style="margin-right:6px"> ${c}</label>`).join('')}`,
+     <div class="dlg-label">角色類型</div>
+     <select class="dlg-input" id="tRole" style="margin-bottom:10px">
+       <option value="teacher">教師（可使用教務+琴房）</option>
+       <option value="piano_only">專任老師（僅限琴房預約）</option>
+     </select>
+     <div id="tClassWrap"><div class="dlg-label">管轄班級（教師才需填）</div>${CLASSES.map(c=>`<label style="display:block;margin-bottom:6px;font-size:14px;cursor:pointer"><input type="checkbox" value="${c}" style="margin-right:6px"> ${c}</label>`).join('')}</div>`,
     [{label:'新增',cls:'ok',fn:async()=>{
       const name=document.getElementById('tN').value.trim();
       const pass=document.getElementById('tP').value.trim();
-      const classes=[...document.querySelectorAll('#dlgBody input[type=checkbox]:checked')].map(c=>c.value);
+      const roleVal=document.getElementById('tRole')?.value||'teacher';
+      const classes=roleVal==='piano_only'?[]:[...document.querySelectorAll('#dlgBody input[type=checkbox]:checked')].map(c=>c.value);
       if(!name||!pass){toast('請填寫完整','err');return false}
-      await dbSet(`teachers/${Date.now()}`,{name,pass,classes});
+      await dbSet(`teachers/${Date.now()}`,{name,pass,classes,role:roleVal});
       toast('教師帳號已新增','ok'); renderTeachers(); return true;
     }},{label:'取消',fn:()=>true}]);
 }
