@@ -345,6 +345,191 @@ select{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2)
 select:focus{border-color:var(--gold)}
 .spin{display:inline-block;width:18px;height:18px;border:2px solid var(--bdr);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══════════════════════════════════════
+   抽卡系統 CSS
+══════════════════════════════════════ */
+#cardOverlay{
+  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:rgba(0,0,0,.92);z-index:10001;
+  flex-direction:column;align-items:center;justify-content:center;
+  perspective:1000px;
+}
+#cardOverlay.on{display:flex}
+
+.pack-wrap{
+  display:flex;flex-direction:column;align-items:center;gap:16px;
+}
+.pack-box{
+  width:160px;height:220px;
+  background:linear-gradient(135deg,#2a1f00,#c8960c,#ffd700,#c8960c,#2a1f00);
+  border-radius:18px;
+  border:3px solid #ffd700;
+  box-shadow:0 0 40px rgba(255,215,0,.6),0 0 80px rgba(255,215,0,.2);
+  display:flex;align-items:center;justify-content:center;
+  font-size:64px;position:relative;overflow:hidden;cursor:pointer;
+  transition:transform .1s;
+}
+.pack-box::before{
+  content:'';position:absolute;top:0;left:-60%;width:40%;height:100%;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.3),transparent);
+  animation:packShine 2s infinite;
+}
+@keyframes packShine{0%{left:-60%}100%{left:160%}}
+@keyframes packShake{
+  0%,100%{transform:rotate(0deg) scale(1)}
+  10%{transform:rotate(-8deg) scale(1.05)}
+  20%{transform:rotate(8deg) scale(1.05)}
+  30%{transform:rotate(-6deg) scale(1.07)}
+  40%{transform:rotate(6deg) scale(1.07)}
+  50%{transform:rotate(-4deg) scale(1.05)}
+  60%{transform:rotate(4deg) scale(1.05)}
+  70%{transform:rotate(-2deg) scale(1.02)}
+  80%{transform:rotate(2deg) scale(1.02)}
+  90%{transform:rotate(-1deg) scale(1)}
+}
+.pack-box.shaking{animation:packShake 1.2s ease forwards}
+
+.card-reveal-wrap{
+  display:none;flex-direction:column;align-items:center;gap:16px;
+}
+.card-reveal-wrap.on{display:flex}
+
+.card-3d{
+  width:200px;height:280px;
+  transform-style:preserve-3d;
+  animation:cardFlipIn .7s ease forwards;
+  border-radius:16px;
+  position:relative;
+}
+@keyframes cardFlipIn{
+  0%{transform:rotateY(180deg) scale(.5);opacity:0}
+  60%{transform:rotateY(-10deg) scale(1.05);opacity:1}
+  80%{transform:rotateY(5deg) scale(1.02)}
+  100%{transform:rotateY(0deg) scale(1);opacity:1}
+}
+.card-inner{
+  width:100%;height:100%;border-radius:16px;overflow:hidden;
+  border:3px solid var(--gold);
+  box-shadow:0 0 30px rgba(212,175,55,.5),0 8px 32px rgba(0,0,0,.8);
+  position:relative;background:var(--bg2);
+}
+.card-inner img{width:100%;height:100%;object-fit:cover;display:block}
+.card-rarity-badge{
+  position:absolute;top:8px;right:8px;
+  font-size:13px;font-weight:bold;padding:3px 10px;border-radius:20px;
+  backdrop-filter:blur(4px);
+}
+.rarity-R .card-rarity-badge{background:rgba(52,152,219,.8);color:#fff}
+.rarity-SR .card-rarity-badge{background:rgba(155,89,182,.8);color:#fff}
+.rarity-SSR .card-rarity-badge{background:rgba(212,175,55,.9);color:#000}
+.rarity-UR .card-rarity-badge{background:linear-gradient(135deg,#ff6b6b,#ffd700);color:#000;box-shadow:0 0 12px rgba(255,215,0,.7)}
+
+.card-name-bar{
+  position:absolute;bottom:0;left:0;right:0;
+  background:linear-gradient(transparent,rgba(0,0,0,.85));
+  padding:20px 10px 10px;text-align:center;
+}
+.card-char-name{font-size:18px;font-weight:bold;color:#fff}
+.card-char-title{font-size:11px;color:rgba(255,255,255,.7)}
+
+.rarity-UR .card-inner{
+  border-color:#ffd700;
+  box-shadow:0 0 50px rgba(255,100,100,.7),0 0 100px rgba(255,215,0,.4),0 8px 32px rgba(0,0,0,.8);
+  animation:urGlow 2s infinite alternate;
+}
+@keyframes urGlow{
+  from{box-shadow:0 0 30px rgba(255,100,100,.5),0 0 60px rgba(255,215,0,.3)}
+  to{box-shadow:0 0 60px rgba(255,100,100,.9),0 0 120px rgba(255,215,0,.6)}
+}
+.rarity-SSR .card-inner{
+  border-color:#ffd700;
+  box-shadow:0 0 40px rgba(212,175,55,.8),0 8px 32px rgba(0,0,0,.8);
+}
+
+.pack-instruction{font-size:14px;color:rgba(255,255,255,.7);text-align:center}
+.pack-cost-tag{
+  background:rgba(212,175,55,.15);border:1px solid var(--gold-d);
+  border-radius:20px;padding:6px 16px;font-size:13px;color:var(--gold);
+}
+
+/* 背包 Overlay */
+#bagOverlay{
+  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:rgba(0,0,0,.88);z-index:10000;
+  flex-direction:column;align-items:center;justify-content:flex-start;
+  overflow-y:auto;padding:20px 16px;
+}
+#bagOverlay.on{display:flex}
+.bag-box{
+  background:var(--bg1);border:1px solid var(--bdr);border-radius:18px;
+  padding:20px;width:100%;max-width:680px;position:relative;
+  box-shadow:0 0 30px rgba(212,175,55,.15);margin:auto;
+}
+.bag-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  border-radius:18px 18px 0 0;
+}
+.bag-close{
+  position:absolute;top:14px;right:14px;
+  background:none;border:1px solid var(--bdr);border-radius:50%;
+  width:34px;height:34px;color:var(--tx2);cursor:pointer;font-size:16px;
+  transition:.2s;display:flex;align-items:center;justify-content:center;
+}
+.bag-close:hover{border-color:var(--gold);color:var(--gold)}
+
+.card-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+@media(max-width:480px){.card-grid{grid-template-columns:repeat(3,1fr)}}
+.card-thumb{
+  border-radius:10px;overflow:hidden;border:2px solid var(--bdr);
+  position:relative;background:var(--bg2);aspect-ratio:.714;
+  transition:.2s;
+}
+.card-thumb:hover{border-color:var(--gold);transform:translateY(-2px)}
+.card-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.card-thumb .ct-count{
+  position:absolute;bottom:4px;right:5px;
+  background:rgba(0,0,0,.75);color:var(--gold);
+  font-size:11px;font-weight:bold;padding:1px 6px;border-radius:8px;
+}
+.card-thumb .ct-rarity{
+  position:absolute;top:4px;left:4px;
+  font-size:10px;font-weight:bold;padding:1px 6px;border-radius:8px;
+}
+.ct-rarity-R{background:rgba(52,152,219,.8);color:#fff}
+.ct-rarity-SR{background:rgba(155,89,182,.8);color:#fff}
+.ct-rarity-SSR{background:rgba(212,175,55,.9);color:#000}
+.ct-rarity-UR{background:linear-gradient(135deg,#ff6b6b,#ffd700);color:#000}
+.card-thumb .ct-name{
+  position:absolute;bottom:0;left:0;right:0;
+  font-size:10px;text-align:center;padding:3px;
+  background:linear-gradient(transparent,rgba(0,0,0,.8));color:#fff;
+}
+.card-thumb.empty-slot{
+  border-style:dashed;opacity:.3;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;color:var(--tx3);
+}
+
+.bond-item{
+  background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;
+  padding:14px;margin-bottom:10px;
+}
+.bond-item.bond-ready{border-color:var(--gold);background:rgba(212,175,55,.07)}
+.bond-title{font-size:15px;font-weight:bold;margin-bottom:4px;color:var(--gold)}
+.bond-req{font-size:12px;color:var(--tx2);margin-bottom:8px}
+.bond-reward{font-size:13px;color:var(--green);margin-bottom:8px}
+.bond-cards{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.bond-card-chip{
+  font-size:11px;padding:2px 8px;border-radius:10px;
+  border:1px solid var(--bdr);color:var(--tx2);
+}
+.bond-card-chip.have{border-color:var(--green);color:var(--green);background:rgba(46,204,113,.08)}
+
+/* 學生端抽卡入口按鈕 */
+.stu-quick-btn.card{background:linear-gradient(135deg,#3d1a6b,#7b2ff7,#b06fff);color:#fff;border-color:#7b2ff7}
+.stu-quick-btn.card:hover{background:linear-gradient(135deg,#4d2a8b,#8b3fff)}
 </style>
 </head>
 <body>
@@ -521,11 +706,49 @@ select:focus{border-color:var(--gold)}
       <iframe id="pianoFrame" style="width:100%; height:100%; border:none;" src=""></iframe>
     </div>
     <div id="tabTeachers" style="display:none">
-      <div class="row" style="margin-bottom:14px">
-        <h3 style="color:var(--gold)">⚙️ 教師帳號管理</h3>
-        <button class="btn g" style="margin-left:auto" onclick="openAddTeacher()">＋ 新增</button>
+      <!-- 管理子分頁列 -->
+      <div style="display:flex;gap:0;border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:16px">
+        <button class="mgmt-tab on" id="mgmtTeacherBtn" onclick="switchMgmt('teacher')" style="flex:1;padding:10px;background:var(--gold);color:#000;border:none;font-size:13px;font-weight:bold;font-family:inherit;cursor:pointer;transition:.2s">⚙️ 教師帳號</button>
+        <button class="mgmt-tab" id="mgmtClassBtn"   onclick="switchMgmt('class')"   style="flex:1;padding:10px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:13px;font-family:inherit;cursor:pointer;transition:.2s">🏫 班級管理</button>
+        <button class="mgmt-tab" id="mgmtStudentBtn" onclick="switchMgmt('student')" style="flex:1;padding:10px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:13px;font-family:inherit;cursor:pointer;transition:.2s">🧑‍🎓 學生管理</button>
       </div>
-      <div id="teacherList"></div>
+
+      <!-- 教師帳號面板 -->
+      <div id="mgmtTeacherPanel">
+        <div class="row" style="margin-bottom:14px">
+          <h3 style="color:var(--gold)">⚙️ 教師帳號管理</h3>
+          <button class="btn g" style="margin-left:auto" onclick="openAddTeacher()">＋ 新增教師</button>
+        </div>
+        <div id="teacherList"></div>
+      </div>
+
+      <!-- 班級管理面板 -->
+      <div id="mgmtClassPanel" style="display:none">
+        <div class="row" style="margin-bottom:14px">
+          <h3 style="color:var(--gold)">🏫 班級管理</h3>
+          <button class="btn g" style="margin-left:auto" onclick="openAddClass()">＋ 新增班級</button>
+        </div>
+        <div style="font-size:12px;color:var(--tx3);margin-bottom:12px;padding:8px 12px;background:var(--bg1);border-radius:var(--r2);border:1px solid var(--bdr)">
+          ℹ️ 內建班級（音三莊、演三莊、音二莊、演二樸、音一莊）無法刪除，自行新增的班級可刪除。
+        </div>
+        <div id="classList"></div>
+      </div>
+
+      <!-- 學生管理面板 -->
+      <div id="mgmtStudentPanel" style="display:none">
+        <div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:8px">
+          <h3 style="color:var(--gold)">🧑‍🎓 學生管理</h3>
+          <button class="btn g" style="margin-left:auto" onclick="openAddStudent()">＋ 新增學生</button>
+        </div>
+        <!-- 班級篩選 -->
+        <div id="stuMgmtClsFilter" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px"></div>
+        <!-- 搜尋 -->
+        <div style="margin-bottom:10px">
+          <input type="text" id="stuMgmtSearch" placeholder="🔍 搜尋學生姓名或學號…" oninput="renderStudentMgmt()"
+            style="width:100%;padding:8px 12px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx);font-size:14px;font-family:inherit;outline:none">
+        </div>
+        <div id="studentMgmtList"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -543,8 +766,10 @@ select:focus{border-color:var(--gold)}
   <!-- ── 頂部三個快捷按鈕 ── -->
   <div class="stu-quick-bar">
     <button class="stu-quick-btn piano" onclick="openStuPiano()">🎹 預約琴房</button>
-    <button class="stu-quick-btn exit" onclick="openApplyExit()">🚪 申請第八節外出</button>
+    <button class="stu-quick-btn exit" onclick="openApplyExit()">🚪 申請外出</button>
     <button class="stu-quick-btn cal" onclick="openStuCal()">📅 行事曆</button>
+    <button class="stu-quick-btn card" onclick="openCardPack()">🌟 抽卡包</button>
+    <button class="stu-quick-btn" onclick="openBag()" style="border-color:var(--tx2);color:var(--tx2);font-size:12px">🎒 卡簿</button>
   </div>
 
   <div id="stuBanner">
@@ -561,6 +786,46 @@ select:focus{border-color:var(--gold)}
 </div>
 
 <!-- ── 學生行事曆 Overlay（點按鈕後開啟） ── -->
+<!-- ══ 抽卡動畫 Overlay ══ -->
+<div id="cardOverlay">
+  <div class="pack-wrap" id="packWrap">
+    <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px">消耗 1 顆 ⭐ 開啟卡包</div>
+    <div class="pack-box" id="packBox" onclick="triggerPackOpen()">🎴</div>
+    <div class="pack-instruction">點擊卡包開啟</div>
+    <div style="display:flex;gap:10px;margin-top:8px">
+      <button class="btn" onclick="closeCardOverlay()" style="border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.6)">✕ 取消</button>
+    </div>
+  </div>
+  <div class="card-reveal-wrap" id="cardRevealWrap">
+    <div id="cardRevealRarity" style="font-size:22px;font-weight:bold;letter-spacing:4px;margin-bottom:8px"></div>
+    <div class="card-3d" id="card3d">
+      <div class="card-inner" id="cardInner">
+        <img id="cardRevealImg" src="" alt="card">
+        <div class="card-rarity-badge" id="cardRevealBadge"></div>
+        <div class="card-name-bar">
+          <div class="card-char-name" id="cardRevealName"></div>
+          <div class="card-char-title" id="cardRevealTitle"></div>
+        </div>
+      </div>
+    </div>
+    <div id="cardRevealMsg" style="font-size:13px;color:rgba(255,255,255,.7);text-align:center;margin-top:4px"></div>
+    <button class="btn g" onclick="collectCard()" style="margin-top:12px;padding:12px 32px;font-size:15px">✨ 收下！</button>
+  </div>
+</div>
+
+<!-- ══ 卡簿 / 羈絆 Overlay ══ -->
+<div id="bagOverlay" onclick="if(event.target===this)closeBag()">
+  <div class="bag-box">
+    <button class="bag-close" onclick="closeBag()">✕</button>
+    <div style="font-size:18px;font-weight:bold;color:var(--gold);margin-bottom:4px">🎒 我的卡簿與羈絆</div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:14px" id="bagSubtitle">載入中…</div>
+    <div class="dp-sec-t">📦 收藏</div>
+    <div class="card-grid" id="bagCardGrid"></div>
+    <div class="dp-sec-t" style="margin-top:10px">🔗 羈絆兌換</div>
+    <div id="bagBondList"></div>
+  </div>
+</div>
+
 <div id="stuCalOverlay" onclick="if(event.target===this)closeStuCal()">
   <div class="stu-cal-box">
     <button class="stu-cal-close" onclick="closeStuCal()">✕</button>
@@ -713,8 +978,10 @@ const dbGet = p => ref(p).once('value').then(s=>s.val());
 const dbSet = (p,v) => ref(p).set(v);
 const dbUpd = (p,v) => ref(p).update(v);
 
-const CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
-const STUDENTS = [
+// 基底班級（程式預設）— 動態追加自 Firebase
+let CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
+// 基底學生資料（程式預設）— 動態追加自 Firebase
+let STUDENTS = [
   {id:"M3-01",name:"毛語程",cls:"音三莊"},{id:"M3-02",name:"林叡成",cls:"音三莊"},
   {id:"M3-03",name:"田宇紘",cls:"音三莊"},{id:"M3-04",name:"吳昆達",cls:"音三莊"},
   {id:"M3-05",name:"吳宥良",cls:"音三莊"},{id:"M3-06",name:"黃崇恩",cls:"音三莊"},
@@ -883,9 +1150,12 @@ async function doStudentLogin() {
   const name = document.getElementById('sName').value.trim();
   const pass = document.getElementById('sPass').value.trim();
   if (!name||!pass) { toast('請填寫姓名和密碼','err'); return; }
-  const stu = byName(name);
-  if (!stu) { toast('查無此學生','err'); return; }
+  toast('驗證中…');
   try {
+    // 先同步自訂學生資料，確保自訂新增的學生也能登入
+    await loadDynamicData();
+    const stu = byName(name);
+    if (!stu) { toast('查無此學生','err'); return; }
     const data = await dbGet(`students/${stu.id}`);
     const stored = data?.password || '0000';
     if (pass !== stored) { toast('密碼錯誤','err'); return; }
@@ -957,6 +1227,8 @@ async function checkAuthSession() {
     });
 
     if (me.role === 'student') {
+      // 先同步自訂學生，避免自訂新增的學生 session 恢復失敗
+      await loadDynamicData();
       const stu = STUDENTS.find(s => s.id === me.stuId);
       if (stu) {
         _currentStuId = stu.id;
@@ -1012,8 +1284,10 @@ function enterApp() {
   document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
   showScreen('appScreen');
   pendAtt = {};
-  buildClsBtns('clsBtns', switchCls);
-  switchCls(me.classes[0]);
+  loadDynamicData().then(() => {
+    buildClsBtns('clsBtns', switchCls);
+    switchCls(me.classes[0]);
+  });
   startApplyListener();
   startMsgListener();
 }
@@ -1041,7 +1315,7 @@ function switchTab(t) {
 
   if (t==='att') renderGrid();
   if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); loadDeductLog(); }
-  if (t==='teachers') renderTeachers();
+  if (t==='teachers') { loadDynamicData().then(()=>{ renderTeachers(); renderClassMgmt(); renderStudentMgmt(); }); }
   if (t==='inbox') renderInbox();
   if (t==='exitlog') loadExitLog();
   if (t==='cal') loadCalendar();
@@ -2518,6 +2792,566 @@ window.addEventListener('load', () => {
     if (loader) loader.style.display = 'none';
   }
 });
+
+// ════════════════════════════════════════════════════════════════
+// 動態班級 / 學生管理
+// ════════════════════════════════════════════════════════════════
+
+const BASE_CLASSES  = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
+
+// 從 Firebase 讀取自訂班級與學生，合併到全域變數
+async function loadDynamicData() {
+  try {
+    // 自訂班級
+    const extraCls = (await dbGet('customClasses')) || {};
+    const extraClsNames = Object.values(extraCls).map(c=>c.name).filter(Boolean);
+    CLASSES = [...BASE_CLASSES, ...extraClsNames.filter(n=>!BASE_CLASSES.includes(n))];
+
+    // 自訂學生
+    const extraStus = (await dbGet('customStudents')) || {};
+    const extraStuArr = Object.entries(extraStus).map(([k,s])=>({...s, _fbKey:k}));
+    // Remove existing custom students then re-add
+    const baseIds = STUDENTS.filter(s=>!s._fbKey).map(s=>s.id);
+    const basePart = STUDENTS.filter(s=>!s._fbKey);
+    STUDENTS = [...basePart, ...extraStuArr.filter(s=>!baseIds.includes(s.id))];
+  } catch(e) {
+    console.warn('loadDynamicData error:', e);
+  }
+}
+
+// ── 管理子分頁切換 ──
+let _mgmtStuCls = 'all';
+
+function switchMgmt(tab) {
+  ['teacher','class','student'].forEach(t => {
+    const btn = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Btn`);
+    const panel = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Panel`);
+    const active = t === tab;
+    if (btn) { btn.style.background = active ? 'var(--gold)' : 'transparent'; btn.style.color = active ? '#000' : 'var(--tx2)'; btn.style.fontWeight = active ? 'bold' : 'normal'; }
+    if (panel) panel.style.display = active ? '' : 'none';
+  });
+  if (tab === 'class') renderClassMgmt();
+  if (tab === 'student') renderStudentMgmt();
+}
+
+// ══════════════
+// 班級管理
+// ══════════════
+async function renderClassMgmt() {
+  const c = document.getElementById('classList');
+  if (!c) return;
+  c.innerHTML = '';
+
+  // Built-in classes
+  BASE_CLASSES.forEach(cls => {
+    const count = STUDENTS.filter(s=>s.cls===cls).length;
+    const div = document.createElement('div');
+    div.className = 'titem';
+    div.innerHTML = `
+      <div>
+        <div class="ti-name">${cls} <span style="font-size:11px;padding:1px 7px;border-radius:8px;background:rgba(212,175,55,.15);color:var(--gold);margin-left:6px">內建</span></div>
+        <div class="ti-cls">共 ${count} 位學生</div>
+      </div>
+      <button class="btn" onclick="switchMgmt('student');filterStuMgmt('${cls}')" style="font-size:11px">查看學生</button>`;
+    c.appendChild(div);
+  });
+
+  // Custom classes
+  const extraCls = (await dbGet('customClasses')) || {};
+  Object.entries(extraCls).forEach(([k, cls]) => {
+    const count = STUDENTS.filter(s=>s.cls===cls.name).length;
+    const div = document.createElement('div');
+    div.className = 'titem';
+    div.innerHTML = `
+      <div>
+        <div class="ti-name">${cls.name}</div>
+        <div class="ti-cls">共 ${count} 位學生 · 新增時間：${cls.createdAt||'—'}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn" onclick="switchMgmt('student');filterStuMgmt('${cls.name}')" style="font-size:11px">查看學生</button>
+        <button class="btn d" onclick="delClass('${k}','${cls.name}')">刪除</button>
+      </div>`;
+    c.appendChild(div);
+  });
+
+  if (!Object.keys(extraCls).length && !c.children.length) {
+    c.innerHTML = '<div class="empty">尚無自訂班級</div>';
+  }
+}
+
+function openAddClass() {
+  openDlg('🏫 新增班級',
+    `<div class="dlg-label">班級名稱</div>
+     <input class="dlg-input" type="text" id="newClsName" placeholder="例：音樂實驗班、弦樂三甲">`,
+    [{label:'新增',cls:'ok',fn:async()=>{
+      const name = document.getElementById('newClsName').value.trim();
+      if (!name) { toast('請填寫班級名稱','err'); return false; }
+      if (CLASSES.includes(name)) { toast('班級名稱已存在','err'); return false; }
+      const k = 'cls_'+Date.now();
+      await dbSet(`customClasses/${k}`, {name, createdBy:me.name, createdAt:now()});
+      toast(`班級「${name}」已新增`,'ok');
+      await loadDynamicData();
+      renderClassMgmt();
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+async function delClass(k, name) {
+  const stuCount = STUDENTS.filter(s=>s.cls===name).length;
+  openDlg(`🗑️ 刪除班級「${name}」`,
+    `<div class="dlg-msg" style="color:var(--red)">確認刪除班級「${name}」？${stuCount>0?`<br><b>⚠️ 該班級尚有 ${stuCount} 位學生，請先移除或轉班。</b>`:''}</div>`,
+    [{label:'確認刪除',cls:'del',fn:async()=>{
+      if (stuCount > 0) { toast('請先移除該班級的所有學生','err'); return false; }
+      await db.ref(`${ROOT}/customClasses/${k}`).remove();
+      toast(`班級「${name}」已刪除`,'ok');
+      await loadDynamicData();
+      renderClassMgmt();
+      buildClsBtns('clsBtns', switchCls);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+// ══════════════
+// 學生管理
+// ══════════════
+function filterStuMgmt(cls) {
+  _mgmtStuCls = cls;
+  document.querySelectorAll('#stuMgmtClsFilter .cls-filter-btn').forEach(b=>{
+    b.style.background = b.dataset.cls===cls ? 'var(--gold)' : 'transparent';
+    b.style.color = b.dataset.cls===cls ? '#000' : 'var(--tx2)';
+  });
+  renderStudentMgmt();
+}
+
+function renderStudentMgmt() {
+  // Build class filter buttons
+  const filterBar = document.getElementById('stuMgmtClsFilter');
+  if (filterBar && !filterBar.children.length) {
+    const allBtn = document.createElement('button');
+    allBtn.className = 'btn cls-filter-btn';
+    allBtn.dataset.cls = 'all';
+    allBtn.textContent = '全部';
+    allBtn.style.cssText = 'background:var(--gold);color:#000;font-weight:bold';
+    allBtn.onclick = () => filterStuMgmt('all');
+    filterBar.appendChild(allBtn);
+    CLASSES.forEach(cls => {
+      const b = document.createElement('button');
+      b.className = 'btn cls-filter-btn';
+      b.dataset.cls = cls;
+      b.textContent = cls;
+      b.onclick = () => filterStuMgmt(cls);
+      filterBar.appendChild(b);
+    });
+  } else if (filterBar) {
+    // Refresh filter buttons for new classes
+    const existing = [...filterBar.querySelectorAll('.cls-filter-btn')].map(b=>b.dataset.cls);
+    CLASSES.filter(c=>!existing.includes(c)).forEach(cls=>{
+      const b = document.createElement('button');
+      b.className = 'btn cls-filter-btn';
+      b.dataset.cls = cls;
+      b.textContent = cls;
+      b.onclick = () => filterStuMgmt(cls);
+      filterBar.appendChild(b);
+    });
+    filterBar.querySelectorAll('.cls-filter-btn').forEach(b=>{
+      b.style.background = b.dataset.cls===_mgmtStuCls ? 'var(--gold)' : 'transparent';
+      b.style.color = b.dataset.cls===_mgmtStuCls ? '#000' : 'var(--tx2)';
+      b.style.fontWeight = b.dataset.cls===_mgmtStuCls ? 'bold' : 'normal';
+    });
+  }
+
+  const list = document.getElementById('studentMgmtList');
+  if (!list) return;
+
+  const q = (document.getElementById('stuMgmtSearch')?.value||'').trim().toLowerCase();
+  let stus = STUDENTS;
+  if (_mgmtStuCls !== 'all') stus = stus.filter(s=>s.cls===_mgmtStuCls);
+  if (q) stus = stus.filter(s=>s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q));
+
+  if (!stus.length) { list.innerHTML='<div class="empty">沒有符合的學生</div>'; return; }
+
+  list.innerHTML = `
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:8px">共 ${stus.length} 位學生</div>
+    ${stus.map(s=>`
+      <div class="titem" style="margin-bottom:6px">
+        <div>
+          <div class="ti-name">${s.name} <span style="font-size:11px;color:var(--tx3)">${s.id}</span>
+            ${s._fbKey?'<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(46,204,113,.15);color:var(--green);margin-left:4px">自訂</span>':''}
+          </div>
+          <div class="ti-cls">${s.cls}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <button class="btn" onclick="openEditStudent('${s.id}')" style="font-size:11px">✏️ 編輯</button>
+          ${s._fbKey?`<button class="btn d" onclick="delStudent('${s._fbKey}','${s.name}')" style="font-size:11px">🗑️ 刪除</button>`:''}
+        </div>
+      </div>`).join('')}`;
+}
+
+function openAddStudent() {
+  const clsOpts = CLASSES.map(c=>`<option value="${c}">${c}</option>`).join('');
+  openDlg('🧑‍🎓 新增學生',
+    `<div class="dlg-label">姓名</div>
+     <input class="dlg-input" type="text" id="nStuName" placeholder="學生姓名">
+     <div class="dlg-label">學號（唯一識別，例：M4-01）</div>
+     <input class="dlg-input" type="text" id="nStuId" placeholder="例：M4-01">
+     <div class="dlg-label">班級</div>
+     <select class="dlg-input" id="nStuCls" style="width:100%;margin-bottom:12px">${clsOpts}</select>
+     <div class="dlg-label">初始密碼（留空則為 0000）</div>
+     <input class="dlg-input" type="text" id="nStuPw" placeholder="0000">`,
+    [{label:'新增',cls:'ok',fn:async()=>{
+      const name = document.getElementById('nStuName').value.trim();
+      const id   = document.getElementById('nStuId').value.trim().toUpperCase();
+      const cls  = document.getElementById('nStuCls').value;
+      const pw   = document.getElementById('nStuPw').value.trim() || '0000';
+      if (!name||!id) { toast('請填寫姓名與學號','err'); return false; }
+      if (STUDENTS.find(s=>s.id===id)) { toast('此學號已存在','err'); return false; }
+      if (STUDENTS.find(s=>s.name===name&&s.cls===cls)) { toast('同班已有同名學生','err'); return false; }
+      const fbKey = 'stu_'+Date.now();
+      // Write to custom students
+      await dbSet(`customStudents/${fbKey}`, {id, name, cls, _fbKey:fbKey, createdBy:me.name, createdAt:now()});
+      // Initialize student data with password
+      await dbUpd(`students/${id}`, {password:pw});
+      toast(`學生「${name}」已新增`,'ok');
+      await loadDynamicData();
+      renderStudentMgmt();
+      buildClsBtns('clsBtns', switchCls);
+      buildClsBtns('clsBtnsR', switchClsR);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+function openEditStudent(stuId) {
+  const stu = STUDENTS.find(s=>s.id===stuId);
+  if (!stu) return;
+  const clsOpts = CLASSES.map(c=>`<option value="${c}"${c===stu.cls?' selected':''}>${c}</option>`).join('');
+  openDlg(`✏️ 編輯學生「${stu.name}」`,
+    `<div class="dlg-label">姓名</div>
+     <input class="dlg-input" type="text" id="eStuName" value="${stu.name}" ${stu._fbKey?'':'readonly style="opacity:.5"'}>
+     <div class="dlg-label">學號</div>
+     <input class="dlg-input" type="text" id="eStuId" value="${stu.id}" readonly style="opacity:.5">
+     <div class="dlg-label">班級${stu._fbKey?'':' （內建學生班級不可修改）'}</div>
+     <select class="dlg-input" id="eStuCls" style="width:100%;margin-bottom:12px" ${stu._fbKey?'':'disabled'}>${clsOpts}</select>
+     <div class="dlg-label" style="margin-top:4px">重置密碼（留空不變）</div>
+     <input class="dlg-input" type="text" id="eStuPw" placeholder="留空=不修改">`,
+    [{label:'儲存',cls:'ok',fn:async()=>{
+      const pw = document.getElementById('eStuPw').value.trim();
+      const upd = {};
+      if (stu._fbKey) {
+        const newName = document.getElementById('eStuName').value.trim();
+        const newCls  = document.getElementById('eStuCls').value;
+        if (!newName) { toast('姓名不能為空','err'); return false; }
+        upd[`${ROOT}/customStudents/${stu._fbKey}/name`] = newName;
+        upd[`${ROOT}/customStudents/${stu._fbKey}/cls`]  = newCls;
+        await db.ref('/').update(upd);
+      }
+      if (pw) await dbUpd(`students/${stu.id}`, {password:pw});
+      toast('學生資料已更新','ok');
+      await loadDynamicData();
+      renderStudentMgmt();
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+async function delStudent(fbKey, name) {
+  openDlg(`🗑️ 刪除學生「${name}」`,
+    `<div class="dlg-msg" style="color:var(--red)">確認刪除學生「${name}」？<br>
+     <label style="font-size:13px;color:var(--tx2);display:block;margin-top:10px">
+       <input type="checkbox" id="delStuData" style="margin-right:6px"> 同時清除該生所有成績資料
+     </label></div>`,
+    [{label:'確認刪除',cls:'del',fn:async()=>{
+      const clearData = document.getElementById('delStuData')?.checked;
+      const stu = STUDENTS.find(s=>s._fbKey===fbKey);
+      await db.ref(`${ROOT}/customStudents/${fbKey}`).remove();
+      if (clearData && stu) {
+        await db.ref(`${ROOT}/students/${stu.id}`).remove();
+        await db.ref(`${ROOT}/stuMsgs/${stu.id}`).remove();
+      }
+      toast(`學生「${name}」已刪除`,'ok');
+      await loadDynamicData();
+      renderStudentMgmt();
+      buildClsBtns('clsBtns', switchCls);
+      buildClsBtns('clsBtnsR', switchClsR);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+// ════════════════════════════════════════════════════════════════
+// 抽卡系統
+// ════════════════════════════════════════════════════════════════
+
+const CARD_DB = [
+  {id:'C01',name:'旭成',rarity:'SR', img:'CARDS/旭成SR_結果_結果.jpg', title:'教務大總管'},
+  {id:'C02',name:'倩宇',rarity:'R',  img:'CARDS/倩宇R_結果.jpg',       title:'法國號導師'},
+  {id:'C03',name:'倩宇',rarity:'SR', img:'CARDS/倩宇SR_結果.jpg',      title:'銅管首席'},
+  {id:'C04',name:'倩宇',rarity:'SSR',img:'CARDS/倩宇SSR_結果.jpg',     title:'法國號女神'},
+  {id:'C05',name:'校長',rarity:'SR', img:'CARDS/校長SR_結果.jpg',      title:'親民校長'},
+  {id:'C06',name:'校長',rarity:'SSR',img:'CARDS/校長SSR_結果.jpg',     title:'大提琴守護者'},
+  {id:'C07',name:'校長',rarity:'UR', img:'CARDS/校長UR_結果.jpg',      title:'莊敬大家長'},
+  {id:'C08',name:'國霖',rarity:'SR', img:'CARDS/國霖SR_結果.jpg',      title:'單簧管大師'},
+  {id:'C09',name:'康榮',rarity:'SSR',img:'CARDS/康榮SSR_結果.jpg',     title:'音樂總監'},
+  {id:'C10',name:'曉萱',rarity:'R',  img:'CARDS/曉萱R_結果.jpg',       title:'低音管導師'},
+  {id:'C11',name:'曉萱',rarity:'SR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音管精靈'},
+];
+
+const RARITY_WEIGHT = {UR:1, SSR:10, SR:30, R:59};
+
+const BONDS_DB = [
+  {
+    id:'BOND_A',
+    name:'高層決策者',
+    needs:['C07','C09','C01'],
+    reward:'免除一次罰抄任務',
+    rewardType:'clearTask',
+    emoji:'👑',
+  },
+  {
+    id:'BOND_B',
+    name:'管樂的交響',
+    needs:['C04','C08','C11'],
+    reward:'任選50元手搖飲一杯',
+    rewardType:'log',
+    emoji:'🧋',
+  },
+  {
+    id:'BOND_C',
+    name:'法國號的傳承',
+    needs:['C04','C03','C02'],
+    reward:'獲得 3 枚金牌',
+    rewardType:'medals3',
+    emoji:'🎺',
+  },
+];
+
+let isOpening = false;
+let _pendingCard = null;
+
+function drawCard() {
+  const roll = Math.random() * 100;
+  let pool;
+  if (roll < RARITY_WEIGHT.UR) pool = CARD_DB.filter(c=>c.rarity==='UR');
+  else if (roll < RARITY_WEIGHT.UR + RARITY_WEIGHT.SSR) pool = CARD_DB.filter(c=>c.rarity==='SSR');
+  else if (roll < RARITY_WEIGHT.UR + RARITY_WEIGHT.SSR + RARITY_WEIGHT.SR) pool = CARD_DB.filter(c=>c.rarity==='SR');
+  else pool = CARD_DB.filter(c=>c.rarity==='R');
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+async function openCardPack() {
+  if (!_currentStuId) { toast('請先登入','err'); return; }
+  const d = await dbGet(`students/${_currentStuId}`);
+  if ((d?.points||0) < 1) { toast('⭐ 星星點數不足，無法開卡包', 'err'); return; }
+
+  isOpening = false;
+  _pendingCard = null;
+  document.getElementById('packWrap').style.display = 'flex';
+  document.getElementById('cardRevealWrap').classList.remove('on');
+  document.getElementById('packBox').classList.remove('shaking');
+  document.getElementById('cardOverlay').classList.add('on');
+}
+
+function closeCardOverlay() {
+  if (isOpening) return;
+  document.getElementById('cardOverlay').classList.remove('on');
+}
+
+async function triggerPackOpen() {
+  if (isOpening) return;
+  if (!_currentStuId) return;
+
+  // Re-validate points
+  const d = await dbGet(`students/${_currentStuId}`);
+  if ((d?.points||0) < 1) { toast('⭐ 點數不足', 'err'); closeCardOverlay(); return; }
+
+  isOpening = true;
+  const box = document.getElementById('packBox');
+  box.style.pointerEvents = 'none';
+  box.classList.add('shaking');
+
+  // Draw card
+  const card = drawCard();
+  _pendingCard = card;
+
+  // Deduct point & write log
+  const lk = Date.now()+'';
+  await dbUpd(`students/${_currentStuId}`, {
+    points: Math.max(0,(d.points||0)-1),
+    [`log/${lk}`]: {time:now(), action:'開啟卡包', reason:`抽到 ${card.rarity} ${card.name}`, teacher:'系統', delta:-1}
+  });
+
+  // After shake animation
+  setTimeout(() => {
+    document.getElementById('packWrap').style.display = 'none';
+    revealCard(card);
+  }, 1400);
+}
+
+function revealCard(card) {
+  const wrap = document.getElementById('cardRevealWrap');
+  const card3d = document.getElementById('card3d');
+  const rarityColors = {R:'#3498DB', SR:'#9B59B6', SSR:'#D4AF37', UR:'#FF6B6B'};
+  const rarityGlow = {R:'', SR:'', SSR:'⭐ SSR ⭐', UR:'🌟 UR 🌟'};
+
+  document.getElementById('cardRevealImg').src = card.img;
+  document.getElementById('cardRevealBadge').textContent = card.rarity;
+  document.getElementById('cardRevealName').textContent = card.name;
+  document.getElementById('cardRevealTitle').textContent = card.title;
+  document.getElementById('cardRevealRarity').textContent = rarityGlow[card.rarity] || card.rarity;
+  document.getElementById('cardRevealRarity').style.color = rarityColors[card.rarity] || '#fff';
+
+  card3d.className = `card-3d rarity-${card.rarity}`;
+  const inner = document.getElementById('cardInner');
+  inner.className = `card-inner`;
+
+  // Duplicate class for glow
+  card3d.className = `card-3d rarity-${card.rarity}`;
+
+  let msg = '';
+  if (card.rarity === 'UR') msg = '🎉 恭喜！超稀有 UR 卡！';
+  else if (card.rarity === 'SSR') msg = '✨ 太棒了！SSR 稀有卡！';
+  else if (card.rarity === 'SR') msg = '👍 SR 卡，不錯喔！';
+  document.getElementById('cardRevealMsg').textContent = msg;
+
+  wrap.classList.add('on');
+}
+
+async function collectCard() {
+  if (!_pendingCard || !_currentStuId) { closeCardOverlay(); return; }
+  const card = _pendingCard;
+  const invPath = `students/${_currentStuId}/inventory/${card.id}`;
+  const cur = (await dbGet(invPath)) || 0;
+  await dbSet(invPath, cur + 1);
+  toast(`已收下 ${card.rarity} ${card.name}！`, 'ok');
+  _pendingCard = null;
+  isOpening = false;
+  closeCardOverlay();
+
+  // Refresh student view
+  const stu = byId(_currentStuId);
+  if (stu) {
+    const d = await dbGet(`students/${_currentStuId}`);
+    _renderStuView(stu, d||{});
+  }
+}
+
+// ── 背包 ──
+async function openBag() {
+  if (!_currentStuId) { toast('請先登入','err'); return; }
+  document.getElementById('bagOverlay').classList.add('on');
+  await renderBag();
+}
+
+function closeBag() {
+  document.getElementById('bagOverlay').classList.remove('on');
+}
+
+async function renderBag() {
+  const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
+  const totalCards = Object.values(inv).reduce((a,b)=>a+(b||0),0);
+  document.getElementById('bagSubtitle').textContent = `共收集 ${totalCards} 張卡片`;
+
+  // Card grid
+  const grid = document.getElementById('bagCardGrid');
+  grid.innerHTML = '';
+  CARD_DB.forEach(card => {
+    const count = inv[card.id] || 0;
+    const div = document.createElement('div');
+    div.className = 'card-thumb' + (count === 0 ? ' empty-slot' : '');
+    if (count > 0) {
+      div.innerHTML = `
+        <img src="${card.img}" alt="${card.name}" onerror="this.parentNode.classList.add('empty-slot');this.remove()">
+        <div class="ct-rarity ct-rarity-${card.rarity}">${card.rarity}</div>
+        <div class="ct-name">${card.name}</div>
+        ${count > 1 ? `<div class="ct-count">×${count}</div>` : ''}`;
+    } else {
+      div.innerHTML = '🂠';
+      div.title = '尚未獲得';
+    }
+    grid.appendChild(div);
+  });
+
+  // Bond list
+  const bondList = document.getElementById('bagBondList');
+  bondList.innerHTML = '';
+  for (const bond of BONDS_DB) {
+    const bondInv = (await dbGet(`students/${_currentStuId}/claimedBonds`)) || {};
+    const needCards = bond.needs.map(id => CARD_DB.find(c=>c.id===id));
+    const canRedeem = bond.needs.every(id => (inv[id]||0) >= 1);
+    const alreadyClaimed = bondInv[bond.id];
+
+    const div = document.createElement('div');
+    div.className = 'bond-item' + (canRedeem && !alreadyClaimed ? ' bond-ready' : '');
+    const chipsHtml = needCards.map(c => {
+      const have = (inv[c.id]||0) >= 1;
+      return `<span class="bond-card-chip${have?' have':''}">${c.rarity} ${c.name}${have?' ✓':''}</span>`;
+    }).join('');
+
+    div.innerHTML = `
+      <div class="bond-title">${bond.emoji} ${bond.name}</div>
+      <div class="bond-cards">${chipsHtml}</div>
+      <div class="bond-reward">🎁 獎勵：${bond.reward}</div>
+      ${alreadyClaimed
+        ? `<div style="font-size:12px;color:var(--tx3)">✅ 已兌換（${alreadyClaimed}）</div>`
+        : canRedeem
+          ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px">🔓 立即兌換</button>`
+          : `<div style="font-size:12px;color:var(--tx3)">🔒 尚未集齊所需卡片</div>`
+      }`;
+    bondList.appendChild(div);
+  }
+}
+
+async function redeemBond(bondId) {
+  if (!_currentStuId) return;
+  const bond = BONDS_DB.find(b=>b.id===bondId);
+  if (!bond) return;
+
+  openDlg(`🔗 兌換羈絆「${bond.name}」`,
+    `<div class="dlg-msg">確認兌換羈絆？<br>將消耗所需卡片各一張。<br><br>🎁 獎勵：<b>${bond.reward}</b></div>`,
+    [{label:'確認兌換', cls:'ok', fn: async () => {
+      const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
+      // Verify again
+      const ok = bond.needs.every(id=>(inv[id]||0)>=1);
+      if (!ok) { toast('卡片不足，無法兌換','err'); return false; }
+
+      const upd = {};
+      // Deduct cards
+      bond.needs.forEach(id => {
+        upd[`${ROOT}/students/${_currentStuId}/inventory/${id}`] = Math.max(0,(inv[id]||0)-1);
+      });
+
+      const lk = Date.now()+'';
+      const t = now();
+
+      // Apply reward
+      if (bond.rewardType === 'medals3') {
+        const d = await dbGet(`students/${_currentStuId}`);
+        upd[`${ROOT}/students/${_currentStuId}/medals`] = (d?.medals||0) + 3;
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換獎勵', reason:`「${bond.name}」＋3枚金牌`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, '', `🎺 羈絆「${bond.name}」兌換成功！獲得3枚金牌`, 'notice');
+      } else if (bond.rewardType === 'log') {
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換獎勵', reason:`「${bond.name}」已兌換手搖飲，請找老師領取`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, '', `🧋 羈絆「${bond.name}」兌換成功！手搖飲請找老師領取`, 'notice');
+      } else if (bond.rewardType === 'clearTask') {
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換獎勵', reason:`「${bond.name}」免除一次罰抄，請找老師確認`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, '', `👑 羈絆「${bond.name}」兌換成功！免除一次罰抄，請找老師確認`, 'notice');
+      }
+
+      // Mark claimed
+      upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
+
+      await db.ref('/').update(upd);
+      toast(`羈絆「${bond.name}」兌換成功！`, 'ok');
+      await renderBag();
+      return true;
+    }}, {label:'取消', fn:()=>true}]
+  );
+}
+
+window.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    closeBag();
+    if (!isOpening) closeCardOverlay();
+  }
+});
+
 </script>
 </body>
 </html>
