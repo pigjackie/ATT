@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -271,6 +272,24 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .bolt-penalty{background:rgba(231,76,60,.15);border:1px solid rgba(231,76,60,.4);border-radius:8px;padding:6px 10px;font-size:12px;color:var(--red);margin-top:4px}
 .sc-bolts{font-size:14px;letter-spacing:-2px;margin-top:2px}
 
+/* ── 行事曆區域 ── */
+.cal-container{background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+.cal-title{font-size:15px;color:var(--gold);font-weight:bold}
+.cal-img-wrap{width:100%;border-radius:8px;overflow:hidden;border:1px solid var(--bdr);background:var(--bg2);min-height:120px;display:flex;align-items:center;justify-content:center}
+.cal-img-wrap img{width:100%;display:block;border-radius:8px}
+.cal-empty{color:var(--tx3);font-size:14px;text-align:center;padding:32px 0}
+.cal-upload-row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.cal-file-input{display:none}
+
+/* 學生頂部快捷按鈕 */
+.stu-quick-bar{display:flex;gap:10px;padding:12px 16px;background:var(--bg1);border-bottom:1px solid var(--bdr);flex-shrink:0}
+.stu-quick-btn{flex:1;padding:11px 10px;border-radius:var(--r2);font-size:14px;font-weight:bold;font-family:inherit;cursor:pointer;border:2px solid transparent;transition:.2s;text-align:center}
+.stu-quick-btn.piano{background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;border-color:var(--gold)}
+.stu-quick-btn.piano:hover{background:var(--gold-l)}
+.stu-quick-btn.exit{background:transparent;border-color:var(--green);color:var(--green)}
+.stu-quick-btn.exit:hover{background:rgba(46,204,113,.1)}
+
 .empty{text-align:center;padding:50px 20px;color:var(--tx3);font-size:15px}
 .sep{border:none;border-top:1px solid var(--bdr);margin:14px 0}
 .row{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
@@ -336,6 +355,7 @@ select:focus{border-color:var(--gold)}
     <button class="navtab" onclick="switchTab('exitlog')" id="tab-exitlog">📋 外出日誌</button>
     <button class="navtab" onclick="switchTab('inbox')" id="tab-inbox">💬 訊息<span class="nbadge" id="inboxBadge" style="display:none">0</span></button>
     <button class="navtab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
+    <button class="navtab" onclick="switchTab('cal')" id="tab-cal">📅 行事曆</button>
     <button class="navtab" onclick="switchTab('piano')" id="tab-piano">🎹 琴房預約</button>
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
   </div>
@@ -423,6 +443,34 @@ select:focus{border-color:var(--gold)}
       <h3 style="color:var(--red);margin-bottom:12px">🔴 扣分記錄（近期）</h3>
       <div id="deductLog"><div class="empty">載入中...</div></div>
     </div>
+
+    <!-- ── 行事曆分頁（教師上傳） ── -->
+    <div id="tabCal" style="display:none">
+      <div class="row" style="margin-bottom:16px;flex-wrap:wrap;gap:8px">
+        <h3 style="color:var(--gold)">📅 學期行事曆管理</h3>
+      </div>
+      <div class="cal-container">
+        <div class="cal-header">
+          <div class="cal-title" id="calDisplayTitle">行事曆</div>
+          <div class="row" style="gap:6px">
+            <input type="text" id="calSemesterLabel" placeholder="學期名稱（例：113學年第2學期）" style="padding:6px 10px;background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx);font-size:13px;font-family:inherit;outline:none;width:220px" onfocus="this.style.borderColor='var(--gold)'" onblur="this.style.borderColor=''">
+          </div>
+        </div>
+        <div class="cal-img-wrap" id="calImgWrap">
+          <div class="cal-empty" id="calEmptyMsg">尚未上傳行事曆<br><span style="font-size:12px">請點下方上傳圖片</span></div>
+          <img id="calImg" style="display:none" alt="學期行事曆">
+        </div>
+        <div class="cal-upload-row">
+          <input type="file" id="calFileInput" class="cal-file-input" accept="image/*" onchange="handleCalUpload(event)">
+          <button class="btn g" onclick="document.getElementById('calFileInput').click()">📷 上傳行事曆圖片</button>
+          <button class="btn s" onclick="saveCalMeta()">💾 儲存學期名稱</button>
+          <button class="btn d" onclick="deleteCalendar()" id="calDelBtn" style="display:none">🗑️ 刪除</button>
+          <span style="font-size:11px;color:var(--tx3)" id="calUploadStatus"></span>
+        </div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:8px">※ 上傳後學生即可在個人頁面查看行事曆</div>
+      </div>
+    </div>
+
     <div id="tabPiano" style="display:none; height:calc(100vh - 120px); margin:-16px;">
       <iframe id="pianoFrame" style="width:100%; height:100%; border:none;" src=""></iframe>
     </div>
@@ -436,6 +484,7 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
+<!-- ── 學生畫面 ── -->
 <div id="studentScreen" class="screen">
   <div class="topbar">
     <div class="topbar-logo">🎼</div>
@@ -443,6 +492,11 @@ select:focus{border-color:var(--gold)}
     <div class="topbar-user">學生：<b id="stuUserName">—</b></div>
     <button class="notif-btn" id="stuNotifBtn" onclick="toggleStuBanner()" title="訊息通知">🔔<span class="notif-dot" id="stuNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
+  </div>
+  <!-- ① 頂部快捷按鈕（預約琴房 + 外出申請） -->
+  <div class="stu-quick-bar">
+    <button class="stu-quick-btn piano" onclick="openStuPiano()">🎹 預約琴房</button>
+    <button class="stu-quick-btn exit" onclick="openApplyExit()">🚪 申請第八節外出</button>
   </div>
   <div id="stuBanner">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
@@ -453,11 +507,20 @@ select:focus{border-color:var(--gold)}
   </div>
   <div class="content">
     <div id="stuCard" style="max-width:600px;margin:0 auto"></div>
-    <div style="max-width:600px;margin:16px auto 0; display:flex; gap:10px;">
-      <button class="btn g" onclick="openApplyExit()" style="flex:1;padding:13px;font-size:15px">🚪 申請第八節外出</button>
-      <button class="btn s" onclick="openStuPiano()" style="flex:1;padding:13px;font-size:15px;border-width:2px;font-weight:bold">🎹 預約琴房</button>
-    </div>
     <div id="stuPassArea" style="max-width:600px;margin:10px auto 0"></div>
+    <!-- ② 學生查看行事曆 -->
+    <div style="max-width:600px;margin:16px auto 0">
+      <div class="cal-container">
+        <div class="cal-header">
+          <div class="cal-title" id="stuCalTitle">📅 學期行事曆</div>
+          <button class="btn" onclick="loadStuCalendar()" style="font-size:11px;padding:3px 10px">🔄</button>
+        </div>
+        <div class="cal-img-wrap" id="stuCalImgWrap">
+          <div class="cal-empty" id="stuCalEmpty">行事曆尚未上傳</div>
+          <img id="stuCalImg" style="display:none;width:100%" alt="學期行事曆">
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -873,7 +936,6 @@ async function refreshStuView(stuId) {
     toast('已重新整理','ok');
   } catch(e) {
     toast('重新整理失敗，請重試','err');
-    console.error('refreshStuView error:', e);
   }
 }
 function toggleResetZone() {
@@ -897,7 +959,7 @@ function enterApp() {
   document.getElementById('curUser').textContent = me.name;
   document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
   showScreen('appScreen');
-  pendAtt = {};  
+  pendAtt = {};
   buildClsBtns('clsBtns', switchCls);
   switchCls(me.classes[0]);
   startApplyListener();
@@ -906,21 +968,23 @@ function enterApp() {
 
 function enterStudentView(stu) {
   document.getElementById('stuUserName').textContent = stu.name;
-  _currentStuId = stu.id;   
+  _currentStuId = stu.id;
   showScreen('studentScreen');
   loadStuView(stu);
   loadStuMsgs(stu.id);
+  loadStuCalendar();
 }
 
 function switchTab(t) {
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
-  ['att','apply','exitlog','inbox','report','teachers','piano'].forEach(id=>{
-    const el = document.getElementById('tab'+id.charAt(0).toUpperCase()+id.slice(1));
+  ['att','apply','exitlog','inbox','report','teachers','piano','cal'].forEach(id=>{
+    const key = 'tab'+id.charAt(0).toUpperCase()+id.slice(1);
+    const el = document.getElementById(key);
     if (el) el.style.display = 'none';
   });
   const btn = document.getElementById('tab-'+t);
   if (btn) btn.classList.add('on');
-  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano'};
+  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano',cal:'tabCal'};
   const content = document.getElementById(map[t]);
   if (content) content.style.display = '';
 
@@ -929,6 +993,7 @@ function switchTab(t) {
   if (t==='teachers') renderTeachers();
   if (t==='inbox') renderInbox();
   if (t==='exitlog') loadExitLog();
+  if (t==='cal') loadCalendar();
   if (t==='piano') {
     const frame = document.getElementById('pianoFrame');
     if (!frame.src || frame.src === window.location.href) {
@@ -1280,12 +1345,16 @@ function closeDetail() {
   curStu = null;
 }
 
+// ════════════════════════════════════════════════
+// ① 閃電顯示：第3的倍數次時顯示「歸零」鍵（需填原因）
+// ════════════════════════════════════════════════
 function renderBolts(bolts) {
   const disp = document.getElementById('dpBoltDisplay');
   const pen  = document.getElementById('dpBoltPenalty');
   if (!disp) return;
   const cur = bolts % 3;
   const penalties = Math.floor(bolts / 3);
+
   let html = '<div style="display:flex;gap:8px;margin-bottom:6px">';
   for (let i=0;i<3;i++) {
     html += `<div style="flex:1;height:36px;border-radius:8px;border:2px solid ${i<cur?'var(--yellow)':'var(--bdr)'};background:${i<cur?'rgba(241,196,15,.2)':'transparent'};display:flex;align-items:center;justify-content:center;font-size:20px;transition:.2s">${i<cur?'⚡':'　'}</div>`;
@@ -1293,9 +1362,14 @@ function renderBolts(bolts) {
   html += '</div>';
   html += `<div style="font-size:12px;color:var(--tx2)">累計 <b style="color:var(--yellow)">${bolts}</b> 個閃電 · <b style="color:${penalties>0?'var(--red)':'var(--tx2)'}">${penalties}</b> 次懲罰已觸發</div>`;
   disp.innerHTML = html;
+
   if (penalties > 0) {
     pen.style.display = 'block';
-    pen.innerHTML = `⚠️ 已累積 ${penalties} 次懲罰（每3個閃電觸發一次）<button class="btn d" onclick="resetBolts()" style="margin-top:6px;width:100%;padding:6px;font-size:13px;border-width:2px;font-weight:bold">🗑️ 閃電歸零</button>`;
+    pen.innerHTML = `
+      <div style="margin-bottom:8px">⚠️ 已累積 <b>${penalties}</b> 次懲罰（每3個閃電觸發一次）</div>
+      <button class="btn d" onclick="resetBolts()" style="width:100%;padding:8px;font-size:13px;border-width:2px;font-weight:bold">
+        🗑️ 閃電歸零（請先確認已完成處罰）
+      </button>`;
   } else {
     pen.style.display = 'none';
   }
@@ -1317,6 +1391,7 @@ async function chgBolt(delta) {
         const upd = {};
         const t = Date.now();
 
+        // ④ 新增閃電時，若有點數先扣點數
         if (curPts > 0) {
           upd[`students/${curStu.id}/points`] = curPts - 1;
           upd[`students/${curStu.id}/log/${t}_pt`] = {time:now(), action:'閃電扣點', reason:'因新增閃電自動扣點', teacher:me.name, delta:-1};
@@ -1331,6 +1406,7 @@ async function chgBolt(delta) {
         const oldPen = Math.floor((curBolts-1)/3);
 
         if (newPen > oldPen) {
+          // 第3的倍數次閃電 → 觸發懲罰通知
           await sendNotifToStudent(curStu.id, curStu.name, `⚡ 閃電達 ${curBolts} 個，觸發懲罰！原因：${reason}`, 'punishment');
           toast(`⚠️ 累積 ${newPen} 次懲罰${deductMsg}！`, 'err');
         } else {
@@ -1352,19 +1428,22 @@ async function chgBolt(delta) {
   }
 }
 
+// ① 閃電歸零：必須填原因（例如：已完成處罰）
 async function resetBolts() {
   if (!curStu) return;
-  openDlg('🗑️ 閃電歸零',
-    `<div class="dlg-msg">將清除所有閃電紀錄，並重新計算。</div>
-     <div class="dlg-label">歸零原因</div><input class="dlg-input" type="text" id="resetBoltReason" placeholder="例：已完成懲罰任務">`,
+  openDlg('🗑️ 閃電歸零確認',
+    `<div class="dlg-msg" style="color:var(--red);margin-bottom:10px">請確認該生已完成處罰再進行歸零。</div>
+     <div class="dlg-label">歸零原因（必填）</div>
+     <input class="dlg-input" type="text" id="resetBoltReason" placeholder="例：已完成處罰任務、已與家長聯繫...">`,
     [{label:'確認歸零',cls:'del',fn:async()=>{
       const reason = document.getElementById('resetBoltReason').value.trim();
-      if(!reason){toast('請填寫原因','err');return false;}
+      if(!reason){toast('請填寫歸零原因','err');return false;}
       const lk = Date.now()+'';
       await dbUpd(`students/${curStu.id}`, {
         bolts: 0,
         [`log/${lk}`]: {time:now(), action:'閃電歸零', reason, teacher:me.name, delta:0}
       });
+      await sendNotifToStudent(curStu.id, curStu.name, `閃電已歸零 — ${reason}`, 'notice');
       toast('閃電已歸零','ok');
       openDetail(curStu); return true;
     }},{label:'取消',fn:()=>true}]
@@ -1405,10 +1484,14 @@ function renderLog(log) {
   }).join('');
 }
 
+// ════════════════════════════════════════════════
+// ④ 扣點：若有點數先扣點數（星星）再扣分
+// ════════════════════════════════════════════════
 async function chgPts(delta) {
   if (!curStu) return;
   openDlg(delta>0?'＋ 加點':'－ 扣點',
-    `<div class="dlg-label">原因</div><input class="dlg-input" type="text" id="pR" placeholder="原因">`,
+    `<div class="dlg-label">原因</div><input class="dlg-input" type="text" id="pR" placeholder="原因">
+     ${delta<0?'<div style="font-size:12px;color:var(--yellow);padding:6px 8px;background:rgba(241,196,15,.08);border-radius:6px;margin-bottom:10px">⭐ 若有點數，將優先扣除點數（星星）</div>':''}`,
     [{label:'確認',cls:'ok',fn:async()=>{
       const reason=document.getElementById('pR').value.trim();
       if(!reason){toast('請填寫原因','err');return false}
@@ -1950,7 +2033,7 @@ function stuChangePw(stuId) {
     }},{label:'取消',fn:()=>true}]);
 }
 
-let _stuViewListener = null;  
+let _stuViewListener = null;
 
 async function loadStuView(stu) {
   if (_stuViewListener) {
@@ -2040,8 +2123,6 @@ function _renderStuView(stu, d) {
       <div style="font-size:13px;color:var(--tx2);margin-bottom:4px">共 <b style="color:var(--gold)">${medals}</b> 枚</div>
 
       <hr class="sep">
-
-      <hr class="sep">
       <div class="dp-sec-t">⚡ 閃電警告</div>
       ${(()=>{const b=d.bolts||0,cur=b%3,pen=Math.floor(b/3);if(!b)return'<div style="font-size:13px;color:var(--tx3);padding:4px 0">目前無警告 ✓</div>';let bar='<div style="display:flex;gap:6px;margin-bottom:6px">';for(let i=0;i<3;i++)bar+=`<div style="flex:1;height:28px;border-radius:6px;border:2px solid ${i<cur?'var(--yellow)':'var(--bdr)'};background:${i<cur?'rgba(241,196,15,.15)':'transparent'};display:flex;align-items:center;justify-content:center">${i<cur?'⚡':''}</div>`;return bar+'</div>'+(pen>0?`<div style="font-size:12px;color:var(--red);padding:5px 8px;background:rgba(231,76,60,.1);border-radius:6px">⚠️ 已觸發 ${pen} 次懲罰</div>`:`<div style="font-size:12px;color:var(--tx2)">⚡ ${cur}/3，集滿3個觸發懲罰</div>`);})()}
       <hr class="sep">
@@ -2110,6 +2191,97 @@ async function stuDelTask(stuId, taskKey) {
     }},{label:'取消',fn:()=>true}]);
 }
 
+// ════════════════════════════════════════════════
+// ③ 行事曆功能（教師上傳、學生查看）
+//    使用 Firebase Realtime DB 儲存 base64 圖片
+// ════════════════════════════════════════════════
+async function loadCalendar() {
+  const calData = await dbGet('calendar') || {};
+  const imgEl = document.getElementById('calImg');
+  const emptyEl = document.getElementById('calEmptyMsg');
+  const delBtn = document.getElementById('calDelBtn');
+  const titleEl = document.getElementById('calDisplayTitle');
+  const labelEl = document.getElementById('calSemesterLabel');
+
+  if (calData.imageBase64) {
+    imgEl.src = calData.imageBase64;
+    imgEl.style.display = 'block';
+    emptyEl.style.display = 'none';
+    delBtn.style.display = '';
+  } else {
+    imgEl.style.display = 'none';
+    emptyEl.style.display = '';
+    delBtn.style.display = 'none';
+  }
+  if (calData.semester) {
+    titleEl.textContent = '📅 ' + calData.semester;
+    labelEl.value = calData.semester;
+  } else {
+    titleEl.textContent = '📅 行事曆';
+    labelEl.value = '';
+  }
+}
+
+async function handleCalUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  if (file.size > 4 * 1024 * 1024) { toast('圖片過大，請壓縮後再上傳（上限4MB）','err'); return; }
+  const status = document.getElementById('calUploadStatus');
+  status.textContent = '上傳中…';
+  try {
+    const base64 = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = e => resolve(e.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+    const semester = document.getElementById('calSemesterLabel').value.trim() || '學期行事曆';
+    await dbUpd('calendar', { imageBase64: base64, semester, updatedBy: me.name, updatedAt: now() });
+    toast('行事曆已上傳','ok');
+    status.textContent = '';
+    loadCalendar();
+    event.target.value = '';
+  } catch(e) {
+    toast('上傳失敗：'+e.message,'err');
+    status.textContent = '';
+  }
+}
+
+async function saveCalMeta() {
+  const semester = document.getElementById('calSemesterLabel').value.trim();
+  if (!semester) { toast('請填寫學期名稱','err'); return; }
+  await dbUpd('calendar', { semester, updatedBy: me.name, updatedAt: now() });
+  toast('學期名稱已儲存','ok');
+  document.getElementById('calDisplayTitle').textContent = '📅 ' + semester;
+}
+
+async function deleteCalendar() {
+  openDlg('🗑️ 刪除行事曆', '<div class="dlg-msg">確認刪除目前的行事曆圖片？</div>',
+    [{label:'確認刪除',cls:'del',fn:async()=>{
+      await dbSet('calendar', {semester:'', imageBase64:'', updatedBy:me.name, updatedAt:now()});
+      toast('行事曆已刪除','ok');
+      loadCalendar();
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+// 學生端載入行事曆
+async function loadStuCalendar() {
+  const calData = await dbGet('calendar') || {};
+  const imgEl = document.getElementById('stuCalImg');
+  const emptyEl = document.getElementById('stuCalEmpty');
+  const titleEl = document.getElementById('stuCalTitle');
+  if (calData.imageBase64) {
+    imgEl.src = calData.imageBase64;
+    imgEl.style.display = 'block';
+    if (emptyEl) emptyEl.style.display = 'none';
+  } else {
+    imgEl.style.display = 'none';
+    if (emptyEl) emptyEl.style.display = '';
+  }
+  if (calData.semester) titleEl.textContent = '📅 ' + calData.semester;
+}
+
 async function renderTeachers() {
   const c = document.getElementById('teacherList');
   c.innerHTML = '<div class="spin"></div>';
@@ -2161,7 +2333,7 @@ async function loadDeductLog() {
       if ((e.delta||0) < 0) all.push({...e, studentName:s.name, studentId:s.id, cls:s.cls});
     });
   }
-  all.sort((a,b)=>(b.time||'').localeCompare(a.time||'')); 
+  all.sort((a,b)=>(b.time||'').localeCompare(a.time||''));
   const recent = all.slice(0,40);
   if (!recent.length) { el.innerHTML='<div class="empty">尚無扣分記錄</div>'; return; }
   el.innerHTML = recent.map(e=>`
