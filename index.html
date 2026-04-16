@@ -361,13 +361,13 @@ select:focus{border-color:var(--gold)}
   display:flex;flex-direction:column;align-items:center;gap:16px;
 }
 .pack-box{
-  width:160px;height:220px;
+  width:240px;height:330px;
   background:linear-gradient(135deg,#2a1f00,#c8960c,#ffd700,#c8960c,#2a1f00);
-  border-radius:18px;
-  border:3px solid #ffd700;
-  box-shadow:0 0 40px rgba(255,215,0,.6),0 0 80px rgba(255,215,0,.2);
+  border-radius:24px;
+  border:4px solid #ffd700;
+  box-shadow:0 0 60px rgba(255,215,0,.7),0 0 120px rgba(255,215,0,.3);
   display:flex;align-items:center;justify-content:center;
-  font-size:64px;position:relative;overflow:hidden;cursor:pointer;
+  font-size:96px;position:relative;overflow:hidden;cursor:pointer;
   transition:transform .1s;
 }
 .pack-box::before{
@@ -396,10 +396,10 @@ select:focus{border-color:var(--gold)}
 .card-reveal-wrap.on{display:flex}
 
 .card-3d{
-  width:200px;height:280px;
+  width:300px;height:420px;
   transform-style:preserve-3d;
   animation:cardFlipIn .7s ease forwards;
-  border-radius:16px;
+  border-radius:22px;
   position:relative;
 }
 @keyframes cardFlipIn{
@@ -409,42 +409,42 @@ select:focus{border-color:var(--gold)}
   100%{transform:rotateY(0deg) scale(1);opacity:1}
 }
 .card-inner{
-  width:100%;height:100%;border-radius:16px;overflow:hidden;
-  border:3px solid var(--gold);
-  box-shadow:0 0 30px rgba(212,175,55,.5),0 8px 32px rgba(0,0,0,.8);
+  width:100%;height:100%;border-radius:22px;overflow:hidden;
+  border:4px solid var(--gold);
+  box-shadow:0 0 50px rgba(212,175,55,.6),0 12px 48px rgba(0,0,0,.8);
   position:relative;background:var(--bg2);
 }
 .card-inner img{width:100%;height:100%;object-fit:cover;display:block}
 .card-rarity-badge{
-  position:absolute;top:8px;right:8px;
-  font-size:13px;font-weight:bold;padding:3px 10px;border-radius:20px;
+  position:absolute;top:12px;right:12px;
+  font-size:17px;font-weight:bold;padding:5px 14px;border-radius:24px;
   backdrop-filter:blur(4px);
 }
 .rarity-R .card-rarity-badge{background:rgba(52,152,219,.8);color:#fff}
 .rarity-SR .card-rarity-badge{background:rgba(155,89,182,.8);color:#fff}
 .rarity-SSR .card-rarity-badge{background:rgba(212,175,55,.9);color:#000}
-.rarity-UR .card-rarity-badge{background:linear-gradient(135deg,#ff6b6b,#ffd700);color:#000;box-shadow:0 0 12px rgba(255,215,0,.7)}
+.rarity-UR .card-rarity-badge{background:linear-gradient(135deg,#ff6b6b,#ffd700);color:#000;box-shadow:0 0 20px rgba(255,215,0,.9),0 0 40px rgba(255,100,100,.5)}
 
 .card-name-bar{
   position:absolute;bottom:0;left:0;right:0;
-  background:linear-gradient(transparent,rgba(0,0,0,.85));
-  padding:20px 10px 10px;text-align:center;
+  background:linear-gradient(transparent,rgba(0,0,0,.88));
+  padding:32px 14px 14px;text-align:center;
 }
-.card-char-name{font-size:18px;font-weight:bold;color:#fff}
-.card-char-title{font-size:11px;color:rgba(255,255,255,.7)}
+.card-char-name{font-size:24px;font-weight:bold;color:#fff}
+.card-char-title{font-size:14px;color:rgba(255,255,255,.75)}
 
 .rarity-UR .card-inner{
   border-color:#ffd700;
-  box-shadow:0 0 50px rgba(255,100,100,.7),0 0 100px rgba(255,215,0,.4),0 8px 32px rgba(0,0,0,.8);
+  box-shadow:0 0 80px rgba(255,100,100,.8),0 0 160px rgba(255,215,0,.5),0 12px 48px rgba(0,0,0,.8);
   animation:urGlow 2s infinite alternate;
 }
 @keyframes urGlow{
-  from{box-shadow:0 0 30px rgba(255,100,100,.5),0 0 60px rgba(255,215,0,.3)}
-  to{box-shadow:0 0 60px rgba(255,100,100,.9),0 0 120px rgba(255,215,0,.6)}
+  from{box-shadow:0 0 60px rgba(255,100,100,.6),0 0 100px rgba(255,215,0,.4)}
+  to{box-shadow:0 0 120px rgba(255,100,100,.95),0 0 200px rgba(255,215,0,.7)}
 }
 .rarity-SSR .card-inner{
   border-color:#ffd700;
-  box-shadow:0 0 40px rgba(212,175,55,.8),0 8px 32px rgba(0,0,0,.8);
+  box-shadow:0 0 70px rgba(212,175,55,.9),0 12px 48px rgba(0,0,0,.8);
 }
 
 .pack-instruction{font-size:14px;color:rgba(255,255,255,.7);text-align:center}
@@ -3093,63 +3093,112 @@ const CARD_DB = [
   {id:'C11',name:'曉萱',rarity:'SR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音管精靈'},
 ];
 
-const RARITY_WEIGHT = {UR:1, SSR:10, SR:30, R:59};
+// ── 稀有度機率（總和 100） ──
+const RARITY_WEIGHT = {UR:2, SSR:13, SR:40, R:45};
 
-const BONDS_DB = [
-  {
-    id:'BOND_A',
-    name:'高層決策者',
-    needs:['C07','C09','C01'],
-    reward:'免除一次罰抄任務',
-    rewardType:'clearTask',
-    emoji:'👑',
-  },
-  {
-    id:'BOND_B',
-    name:'管樂的交響',
-    needs:['C04','C08','C11'],
-    reward:'任選50元手搖飲一杯',
-    rewardType:'log',
-    emoji:'🧋',
-  },
-  {
-    id:'BOND_C',
-    name:'法國號的傳承',
-    needs:['C04','C03','C02'],
-    reward:'獲得 3 枚金牌',
-    rewardType:'medals3',
-    emoji:'🎺',
-  },
-];
+// ── 動態生成羈絆清單 ──
+let DYNAMIC_BONDS = [];
+
+function generateDynamicBonds() {
+  const bonds = [];
+
+  // 【同名大滿貫】：同名老師所有卡片
+  const nameMap = {};
+  CARD_DB.forEach(c => {
+    if (!nameMap[c.name]) nameMap[c.name] = [];
+    nameMap[c.name].push(c);
+  });
+  Object.entries(nameMap).forEach(([name, cards]) => {
+    if (cards.length < 2) return; // 只有1張卡的人不算
+    const hasHighRarity = cards.some(c => c.rarity === 'UR' || c.rarity === 'SSR');
+    const reward    = hasHighRarity ? '星巴克一杯☕' : '泡麵一碗🍜';
+    const rewardType = hasHighRarity ? 'starbucks' : 'noodle';
+    const emoji     = hasHighRarity ? '☕' : '🍜';
+    bonds.push({
+      id: `BOND_NAME_${name}`,
+      name: `${name}大滿貫`,
+      needs: cards.map(c => c.id),
+      reward, rewardType, emoji,
+      desc: `集齊 ${name} 老師的全部 ${cards.length} 張卡片`,
+    });
+  });
+
+  // 【稀有度連線】：任意3張不同的 SSR / SR / R
+  const rarityBonds = [
+    { rarity:'SSR', count:3, id:'BOND_RARITY_SSR3', name:'SSR 三星連線', reward:'星巴克一杯☕', rewardType:'starbucks', emoji:'⭐', desc:'集齊任意 3 張不同 SSR 卡' },
+    { rarity:'SR',  count:3, id:'BOND_RARITY_SR3',  name:'SR 三星連線',  reward:'金牌兩面🥇🥇', rewardType:'medals2',    emoji:'🥇', desc:'集齊任意 3 張不同 SR 卡' },
+    { rarity:'R',   count:3, id:'BOND_RARITY_R3',   name:'R 三星連線',   reward:'金牌一面🥇',   rewardType:'medals1',    emoji:'🎖️', desc:'集齊任意 3 張不同 R 卡' },
+  ];
+  rarityBonds.forEach(rb => {
+    const pool = CARD_DB.filter(c => c.rarity === rb.rarity);
+    if (pool.length >= rb.count) {
+      bonds.push({
+        id: rb.id, name: rb.name, reward: rb.reward,
+        rewardType: rb.rewardType, emoji: rb.emoji, desc: rb.desc,
+        rarityPool: rb.rarity, rarityCount: rb.count, // 特殊：任意N張
+      });
+    }
+  });
+
+  DYNAMIC_BONDS = bonds;
+  return bonds;
+}
+
+// 在卡庫載入後立即生成
+generateDynamicBonds();
 
 let isOpening = false;
 let _pendingCard = null;
 
+// ── 抽卡邏輯：動態卡池，未來新增卡片自動納入 ──
 function drawCard() {
   const roll = Math.random() * 100;
-  let pool;
-  if (roll < RARITY_WEIGHT.UR) pool = CARD_DB.filter(c=>c.rarity==='UR');
-  else if (roll < RARITY_WEIGHT.UR + RARITY_WEIGHT.SSR) pool = CARD_DB.filter(c=>c.rarity==='SSR');
-  else if (roll < RARITY_WEIGHT.UR + RARITY_WEIGHT.SSR + RARITY_WEIGHT.SR) pool = CARD_DB.filter(c=>c.rarity==='SR');
-  else pool = CARD_DB.filter(c=>c.rarity==='R');
-  return pool[Math.floor(Math.random()*pool.length)];
+  const thUR  = RARITY_WEIGHT.UR;
+  const thSSR = thUR  + RARITY_WEIGHT.SSR;
+  const thSR  = thSSR + RARITY_WEIGHT.SR;
+
+  let rarity;
+  if      (roll < thUR)  rarity = 'UR';
+  else if (roll < thSSR) rarity = 'SSR';
+  else if (roll < thSR)  rarity = 'SR';
+  else                   rarity = 'R';
+
+  // 自動從 CARD_DB 中篩出對應稀有度，均勻隨機
+  let pool = CARD_DB.filter(c => c.rarity === rarity);
+  if (!pool.length && rarity === 'UR')  pool = CARD_DB.filter(c => c.rarity === 'SSR');
+  if (!pool.length && rarity === 'SSR') pool = CARD_DB.filter(c => c.rarity === 'SR');
+  if (!pool.length && rarity === 'SR')  pool = CARD_DB.filter(c => c.rarity === 'R');
+  if (!pool.length) pool = CARD_DB;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ── 重置卡包狀態（Bug修復：任何中斷都能復原） ──
+function _resetPackState() {
+  isOpening = false;
+  _pendingCard = null;
+  const box = document.getElementById('packBox');
+  if (box) {
+    box.classList.remove('shaking');
+    box.style.pointerEvents = '';
+  }
 }
 
 async function openCardPack() {
   if (!_currentStuId) { toast('請先登入','err'); return; }
-  const d = await dbGet(`students/${_currentStuId}`);
-  if ((d?.points||0) < 1) { toast('⭐ 星星點數不足，無法開卡包', 'err'); return; }
+  try {
+    const d = await dbGet(`students/${_currentStuId}`);
+    if ((d?.points||0) < 1) { toast('⭐ 星星點數不足，無法開卡包', 'err'); return; }
+  } catch(e) { toast('連線失敗，請重試','err'); return; }
 
-  isOpening = false;
-  _pendingCard = null;
+  _resetPackState();
   document.getElementById('packWrap').style.display = 'flex';
   document.getElementById('cardRevealWrap').classList.remove('on');
-  document.getElementById('packBox').classList.remove('shaking');
   document.getElementById('cardOverlay').classList.add('on');
 }
 
 function closeCardOverlay() {
   if (isOpening) return;
+  _resetPackState();
   document.getElementById('cardOverlay').classList.remove('on');
 }
 
@@ -3157,84 +3206,83 @@ async function triggerPackOpen() {
   if (isOpening) return;
   if (!_currentStuId) return;
 
-  // Re-validate points
-  const d = await dbGet(`students/${_currentStuId}`);
-  if ((d?.points||0) < 1) { toast('⭐ 點數不足', 'err'); closeCardOverlay(); return; }
-
-  isOpening = true;
   const box = document.getElementById('packBox');
-  box.style.pointerEvents = 'none';
-  box.classList.add('shaking');
+  try {
+    const d = await dbGet(`students/${_currentStuId}`);
+    if ((d?.points||0) < 1) {
+      toast('⭐ 點數不足', 'err');
+      _resetPackState();
+      closeCardOverlay();
+      return;
+    }
 
-  // Draw card
-  const card = drawCard();
-  _pendingCard = card;
+    isOpening = true;
+    box.style.pointerEvents = 'none';
+    box.classList.add('shaking');
 
-  // Deduct point & write log
-  const lk = Date.now()+'';
-  await dbUpd(`students/${_currentStuId}`, {
-    points: Math.max(0,(d.points||0)-1),
-    [`log/${lk}`]: {time:now(), action:'開啟卡包', reason:`抽到 ${card.rarity} ${card.name}`, teacher:'系統', delta:-1}
-  });
+    const card = drawCard();
+    _pendingCard = card;
 
-  // After shake animation
-  setTimeout(() => {
-    document.getElementById('packWrap').style.display = 'none';
-    revealCard(card);
-  }, 1400);
+    const lk = Date.now()+'';
+    await dbUpd(`students/${_currentStuId}`, {
+      points: Math.max(0,(d.points||0)-1),
+      [`log/${lk}`]: {time:now(), action:'開啟卡包', reason:`抽到 ${card.rarity} ${card.name}`, teacher:'系統', delta:-1}
+    });
+
+    setTimeout(() => {
+      document.getElementById('packWrap').style.display = 'none';
+      revealCard(card);
+    }, 1400);
+
+  } catch(e) {
+    toast('抽卡失敗，點數已退還請重試','err');
+    _resetPackState();
+  }
 }
 
 function revealCard(card) {
-  const wrap = document.getElementById('cardRevealWrap');
-  const card3d = document.getElementById('card3d');
   const rarityColors = {R:'#3498DB', SR:'#9B59B6', SSR:'#D4AF37', UR:'#FF6B6B'};
-  const rarityGlow = {R:'', SR:'', SSR:'⭐ SSR ⭐', UR:'🌟 UR 🌟'};
+  const rarityGlow   = {R:'', SR:'', SSR:'✨ SSR ✨', UR:'🌟 UR 🌟'};
 
-  document.getElementById('cardRevealImg').src = card.img;
-  document.getElementById('cardRevealBadge').textContent = card.rarity;
-  document.getElementById('cardRevealName').textContent = card.name;
-  document.getElementById('cardRevealTitle').textContent = card.title;
+  document.getElementById('cardRevealImg').src    = card.img;
+  document.getElementById('cardRevealBadge').textContent  = card.rarity;
+  document.getElementById('cardRevealName').textContent   = card.name;
+  document.getElementById('cardRevealTitle').textContent  = card.title;
   document.getElementById('cardRevealRarity').textContent = rarityGlow[card.rarity] || card.rarity;
   document.getElementById('cardRevealRarity').style.color = rarityColors[card.rarity] || '#fff';
 
-  card3d.className = `card-3d rarity-${card.rarity}`;
-  const inner = document.getElementById('cardInner');
-  inner.className = `card-inner`;
-
-  // Duplicate class for glow
+  const card3d = document.getElementById('card3d');
   card3d.className = `card-3d rarity-${card.rarity}`;
 
-  let msg = '';
-  if (card.rarity === 'UR') msg = '🎉 恭喜！超稀有 UR 卡！';
-  else if (card.rarity === 'SSR') msg = '✨ 太棒了！SSR 稀有卡！';
-  else if (card.rarity === 'SR') msg = '👍 SR 卡，不錯喔！';
+  const msg = card.rarity==='UR' ? '🎉 恭喜！超稀有 UR 卡！' :
+              card.rarity==='SSR'? '✨ 太棒了！SSR 稀有卡！' :
+              card.rarity==='SR' ? '👍 SR 卡，不錯喔！' : '';
   document.getElementById('cardRevealMsg').textContent = msg;
-
-  wrap.classList.add('on');
+  document.getElementById('cardRevealWrap').classList.add('on');
 }
 
 async function collectCard() {
-  if (!_pendingCard || !_currentStuId) { closeCardOverlay(); return; }
+  if (!_pendingCard || !_currentStuId) { _resetPackState(); closeCardOverlay(); return; }
   const card = _pendingCard;
-  const invPath = `students/${_currentStuId}/inventory/${card.id}`;
-  const cur = (await dbGet(invPath)) || 0;
-  await dbSet(invPath, cur + 1);
-  toast(`已收下 ${card.rarity} ${card.name}！`, 'ok');
-  _pendingCard = null;
-  isOpening = false;
-  closeCardOverlay();
-
-  // Refresh student view
-  const stu = byId(_currentStuId);
-  if (stu) {
-    const d = await dbGet(`students/${_currentStuId}`);
-    _renderStuView(stu, d||{});
+  try {
+    const invPath = `students/${_currentStuId}/inventory/${card.id}`;
+    const cur = (await dbGet(invPath)) || 0;
+    await dbSet(invPath, cur + 1);
+    toast(`已收下 ${card.rarity} ${card.name}！`, 'ok');
+  } catch(e) {
+    toast('儲存失敗，請重試','err');
+  } finally {
+    _resetPackState();
+    closeCardOverlay();
+    const stu = byId(_currentStuId);
+    if (stu) { const d = await dbGet(`students/${_currentStuId}`); _renderStuView(stu, d||{}); }
   }
 }
 
 // ── 背包 ──
 async function openBag() {
   if (!_currentStuId) { toast('請先登入','err'); return; }
+  generateDynamicBonds(); // 每次開啟重新計算，確保卡庫更新後同步
   document.getElementById('bagOverlay').classList.add('on');
   await renderBag();
 }
@@ -3243,24 +3291,38 @@ function closeBag() {
   document.getElementById('bagOverlay').classList.remove('on');
 }
 
+// 判斷稀有度連線羈絆是否達成（任意N張不同）
+function checkRarityBond(bond, inv) {
+  if (!bond.rarityPool) return false;
+  const pool = CARD_DB.filter(c => c.rarity === bond.rarityPool);
+  const have = pool.filter(c => (inv[c.id]||0) >= 1);
+  return have.length >= bond.rarityCount;
+}
+
+// 取得稀有度連線羈絆消耗的卡片（前N張已擁有的）
+function getRarityBondCards(bond, inv) {
+  const pool = CARD_DB.filter(c => c.rarity === bond.rarityPool);
+  return pool.filter(c => (inv[c.id]||0) >= 1).slice(0, bond.rarityCount);
+}
+
 async function renderBag() {
   const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
   const totalCards = Object.values(inv).reduce((a,b)=>a+(b||0),0);
   document.getElementById('bagSubtitle').textContent = `共收集 ${totalCards} 張卡片`;
 
-  // Card grid
+  // 卡牌格
   const grid = document.getElementById('bagCardGrid');
   grid.innerHTML = '';
   CARD_DB.forEach(card => {
     const count = inv[card.id] || 0;
     const div = document.createElement('div');
-    div.className = 'card-thumb' + (count === 0 ? ' empty-slot' : '');
+    div.className = 'card-thumb' + (count===0 ? ' empty-slot' : '');
     if (count > 0) {
       div.innerHTML = `
         <img src="${card.img}" alt="${card.name}" onerror="this.parentNode.classList.add('empty-slot');this.remove()">
         <div class="ct-rarity ct-rarity-${card.rarity}">${card.rarity}</div>
         <div class="ct-name">${card.name}</div>
-        ${count > 1 ? `<div class="ct-count">×${count}</div>` : ''}`;
+        ${count>1 ? `<div class="ct-count">×${count}</div>` : ''}`;
     } else {
       div.innerHTML = '🂠';
       div.title = '尚未獲得';
@@ -3268,31 +3330,45 @@ async function renderBag() {
     grid.appendChild(div);
   });
 
-  // Bond list
+  // 羈絆列表（動態生成）
   const bondList = document.getElementById('bagBondList');
   bondList.innerHTML = '';
-  for (const bond of BONDS_DB) {
-    const bondInv = (await dbGet(`students/${_currentStuId}/claimedBonds`)) || {};
-    const needCards = bond.needs.map(id => CARD_DB.find(c=>c.id===id));
-    const canRedeem = bond.needs.every(id => (inv[id]||0) >= 1);
-    const alreadyClaimed = bondInv[bond.id];
+  const claimedBonds = (await dbGet(`students/${_currentStuId}/claimedBonds`)) || {};
+
+  for (const bond of DYNAMIC_BONDS) {
+    const isRarityType = !!bond.rarityPool;
+    const canRedeem    = isRarityType ? checkRarityBond(bond, inv)
+                                      : bond.needs.every(id => (inv[id]||0) >= 1);
+    const alreadyClaimed = claimedBonds[bond.id];
+
+    let chipsHtml = '';
+    if (isRarityType) {
+      const pool = CARD_DB.filter(c => c.rarity === bond.rarityPool);
+      const haveCount = pool.filter(c => (inv[c.id]||0) >= 1).length;
+      chipsHtml = `<span class="bond-card-chip${haveCount>=bond.rarityCount?' have':''}">
+        ${bond.rarityPool} 卡：${haveCount}/${bond.rarityCount} 張 ${haveCount>=bond.rarityCount?'✓':''}
+      </span>`;
+    } else {
+      chipsHtml = bond.needs.map(id => {
+        const c = CARD_DB.find(x=>x.id===id);
+        if (!c) return '';
+        const have = (inv[c.id]||0) >= 1;
+        return `<span class="bond-card-chip${have?' have':''}">${c.rarity} ${c.name}${have?' ✓':''}</span>`;
+      }).join('');
+    }
 
     const div = document.createElement('div');
     div.className = 'bond-item' + (canRedeem && !alreadyClaimed ? ' bond-ready' : '');
-    const chipsHtml = needCards.map(c => {
-      const have = (inv[c.id]||0) >= 1;
-      return `<span class="bond-card-chip${have?' have':''}">${c.rarity} ${c.name}${have?' ✓':''}</span>`;
-    }).join('');
-
     div.innerHTML = `
       <div class="bond-title">${bond.emoji} ${bond.name}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">${bond.desc||''}</div>
       <div class="bond-cards">${chipsHtml}</div>
       <div class="bond-reward">🎁 獎勵：${bond.reward}</div>
       ${alreadyClaimed
         ? `<div style="font-size:12px;color:var(--tx3)">✅ 已兌換（${alreadyClaimed}）</div>`
         : canRedeem
-          ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px">🔓 立即兌換</button>`
-          : `<div style="font-size:12px;color:var(--tx3)">🔒 尚未集齊所需卡片</div>`
+          ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px;margin-top:6px">🔓 立即兌換</button>`
+          : `<div style="font-size:12px;color:var(--tx3);margin-top:4px">🔒 尚未集齊所需卡片</div>`
       }`;
     bondList.appendChild(div);
   }
@@ -3300,43 +3376,54 @@ async function renderBag() {
 
 async function redeemBond(bondId) {
   if (!_currentStuId) return;
-  const bond = BONDS_DB.find(b=>b.id===bondId);
+  const bond = DYNAMIC_BONDS.find(b => b.id === bondId);
   if (!bond) return;
 
   openDlg(`🔗 兌換羈絆「${bond.name}」`,
-    `<div class="dlg-msg">確認兌換羈絆？<br>將消耗所需卡片各一張。<br><br>🎁 獎勵：<b>${bond.reward}</b></div>`,
+    `<div class="dlg-msg">確認兌換？將消耗所需卡片。<br><br>🎁 獎勵：<b>${bond.reward}</b></div>`,
     [{label:'確認兌換', cls:'ok', fn: async () => {
       const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
-      // Verify again
-      const ok = bond.needs.every(id=>(inv[id]||0)>=1);
+      const isRarityType = !!bond.rarityPool;
+
+      // 驗證
+      const ok = isRarityType ? checkRarityBond(bond, inv)
+                              : bond.needs.every(id => (inv[id]||0) >= 1);
       if (!ok) { toast('卡片不足，無法兌換','err'); return false; }
 
       const upd = {};
-      // Deduct cards
-      bond.needs.forEach(id => {
-        upd[`${ROOT}/students/${_currentStuId}/inventory/${id}`] = Math.max(0,(inv[id]||0)-1);
-      });
+      const lk  = Date.now()+'';
+      const t   = now();
 
-      const lk = Date.now()+'';
-      const t = now();
-
-      // Apply reward
-      if (bond.rewardType === 'medals3') {
-        const d = await dbGet(`students/${_currentStuId}`);
-        upd[`${ROOT}/students/${_currentStuId}/medals`] = (d?.medals||0) + 3;
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換獎勵', reason:`「${bond.name}」＋3枚金牌`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, '', `🎺 羈絆「${bond.name}」兌換成功！獲得3枚金牌`, 'notice');
-      } else if (bond.rewardType === 'log') {
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換獎勵', reason:`「${bond.name}」已兌換手搖飲，請找老師領取`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, '', `🧋 羈絆「${bond.name}」兌換成功！手搖飲請找老師領取`, 'notice');
-      } else if (bond.rewardType === 'clearTask') {
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換獎勵', reason:`「${bond.name}」免除一次罰抄，請找老師確認`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, '', `👑 羈絆「${bond.name}」兌換成功！免除一次罰抄，請找老師確認`, 'notice');
+      // 扣除卡片
+      if (isRarityType) {
+        getRarityBondCards(bond, inv).forEach(c => {
+          upd[`${ROOT}/students/${_currentStuId}/inventory/${c.id}`] = Math.max(0,(inv[c.id]||0)-1);
+        });
+      } else {
+        bond.needs.forEach(id => {
+          upd[`${ROOT}/students/${_currentStuId}/inventory/${id}`] = Math.max(0,(inv[id]||0)-1);
+        });
       }
 
-      // Mark claimed
-      upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
+      // 發放獎勵
+      const d = await dbGet(`students/${_currentStuId}`);
+      if (bond.rewardType === 'medals3' || bond.rewardType === 'medals2' || bond.rewardType === 'medals1') {
+        const n = bond.rewardType === 'medals3' ? 3 : bond.rewardType === 'medals2' ? 2 : 1;
+        upd[`${ROOT}/students/${_currentStuId}/medals`] = (d?.medals||0) + n;
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」+${n}枚金牌`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, '', `${bond.emoji} 羈絆「${bond.name}」兌換成功！獲得${n}枚金牌🥇`, 'notice');
+      } else if (bond.rewardType === 'starbucks') {
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」星巴克一杯，請找老師領取`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, '', `☕ 羈絆「${bond.name}」兌換成功！星巴克請找老師領取`, 'notice');
+      } else if (bond.rewardType === 'noodle') {
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」泡麵一碗，請找老師領取`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, '', `🍜 羈絆「${bond.name}」兌換成功！泡麵請找老師領取`, 'notice');
+      } else {
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」${bond.reward}`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, '', `${bond.emoji} 羈絆「${bond.name}」兌換成功！${bond.reward}`, 'notice');
+      }
 
+      upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
       await db.ref('/').update(upd);
       toast(`羈絆「${bond.name}」兌換成功！`, 'ok');
       await renderBag();
