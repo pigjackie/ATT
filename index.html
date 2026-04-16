@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -282,13 +281,60 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .cal-upload-row{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
 .cal-file-input{display:none}
 
+/* ── 學生行事曆 Overlay ── */
+#stuCalOverlay{
+  display:none;
+  position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:rgba(0,0,0,.85);
+  z-index:9998;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+  overflow-y:auto;
+  padding:20px 16px;
+}
+#stuCalOverlay.on{display:flex}
+.stu-cal-box{
+  background:var(--bg1);
+  border:1px solid var(--bdr);
+  border-radius:18px;
+  padding:20px;
+  width:100%;
+  max-width:680px;
+  position:relative;
+  box-shadow:0 0 30px rgba(212,175,55,.15);
+  margin:auto;
+}
+.stu-cal-box::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+  border-radius:18px 18px 0 0;
+}
+.stu-cal-close{
+  position:absolute;top:14px;right:14px;
+  background:none;border:1px solid var(--bdr);border-radius:50%;
+  width:34px;height:34px;color:var(--tx2);cursor:pointer;font-size:16px;
+  transition:.2s;display:flex;align-items:center;justify-content:center;
+}
+.stu-cal-close:hover{border-color:var(--gold);color:var(--gold)}
+
 /* 學生頂部快捷按鈕 */
-.stu-quick-bar{display:flex;gap:10px;padding:12px 16px;background:var(--bg1);border-bottom:1px solid var(--bdr);flex-shrink:0}
-.stu-quick-btn{flex:1;padding:11px 10px;border-radius:var(--r2);font-size:14px;font-weight:bold;font-family:inherit;cursor:pointer;border:2px solid transparent;transition:.2s;text-align:center}
+.stu-quick-bar{
+  display:flex;gap:8px;padding:10px 12px;
+  background:var(--bg1);border-bottom:1px solid var(--bdr);flex-shrink:0;
+  flex-wrap:wrap;
+}
+.stu-quick-btn{
+  flex:1;min-width:0;padding:11px 8px;border-radius:var(--r2);
+  font-size:13px;font-weight:bold;font-family:inherit;cursor:pointer;
+  border:2px solid transparent;transition:.2s;text-align:center;white-space:nowrap;
+}
 .stu-quick-btn.piano{background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;border-color:var(--gold)}
 .stu-quick-btn.piano:hover{background:var(--gold-l)}
 .stu-quick-btn.exit{background:transparent;border-color:var(--green);color:var(--green)}
 .stu-quick-btn.exit:hover{background:rgba(46,204,113,.1)}
+.stu-quick-btn.cal{background:transparent;border-color:var(--blue);color:var(--blue)}
+.stu-quick-btn.cal:hover{background:rgba(52,152,219,.1)}
 
 .empty{text-align:center;padding:50px 20px;color:var(--tx3);font-size:15px}
 .sep{border:none;border-top:1px solid var(--bdr);margin:14px 0}
@@ -493,11 +539,14 @@ select:focus{border-color:var(--gold)}
     <button class="notif-btn" id="stuNotifBtn" onclick="toggleStuBanner()" title="訊息通知">🔔<span class="notif-dot" id="stuNotifDot"></span></button>
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
-  <!-- ① 頂部快捷按鈕（預約琴房 + 外出申請） -->
+
+  <!-- ── 頂部三個快捷按鈕 ── -->
   <div class="stu-quick-bar">
     <button class="stu-quick-btn piano" onclick="openStuPiano()">🎹 預約琴房</button>
     <button class="stu-quick-btn exit" onclick="openApplyExit()">🚪 申請第八節外出</button>
+    <button class="stu-quick-btn cal" onclick="openStuCal()">📅 行事曆</button>
   </div>
+
   <div id="stuBanner">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
       <div style="font-size:13px;color:var(--red);font-weight:bold">🔔 訊息通知</div>
@@ -508,18 +557,21 @@ select:focus{border-color:var(--gold)}
   <div class="content">
     <div id="stuCard" style="max-width:600px;margin:0 auto"></div>
     <div id="stuPassArea" style="max-width:600px;margin:10px auto 0"></div>
-    <!-- ② 學生查看行事曆 -->
-    <div style="max-width:600px;margin:16px auto 0">
-      <div class="cal-container">
-        <div class="cal-header">
-          <div class="cal-title" id="stuCalTitle">📅 學期行事曆</div>
-          <button class="btn" onclick="loadStuCalendar()" style="font-size:11px;padding:3px 10px">🔄</button>
-        </div>
-        <div class="cal-img-wrap" id="stuCalImgWrap">
-          <div class="cal-empty" id="stuCalEmpty">行事曆尚未上傳</div>
-          <img id="stuCalImg" style="display:none;width:100%" alt="學期行事曆">
-        </div>
-      </div>
+  </div>
+</div>
+
+<!-- ── 學生行事曆 Overlay（點按鈕後開啟） ── -->
+<div id="stuCalOverlay" onclick="if(event.target===this)closeStuCal()">
+  <div class="stu-cal-box">
+    <button class="stu-cal-close" onclick="closeStuCal()">✕</button>
+    <div style="font-size:18px;font-weight:bold;color:var(--gold);margin-bottom:4px" id="stuCalTitle">📅 學期行事曆</div>
+    <div style="font-size:11px;color:var(--tx3);margin-bottom:14px" id="stuCalSemester"></div>
+    <div id="stuCalImgWrap" style="width:100%;border-radius:8px;overflow:hidden;border:1px solid var(--bdr);background:var(--bg2);min-height:140px;display:flex;align-items:center;justify-content:center">
+      <div id="stuCalEmpty" style="color:var(--tx3);font-size:14px;text-align:center;padding:40px 0">行事曆尚未上傳</div>
+      <img id="stuCalImg" style="display:none;width:100%;border-radius:8px" alt="學期行事曆">
+    </div>
+    <div style="margin-top:12px;text-align:center">
+      <button class="btn" onclick="loadAndRefreshStuCal()" style="font-size:12px;padding:5px 16px">🔄 重新整理</button>
     </div>
   </div>
 </div>
@@ -972,7 +1024,6 @@ function enterStudentView(stu) {
   showScreen('studentScreen');
   loadStuView(stu);
   loadStuMsgs(stu.id);
-  loadStuCalendar();
 }
 
 function switchTab(t) {
@@ -1345,9 +1396,6 @@ function closeDetail() {
   curStu = null;
 }
 
-// ════════════════════════════════════════════════
-// ① 閃電顯示：第3的倍數次時顯示「歸零」鍵（需填原因）
-// ════════════════════════════════════════════════
 function renderBolts(bolts) {
   const disp = document.getElementById('dpBoltDisplay');
   const pen  = document.getElementById('dpBoltPenalty');
@@ -1391,7 +1439,6 @@ async function chgBolt(delta) {
         const upd = {};
         const t = Date.now();
 
-        // ④ 新增閃電時，若有點數先扣點數
         if (curPts > 0) {
           upd[`students/${curStu.id}/points`] = curPts - 1;
           upd[`students/${curStu.id}/log/${t}_pt`] = {time:now(), action:'閃電扣點', reason:'因新增閃電自動扣點', teacher:me.name, delta:-1};
@@ -1406,7 +1453,6 @@ async function chgBolt(delta) {
         const oldPen = Math.floor((curBolts-1)/3);
 
         if (newPen > oldPen) {
-          // 第3的倍數次閃電 → 觸發懲罰通知
           await sendNotifToStudent(curStu.id, curStu.name, `⚡ 閃電達 ${curBolts} 個，觸發懲罰！原因：${reason}`, 'punishment');
           toast(`⚠️ 累積 ${newPen} 次懲罰${deductMsg}！`, 'err');
         } else {
@@ -1428,7 +1474,6 @@ async function chgBolt(delta) {
   }
 }
 
-// ① 閃電歸零：必須填原因（例如：已完成處罰）
 async function resetBolts() {
   if (!curStu) return;
   openDlg('🗑️ 閃電歸零確認',
@@ -1484,9 +1529,6 @@ function renderLog(log) {
   }).join('');
 }
 
-// ════════════════════════════════════════════════
-// ④ 扣點：若有點數先扣點數（星星）再扣分
-// ════════════════════════════════════════════════
 async function chgPts(delta) {
   if (!curStu) return;
   openDlg(delta>0?'＋ 加點':'－ 扣點',
@@ -2056,6 +2098,51 @@ function openStuPiano() {
   }
 }
 
+// ════════════════════════════════════════════════
+// 學生行事曆 Overlay 開關
+// ════════════════════════════════════════════════
+async function openStuCal() {
+  document.getElementById('stuCalOverlay').classList.add('on');
+  await loadAndRefreshStuCal();
+}
+
+function closeStuCal() {
+  document.getElementById('stuCalOverlay').classList.remove('on');
+}
+
+async function loadAndRefreshStuCal() {
+  const imgEl = document.getElementById('stuCalImg');
+  const emptyEl = document.getElementById('stuCalEmpty');
+  const titleEl = document.getElementById('stuCalTitle');
+  const semEl = document.getElementById('stuCalSemester');
+
+  imgEl.style.display = 'none';
+  if (emptyEl) emptyEl.style.display = '';
+  if (semEl) semEl.textContent = '載入中…';
+
+  try {
+    const calData = await dbGet('calendar') || {};
+    if (calData.imageBase64) {
+      imgEl.src = calData.imageBase64;
+      imgEl.style.display = 'block';
+      if (emptyEl) emptyEl.style.display = 'none';
+    } else {
+      imgEl.style.display = 'none';
+      if (emptyEl) { emptyEl.style.display = ''; emptyEl.textContent = '行事曆尚未上傳'; }
+    }
+    if (calData.semester) {
+      titleEl.textContent = '📅 ' + calData.semester;
+      if (semEl) semEl.textContent = calData.updatedAt ? '更新時間：' + calData.updatedAt : '';
+    } else {
+      titleEl.textContent = '📅 學期行事曆';
+      if (semEl) semEl.textContent = '';
+    }
+  } catch(e) {
+    if (emptyEl) { emptyEl.style.display = ''; emptyEl.textContent = '載入失敗，請重試'; }
+    if (semEl) semEl.textContent = '';
+  }
+}
+
 function _renderStuView(stu, d) {
   const el = document.getElementById('stuCard');
   if (!el) return;
@@ -2192,8 +2279,7 @@ async function stuDelTask(stuId, taskKey) {
 }
 
 // ════════════════════════════════════════════════
-// ③ 行事曆功能（教師上傳、學生查看）
-//    使用 Firebase Realtime DB 儲存 base64 圖片
+// 行事曆功能（教師上傳端）
 // ════════════════════════════════════════════════
 async function loadCalendar() {
   const calData = await dbGet('calendar') || {};
@@ -2263,23 +2349,6 @@ async function deleteCalendar() {
       loadCalendar();
       return true;
     }},{label:'取消',fn:()=>true}]);
-}
-
-// 學生端載入行事曆
-async function loadStuCalendar() {
-  const calData = await dbGet('calendar') || {};
-  const imgEl = document.getElementById('stuCalImg');
-  const emptyEl = document.getElementById('stuCalEmpty');
-  const titleEl = document.getElementById('stuCalTitle');
-  if (calData.imageBase64) {
-    imgEl.src = calData.imageBase64;
-    imgEl.style.display = 'block';
-    if (emptyEl) emptyEl.style.display = 'none';
-  } else {
-    imgEl.style.display = 'none';
-    if (emptyEl) emptyEl.style.display = '';
-  }
-  if (calData.semester) titleEl.textContent = '📅 ' + calData.semester;
 }
 
 async function renderTeachers() {
