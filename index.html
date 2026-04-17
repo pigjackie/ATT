@@ -1322,17 +1322,25 @@ function doLogout() {
 function enterApp() {
   document.getElementById('curUser').textContent = me.name;
   document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
-  // 卡片管理只有 master 看得到
   const cardTabBtn = document.getElementById('mgmtCardBtn');
   if (cardTabBtn) cardTabBtn.style.display = me.role==='master' ? '' : 'none';
   showScreen('appScreen');
   pendAtt = {};
-  loadDynamicData().then(async () => {
-    await applyCardTitleOverrides();
-    await loadCustomCardData();
+
+  // 先立刻建立班級按鈕和點名頁，不等卡片資料
+  loadDynamicData().then(() => {
+    buildClsBtns('clsBtns', switchCls);
+    switchCls(me.classes[0]);
+    // 卡片資料在背景載入，失敗不影響主功能
+    applyCardTitleOverrides().catch(e=>console.warn('applyCardTitleOverrides:', e));
+    loadCustomCardData().catch(e=>console.warn('loadCustomCardData:', e));
+  }).catch(e => {
+    console.warn('loadDynamicData error:', e);
+    // 即使 loadDynamicData 失敗，也要讓點名正常運作
     buildClsBtns('clsBtns', switchCls);
     switchCls(me.classes[0]);
   });
+
   startApplyListener();
   startMsgListener();
 }
@@ -1358,7 +1366,7 @@ function switchTab(t) {
   const content = document.getElementById(map[t]);
   if (content) content.style.display = '';
 
-  if (t==='att') renderGrid();
+  if (t==='att') { if (!curCls && me?.classes?.[0]) { buildClsBtns('clsBtns', switchCls); switchCls(me.classes[0]); } else { renderGrid(); } }
   if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); loadDeductLog(); }
   if (t==='teachers') { loadDynamicData().then(()=>{ renderTeachers(); renderClassMgmt(); renderStudentMgmt(); if(me?.role==='master') renderCardMgmt(); }); }
   if (t==='inbox') renderInbox();
