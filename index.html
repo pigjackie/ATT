@@ -530,6 +530,32 @@ select:focus{border-color:var(--gold)}
 /* 學生端抽卡入口按鈕 */
 .stu-quick-btn.card{background:linear-gradient(135deg,#3d1a6b,#7b2ff7,#b06fff);color:#fff;border-color:#7b2ff7}
 .stu-quick-btn.card:hover{background:linear-gradient(135deg,#4d2a8b,#8b3fff)}
+
+/* ── 羈絆勳章 ── */
+.bond-medal-showcase{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  background:linear-gradient(135deg,#1a0a2e,#2d1357,#1a0a2e);
+  border:2px solid #7b2ff7;border-radius:14px;padding:14px 16px;margin-bottom:12px;
+  box-shadow:0 0 20px rgba(123,47,247,.3),inset 0 1px 0 rgba(255,255,255,.1);
+}
+.bond-medal-icon{font-size:36px;filter:drop-shadow(0 0 8px rgba(200,150,255,.8));animation:medalFloat 3s ease-in-out infinite}
+@keyframes medalFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.bond-medal-count{font-size:28px;font-weight:bold;color:#c89eff}
+.bond-medal-label{font-size:12px;color:rgba(200,150,255,.8)}
+.bond-medal-btn{
+  margin-left:auto;padding:8px 14px;background:linear-gradient(135deg,#7b2ff7,#b06fff);
+  color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:bold;
+  font-family:inherit;cursor:pointer;transition:.2s;white-space:nowrap;
+}
+.bond-medal-btn:hover{background:linear-gradient(135deg,#9b4fff,#c890ff);transform:translateY(-1px)}
+.bond-medal-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+.medal-redeem-item{
+  background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.medal-redeem-item.has-medals{border-color:rgba(123,47,247,.5);background:rgba(123,47,247,.05)}
+.mri-info{flex:1}.mri-name{font-size:15px;font-weight:bold;margin-bottom:2px}
+.mri-count{font-size:13px;color:rgba(160,100,255,.9);font-weight:bold}.mri-cls{font-size:11px;color:var(--tx3)}
 </style>
 </head>
 <body>
@@ -666,7 +692,19 @@ select:focus{border-color:var(--gold)}
       <div class="row" style="margin-bottom:14px;flex-wrap:wrap">
         <button class="btn g" onclick="exportXlsx()">📥 Excel</button>
         <button class="btn" onclick="exportPdf()">📄 PDF</button>
+        <button class="btn" onclick="openBondMedalPanel()" style="border-color:#7b2ff7;color:#c89eff">🏵️ 勳章核銷</button>
         <button class="btn d" onclick="resetAllDlg()" style="margin-left:auto;opacity:.6;font-size:11px" title="重置全校資料（危險）">🗑️ 全校重置</button>
+      </div>
+      <!-- 勳章核銷面板 -->
+      <div id="bondMedalPanel" style="display:none;background:var(--bg1);border:1px solid #7b2ff7;border-radius:var(--r);padding:16px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+          <div style="font-size:14px;font-weight:bold;color:#c89eff">🏵️ 全校羈絆勳章持有狀況</div>
+          <div style="display:flex;gap:6px">
+            <button class="btn" onclick="loadBondMedalPanel()" style="font-size:11px">🔄 重新整理</button>
+            <button class="btn d" onclick="document.getElementById('bondMedalPanel').style.display='none'" style="font-size:11px">✕ 關閉</button>
+          </div>
+        </div>
+        <div id="bondMedalList"><div class="empty">點重新整理載入</div></div>
       </div>
       <div class="clsbtns" id="clsBtnsR"></div>
       <div class="sgrid" id="rptGrid"></div>
@@ -859,9 +897,20 @@ select:focus{border-color:var(--gold)}
     <button class="bag-close" onclick="closeBag()">✕</button>
     <div style="font-size:18px;font-weight:bold;color:var(--gold);margin-bottom:4px">🎒 我的卡簿與羈絆</div>
     <div style="font-size:11px;color:var(--tx3);margin-bottom:14px" id="bagSubtitle">載入中…</div>
-    <div class="dp-sec-t">📦 收藏</div>
+    <!-- 羈絆勳章展示 -->
+    <div class="bond-medal-showcase" id="bagMedalShowcase">
+      <div class="bond-medal-icon">🏵️</div>
+      <div>
+        <div class="bond-medal-count" id="bagMedalCount">0</div>
+        <div class="bond-medal-label">羈絆勳章</div>
+      </div>
+      <button class="bond-medal-btn" id="bagMedalRedeemBtn" onclick="openMedalRedeemDlg()" disabled>
+        找老師兌獎
+      </button>
+    </div>
+    <div class="dp-sec-t">📦 卡片收藏</div>
     <div class="card-grid" id="bagCardGrid"></div>
-    <div class="dp-sec-t" style="margin-top:10px">🔗 羈絆兌換</div>
+    <div class="dp-sec-t" style="margin-top:10px">🔗 羈絆（消耗卡片換勳章）</div>
     <div id="bagBondList"></div>
   </div>
 </div>
@@ -935,6 +984,22 @@ select:focus{border-color:var(--gold)}
     <div class="row">
       <button class="btn s" onclick="chgMedal(1)">＋ 加金牌</button>
       <button class="btn d" onclick="chgMedal(-1)">－ 扣金牌</button>
+    </div>
+  </div>
+  <div class="dp-sec">
+    <div class="dp-sec-t">🏵️ 羈絆勳章</div>
+    <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+      <div style="font-size:30px">🏵️</div>
+      <div>
+        <div style="font-size:22px;font-weight:bold;color:#c89eff" id="dpBondMedalN">0</div>
+        <div style="font-size:11px;color:rgba(200,150,255,.7)">枚勳章</div>
+      </div>
+      <div style="margin-left:auto;font-size:11px;color:rgba(200,150,255,.6);line-height:1.5">由老師決定<br>兌換獎品</div>
+    </div>
+    <div class="row">
+      <button class="btn s" onclick="chgBondMedal(1)" style="border-color:#7b2ff7;color:#c89eff;flex:1">＋ 加勳章</button>
+      <button class="btn d" onclick="chgBondMedal(-1)" style="flex:1">－ 扣勳章</button>
+      <button class="btn" onclick="teacherRedeemBondMedal()" style="flex:2;border-color:#7b2ff7;color:#c89eff;font-weight:bold">🎁 核銷兌獎</button>
     </div>
   </div>
   <div class="dp-sec">
@@ -1715,6 +1780,7 @@ async function openDetail(stu) {
   renderBolts(d.bolts||0);
   renderTasks(d.tasks||{});
   renderLog(d.log||{});
+  _updateDetailBondMedal(d);
   document.getElementById('detailPanel').classList.add('open');
 }
 
@@ -3582,7 +3648,14 @@ function getRarityBondCards(bond, inv) {
 async function renderBag() {
   const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
   const totalCards = Object.values(inv).reduce((a,b)=>a+(b||0),0);
-  document.getElementById('bagSubtitle').textContent = `共收集 ${totalCards} 張卡片`;
+  const stuData = await dbGet(`students/${_currentStuId}`);
+  const bondMedals = stuData?.bondMedals || 0;
+  document.getElementById('bagSubtitle').textContent = `收藏 ${totalCards} 張卡片 · 羈絆勳章 ${bondMedals} 枚`;
+  // 更新勳章展示
+  const medalCountEl = document.getElementById('bagMedalCount');
+  const medalBtn = document.getElementById('bagMedalRedeemBtn');
+  if (medalCountEl) medalCountEl.textContent = bondMedals;
+  if (medalBtn) medalBtn.disabled = bondMedals < 1;
 
   // 卡牌格
   const grid = document.getElementById('bagCardGrid');
@@ -3637,7 +3710,7 @@ async function renderBag() {
       <div class="bond-title">${bond.emoji} ${bond.name}</div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">${bond.desc||''}</div>
       <div class="bond-cards">${chipsHtml}</div>
-      <div class="bond-reward">🎁 獎勵：${bond.reward}</div>
+      <div class="bond-reward" style="color:rgba(200,150,255,.9)">🏵️ 兌換後獲得羈絆勳章（數量依難度而定）<br><span style="font-size:11px;color:var(--tx3)">持勳章找老師核銷，換取你想要的獎品</span></div>
       ${alreadyClaimed
         ? `<div style="font-size:12px;color:var(--tx3)">✅ 已兌換（${alreadyClaimed}）</div>`
         : canRedeem
@@ -3653,13 +3726,24 @@ async function redeemBond(bondId) {
   const bond = DYNAMIC_BONDS.find(b => b.id === bondId);
   if (!bond) return;
 
+  // 計算可得勳章數（依難度給1~3枚）
+  const medalCount = bond.rarityPool
+    ? (bond.rarityCount >= 5 ? 3 : bond.rarityCount >= 3 ? 2 : 1)
+    : (bond.needs.length >= 5 ? 3 : bond.needs.length >= 3 ? 2 : 1);
+
   openDlg(`🔗 兌換羈絆「${bond.name}」`,
-    `<div class="dlg-msg">確認兌換？將消耗所需卡片。<br><br>🎁 獎勵：<b>${bond.reward}</b></div>`,
+    `<div class="dlg-msg" style="text-align:center">
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">${bond.desc||''}</div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;padding:14px;margin-bottom:10px">
+        <span style="font-size:28px">🏵️</span>
+        <span style="font-size:20px;font-weight:bold;color:#c89eff">× ${medalCount}</span>
+        <span style="font-size:13px;color:rgba(200,150,255,.8)">羈絆勳章</span>
+      </div>
+      <div style="font-size:12px;color:var(--tx3)">消耗所需卡片各一張，換得羈絆勳章<br>持勳章找任一老師核銷，換取你想要的獎品</div>
+     </div>`,
     [{label:'確認兌換', cls:'ok', fn: async () => {
       const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
       const isRarityType = !!bond.rarityPool;
-
-      // 驗證
       const ok = isRarityType ? checkRarityBond(bond, inv)
                               : bond.needs.every(id => (inv[id]||0) >= 1);
       if (!ok) { toast('卡片不足，無法兌換','err'); return false; }
@@ -3679,34 +3763,21 @@ async function redeemBond(bondId) {
         });
       }
 
-      // 發放獎勵
+      // 發放羈絆勳章（統一獎勵）
       const d = await dbGet(`students/${_currentStuId}`);
       const stuName = byId(_currentStuId)?.name || '';
-      if (bond.rewardType === 'medals3' || bond.rewardType === 'medals2' || bond.rewardType === 'medals1') {
-        const n = bond.rewardType === 'medals3' ? 3 : bond.rewardType === 'medals2' ? 2 : 1;
-        upd[`${ROOT}/students/${_currentStuId}/medals`] = (d?.medals||0) + n;
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」+${n}枚金牌`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, stuName, `${bond.emoji} 羈絆「${bond.name}」兌換成功！獲得${n}枚金牌🥇`, 'notice');
-      } else if (bond.rewardType === 'starbucks') {
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」星巴克一杯，請找老師領取`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, stuName, `☕ 羈絆「${bond.name}」兌換成功！【星巴克一杯】請找老師領取`, 'notice');
-      } else if (bond.rewardType === 'noodle') {
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」一度贊泡麵，請找老師領取`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, stuName, `🍜 羈絆「${bond.name}」兌換成功！【一度贊泡麵】請找老師領取`, 'notice');
-      } else if (bond.rewardType === 'drink') {
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」任選手搖飲，請找老師領取`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, stuName, `🧋 羈絆「${bond.name}」兌換成功！【任選手搖飲】請找老師領取`, 'notice');
-      } else if (bond.rewardType === 'tissue') {
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」衛生紙一包，請找老師領取`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, stuName, `🧻 羈絆「${bond.name}」兌換成功！【衛生紙一包】請找老師領取`, 'notice');
-      } else {
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」${bond.reward}`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, stuName, `${bond.emoji} 羈絆「${bond.name}」兌換成功！${bond.reward}，請找老師領取`, 'notice');
-      }
-
+      upd[`${ROOT}/students/${_currentStuId}/bondMedals`] = (d?.bondMedals||0) + medalCount;
+      upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
+        time:t, action:'羈絆兌換', reason:`「${bond.name}」獲得 ${medalCount} 枚羈絆勳章🏵️`, teacher:'系統', delta:0
+      };
       upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
+
       await db.ref('/').update(upd);
-      toast(`羈絆「${bond.name}」兌換成功！`, 'ok');
+      await sendNotifToStudent(_currentStuId, stuName,
+        `${bond.emoji} 羈絆「${bond.name}」兌換成功！獲得 ${medalCount} 枚羈絆勳章🏵️
+拿著勳章去找老師換獎品吧！`, 'notice');
+
+      toast(`獲得 ${medalCount} 枚羈絆勳章🏵️`, 'ok');
       await renderBag();
       return true;
     }}, {label:'取消', fn:()=>true}]
@@ -3963,6 +4034,195 @@ async function applyCardTitleOverrides() {
     const card = CARD_DB.find(c=>c.id===id);
     if (card) card.title = title;
   });
+}
+
+
+// ════════════════════════════════════════════════════════════════
+// 羈絆勳章系統
+// ════════════════════════════════════════════════════════════════
+
+// 學生端：找老師兌獎對話框
+function openMedalRedeemDlg() {
+  if (!_currentStuId) return;
+  openDlg('🏵️ 找老師兌換獎品',
+    `<div style="text-align:center;padding:8px 0">
+       <div style="font-size:48px;margin-bottom:8px">🏵️</div>
+       <div style="font-size:14px;color:var(--tx);margin-bottom:12px;line-height:1.6">
+         請出示此畫面給老師<br>老師將幫你核銷勳章、兌換獎品
+       </div>
+       <div id="medalRedeemCount" style="font-size:22px;font-weight:bold;color:#c89eff;margin-bottom:8px">載入中…</div>
+       <div style="font-size:12px;color:var(--tx3)">每位老師提供的獎品可能不同<br>請直接詢問老師！</div>
+     </div>`,
+    [{label:'關閉',fn:()=>true}]
+  );
+  // 顯示勳章數量
+  dbGet(`students/${_currentStuId}`).then(d => {
+    const el = document.getElementById('medalRedeemCount');
+    if (el) el.textContent = `持有 ${d?.bondMedals||0} 枚羈絆勳章`;
+  });
+}
+
+// 老師端：加減羈絆勳章
+async function chgBondMedal(delta) {
+  if (!curStu) return;
+  if (delta > 0) {
+    openDlg('🏵️ 手動增加羈絆勳章',
+      `<div class="dlg-label">增加枚數</div>
+       <input class="dlg-input" type="number" id="bmDelta" value="1" min="1" max="10">
+       <div class="dlg-label">原因</div>
+       <input class="dlg-input" type="text" id="bmReason" placeholder="例：活動獎勵">`,
+      [{label:'確認', cls:'ok', fn: async () => {
+        const n = parseInt(document.getElementById('bmDelta').value) || 1;
+        const reason = document.getElementById('bmReason').value.trim() || '老師手動增加';
+        const d = await dbGet(`students/${curStu.id}`);
+        const lk = Date.now()+'';
+        await dbUpd(`students/${curStu.id}`, {
+          bondMedals: (d?.bondMedals||0) + n,
+          [`log/${lk}`]: {time:now(), action:`增加羈絆勳章 +${n}`, reason, teacher:me.name, delta:0}
+        });
+        toast(`已增加 ${n} 枚羈絆勳章`, 'ok');
+        openDetail(curStu); return true;
+      }}, {label:'取消', fn:()=>true}]);
+  } else {
+    const d = await dbGet(`students/${curStu.id}`);
+    const cur = d?.bondMedals || 0;
+    if (cur < 1) { toast('勳章數量不足', 'err'); return; }
+    openDlg('🏵️ 扣除羈絆勳章',
+      `<div class="dlg-label">扣除枚數（現有 ${cur} 枚）</div>
+       <input class="dlg-input" type="number" id="bmDeltaS" value="1" min="1" max="${cur}">`,
+      [{label:'確認', cls:'del', fn: async () => {
+        const n = Math.min(parseInt(document.getElementById('bmDeltaS').value)||1, cur);
+        const lk = Date.now()+'';
+        await dbUpd(`students/${curStu.id}`, {
+          bondMedals: cur - n,
+          [`log/${lk}`]: {time:now(), action:`扣除羈絆勳章 -${n}`, reason:'老師手動扣除', teacher:me.name, delta:0}
+        });
+        toast(`已扣除 ${n} 枚羈絆勳章`, 'ok');
+        openDetail(curStu); return true;
+      }}, {label:'取消', fn:()=>true}]);
+  }
+}
+
+// 老師端：核銷兌獎（消耗勳章 + 記錄獎品）
+async function teacherRedeemBondMedal() {
+  if (!curStu) return;
+  const d = await dbGet(`students/${curStu.id}`);
+  const cur = d?.bondMedals || 0;
+  if (cur < 1) { toast(`${curStu.name} 目前沒有羈絆勳章`, 'err'); return; }
+
+  openDlg(`🎁 核銷羈絆勳章 — ${curStu.name}`,
+    `<div style="text-align:center;margin-bottom:14px">
+       <div style="font-size:32px">🏵️ × <b style="color:#c89eff;font-size:28px">${cur}</b></div>
+       <div style="font-size:12px;color:var(--tx3);margin-top:4px">現有羈絆勳章</div>
+     </div>
+     <div class="dlg-label">消耗勳章數量</div>
+     <input class="dlg-input" type="number" id="redeemN" value="1" min="1" max="${cur}">
+     <div class="dlg-label">兌換的獎品（記錄用）</div>
+     <input class="dlg-input" type="text" id="redeemPrize" placeholder="例：手搖飲一杯、泡麵、星巴克…">
+     <div style="font-size:11px;color:var(--tx3);margin-top:-8px;margin-bottom:8px">此欄位僅供記錄，實際獎品由老師自行決定</div>`,
+    [{label:'確認核銷', cls:'ok', fn: async () => {
+      const n = Math.min(parseInt(document.getElementById('redeemN').value)||1, cur);
+      const prize = document.getElementById('redeemPrize').value.trim() || '獎品';
+      if (n < 1) { toast('請輸入正確數量', 'err'); return false; }
+      const lk = Date.now()+'';
+      const t = now();
+      await dbUpd(`students/${curStu.id}`, {
+        bondMedals: cur - n,
+        [`log/${lk}`]: {time:t, action:`🏵️ 羈絆勳章核銷 -${n} 枚`, reason:`兌換：${prize}（核銷老師：${me.name}）`, teacher:me.name, delta:0}
+      });
+      await sendNotifToStudent(curStu.id, curStu.name,
+        `🏵️ ${me.name} 老師已幫你核銷 ${n} 枚羈絆勳章，兌換獎品：${prize}`, 'notice');
+      toast(`核銷成功！${curStu.name} 剩餘 ${cur-n} 枚勳章`, 'ok');
+      openDetail(curStu); return true;
+    }}, {label:'取消', fn:()=>true}]);
+}
+
+// openDetail 加載勳章數量（在 openDetail 函數末尾呼叫）
+function _updateDetailBondMedal(d) {
+  const el = document.getElementById('dpBondMedalN');
+  if (el) el.textContent = d?.bondMedals || 0;
+}
+
+// 老師端：從「報表」頁查看全班勳章（加在 renderRpt 末尾呼叫）
+async function renderBondMedalRanking(cls) {
+  const stus = byCls(cls || curCls);
+  const results = await Promise.all(stus.map(s => dbGet(`students/${s.id}/bondMedals`)));
+  const ranked = stus.map((s,i) => ({...s, medals: results[i]||0}))
+    .filter(s => s.medals > 0)
+    .sort((a,b) => b.medals - a.medals);
+  return ranked;
+}
+
+
+// 報表頁：勳章核銷面板
+function openBondMedalPanel() {
+  const panel = document.getElementById('bondMedalPanel');
+  if (!panel) return;
+  panel.style.display = '';
+  loadBondMedalPanel();
+}
+
+async function loadBondMedalPanel() {
+  const list = document.getElementById('bondMedalList');
+  if (!list) return;
+  list.innerHTML = '<div class="spin"></div>';
+
+  const allStus = me.classes.flatMap(c => byCls(c));
+  const results = await Promise.all(allStus.map(s => dbGet(`students/${s.id}/bondMedals`)));
+  const withMedals = allStus
+    .map((s,i) => ({...s, bondMedals: results[i]||0}))
+    .filter(s => s.bondMedals > 0)
+    .sort((a,b) => b.bondMedals - a.bondMedals);
+
+  if (!withMedals.length) {
+    list.innerHTML = '<div class="empty" style="padding:20px">目前沒有學生持有羈絆勳章</div>';
+    return;
+  }
+
+  list.innerHTML = withMedals.map(s => `
+    <div class="medal-redeem-item has-medals">
+      <div class="mri-info">
+        <div class="mri-name">${s.name}</div>
+        <div class="mri-cls">${s.cls} · ${s.id}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">🏵️</span>
+        <span class="mri-count">× ${s.bondMedals}</span>
+        <button class="btn g" onclick="quickRedeemMedal('${s.id}','${s.name}',${s.bondMedals})"
+          style="font-size:11px;padding:4px 10px;border-color:#7b2ff7;background:linear-gradient(135deg,#7b2ff7,#b06fff)">
+          核銷兌獎
+        </button>
+      </div>
+    </div>`).join('');
+}
+
+async function quickRedeemMedal(stuId, stuName, curMedals) {
+  openDlg(`🎁 核銷羈絆勳章 — ${stuName}`,
+    `<div style="text-align:center;margin-bottom:14px">
+       <div style="font-size:32px">🏵️ × <b style="color:#c89eff;font-size:28px">${curMedals}</b></div>
+       <div style="font-size:12px;color:var(--tx3);margin-top:4px">現有羈絆勳章</div>
+     </div>
+     <div class="dlg-label">消耗勳章數量</div>
+     <input class="dlg-input" type="number" id="qrN" value="1" min="1" max="${curMedals}">
+     <div class="dlg-label">兌換的獎品（記錄用）</div>
+     <input class="dlg-input" type="text" id="qrPrize" placeholder="例：手搖飲、泡麵、衛生紙…">`,
+    [{label:'確認核銷', cls:'ok', fn: async () => {
+      const n = Math.min(parseInt(document.getElementById('qrN').value)||1, curMedals);
+      const prize = document.getElementById('qrPrize').value.trim() || '獎品';
+      const lk = Date.now()+'';
+      const fresh = await dbGet(`students/${stuId}`);
+      const cur2 = fresh?.bondMedals || 0;
+      await dbUpd(`students/${stuId}`, {
+        bondMedals: Math.max(0, cur2 - n),
+        [`log/${lk}`]: {time:now(), action:`🏵️ 羈絆勳章核銷 -${n} 枚`, reason:`兌換：${prize}（核銷老師：${me.name}）`, teacher:me.name, delta:0}
+      });
+      await db.ref(`${ROOT}/stuMsgs/${stuId}/${lk}_msg`).set({
+        from:me.name, content:`🏵️ ${me.name} 老師已幫你核銷 ${n} 枚羈絆勳章，兌換獎品：${prize}`, type:'notice', time:now(), read:false
+      });
+      toast(`核銷成功！${stuName} 剩餘 ${Math.max(0,cur2-n)} 枚勳章`, 'ok');
+      loadBondMedalPanel();
+      return true;
+    }}, {label:'取消', fn:()=>true}]);
 }
 
 window.addEventListener('keydown', e => {
