@@ -3175,18 +3175,24 @@ let DYNAMIC_BONDS = [];
 function generateDynamicBonds() {
   const bonds = [];
 
-  // 【同名大滿貫】：同名老師所有卡片
+  // ══════════════════════════════════════════
+  // 【同名大滿貫】—— 集齊同一老師的全部卡片
+  // 難度依老師卡片組合而定，獎品對應
+  // ══════════════════════════════════════════
   const nameMap = {};
   CARD_DB.forEach(c => {
     if (!nameMap[c.name]) nameMap[c.name] = [];
     nameMap[c.name].push(c);
   });
+  // 同名大滿貫獎品：含 UR → 星巴克；含 SSR（無UR）→ 手搖飲；純SR+R → 金牌2
   Object.entries(nameMap).forEach(([name, cards]) => {
-    if (cards.length < 2) return; // 只有1張卡的人不算
-    const hasHighRarity = cards.some(c => c.rarity === 'UR' || c.rarity === 'SSR');
-    const reward    = hasHighRarity ? '星巴克一杯☕' : '泡麵一碗🍜';
-    const rewardType = hasHighRarity ? 'starbucks' : 'noodle';
-    const emoji     = hasHighRarity ? '☕' : '🍜';
+    if (cards.length < 2) return;
+    const hasUR  = cards.some(c => c.rarity === 'UR');
+    const hasSSR = cards.some(c => c.rarity === 'SSR');
+    let reward, rewardType, emoji;
+    if (hasUR)       { reward = '星巴克一杯☕';   rewardType = 'starbucks'; emoji = '☕'; }
+    else if (hasSSR) { reward = '任選手搖飲🧋';   rewardType = 'drink';     emoji = '🧋'; }
+    else             { reward = '金牌兩面🥇🥇';   rewardType = 'medals2';   emoji = '🥇'; }
     bonds.push({
       id: `BOND_NAME_${name}`,
       name: `${name}大滿貫`,
@@ -3196,11 +3202,19 @@ function generateDynamicBonds() {
     });
   });
 
-  // 【稀有度連線】：任意3張不同的 SSR / SR / R
+  // ══════════════════════════════════════════
+  // 【稀有度連線】—— 任意N張同稀有度
+  // ══════════════════════════════════════════
+  // 全部3張SSR（難度：各SSR期望8抽，共3張≈24抽）→ 星巴克
+  // 任意3張SR（期望≈39抽）→ 手搖飲
+  // 任意2張SR（期望≈26抽）→ 衛生紙
+  // 任意2張R（期望≈9抽）→ 金牌1
   const rarityBonds = [
-    { rarity:'SSR', count:3, id:'BOND_RARITY_SSR3', name:'SSR 三星連線', reward:'星巴克一杯☕', rewardType:'starbucks', emoji:'⭐', desc:'集齊任意 3 張不同 SSR 卡' },
-    { rarity:'SR',  count:3, id:'BOND_RARITY_SR3',  name:'SR 三星連線',  reward:'金牌兩面🥇🥇', rewardType:'medals2',    emoji:'🥇', desc:'集齊任意 3 張不同 SR 卡' },
-    { rarity:'R',   count:3, id:'BOND_RARITY_R3',   name:'R 三星連線',   reward:'金牌一面🥇',   rewardType:'medals1',    emoji:'🎖️', desc:'集齊任意 3 張不同 R 卡' },
+    { rarity:'SSR', count:3, id:'BOND_RARITY_SSR3', name:'SSR 三星連線',  reward:'星巴克一杯☕',   rewardType:'starbucks', emoji:'💎', desc:'集齊任意 3 張不同 SSR 卡（高難度）' },
+    { rarity:'SR',  count:5, id:'BOND_RARITY_SR5',  name:'SR 五星全制霸', reward:'一度贊泡麵🍜',   rewardType:'noodle',    emoji:'🍜', desc:'集齊全部 5 張不同 SR 卡（超高難度）' },
+    { rarity:'SR',  count:3, id:'BOND_RARITY_SR3',  name:'SR 三星連線',   reward:'任選手搖飲🧋',   rewardType:'drink',     emoji:'🥤', desc:'集齊任意 3 張不同 SR 卡' },
+    { rarity:'SR',  count:2, id:'BOND_RARITY_SR2',  name:'SR 雙星邂逅',   reward:'衛生紙一包🧻',   rewardType:'tissue',    emoji:'🧻', desc:'集齊任意 2 張不同 SR 卡' },
+    { rarity:'R',   count:2, id:'BOND_RARITY_R2',   name:'R 雙子星',      reward:'金牌一面🥇',     rewardType:'medals1',   emoji:'🎖️', desc:'集齊任意 2 張不同 R 卡' },
   ];
   rarityBonds.forEach(rb => {
     const pool = CARD_DB.filter(c => c.rarity === rb.rarity);
@@ -3208,69 +3222,171 @@ function generateDynamicBonds() {
       bonds.push({
         id: rb.id, name: rb.name, reward: rb.reward,
         rewardType: rb.rewardType, emoji: rb.emoji, desc: rb.desc,
-        rarityPool: rb.rarity, rarityCount: rb.count, // 特殊：任意N張
+        rarityPool: rb.rarity, rarityCount: rb.count,
       });
     }
   });
 
-  // 【音樂性羈絆】— 固定組合，有趣主題
+  // ══════════════════════════════════════════
+  // 【音樂性固定羈絆】—— 依難度排序
+  // 難度計算：UR期望50抽、各SSR期望8抽、各SR期望13抽、各R期望4抽
+  // ══════════════════════════════════════════
   const musicBonds = [
+
+    // ★★★★★ 星巴克（需要UR或多張SSR，極難）
     {
-      id:'BOND_BRASS_TRIO', name:'銅管鐵三角', emoji:'🎺',
-      needs:['C02','C03','C04'],
-      reward:'泡麵一碗🍜', rewardType:'noodle',
-      desc:'集齊倩宇老師的 R＋SR＋SSR 三張卡，見證法國號的全面成長',
-    },
-    {
-      id:'BOND_SCHOOL_POWER', name:'莊敬最強組合', emoji:'👑',
-      needs:['C07','C06','C05'],
+      id:'BOND_SCHOOL_POWER', name:'莊敬權力核心', emoji:'👑',
+      needs:['C07','C06','C09'],  // 校長UR + 校長SSR + 康榮SSR（1UR+2SSR，期望≈66抽）
       reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊校長 UR＋SSR＋SR，莊敬最高決策天團',
+      desc:'集齊校長UR、校長SSR、康榮SSR，莊敬最高權力天團',
     },
     {
-      id:'BOND_WIND_MASTER', name:'管樂界四天王', emoji:'🎼',
-      needs:['C04','C08','C09','C11'],
-      reward:'金牌兩面🥇🥇', rewardType:'medals2',
-      desc:'集齊倩宇SSR、國霖SR、康榮SSR、曉萱SR，打造管樂夢幻隊伍',
-    },
-    {
-      id:'BOND_LEGEND_TEACHER', name:'傳說中的教師天團', emoji:'🌟',
-      needs:['C01','C09','C08'],
+      id:'BOND_LEGEND_TRIO', name:'傳說三巨頭', emoji:'🌟',
+      needs:['C07','C04','C09'],  // 校長UR + 倩宇SSR + 康榮SSR（1UR+2SSR，期望≈66抽）
       reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊旭成SR、康榮SSR、國霖SR，三位傳說級老師同台',
+      desc:'集齊校長UR、倩宇SSR、康榮SSR，傳說級稀有三重奏',
     },
+    {
+      id:'BOND_ALL_SSR_UR', name:'稀有完全制霸', emoji:'💫',
+      needs:['C04','C06','C07','C09'],  // 全SSR+UR（1UR+3SSR，期望≈74抽）
+      reward:'星巴克一杯☕', rewardType:'starbucks',
+      desc:'集齊校長UR與全部三張SSR，傳說中的稀有全收集',
+    },
+
+    // ★★★★ 一度贊泡麵（需要UR或多張SSR+SR，高難）
+    {
+      id:'BOND_FULL_HOUSE', name:'莊敬全明星', emoji:'🏆',
+      needs:['C01','C04','C07','C09','C11'],  // UR+2SSR+2SR（期望≈90抽）
+      reward:'一度贊泡麵🍜', rewardType:'noodle',
+      desc:'集齊旭成SR、倩宇SSR、校長UR、康榮SSR、曉萱SR，全明星陣容',
+    },
+    {
+      id:'BOND_BRASS_KING', name:'銅管帝國', emoji:'🎺',
+      needs:['C07','C05','C06'],  // 校長全系列（1UR+1SSR+1SR，期望≈71抽）
+      reward:'一度贊泡麵🍜', rewardType:'noodle',
+      desc:'集齊校長的 SR＋SSR＋UR 三張卡，校長的三個面貌',
+    },
+    {
+      id:'BOND_WIND_GOD', name:'管樂之神', emoji:'🎼',
+      needs:['C04','C06','C08','C09'],  // 2SSR+2SR（期望≈42抽）
+      reward:'一度贊泡麵🍜', rewardType:'noodle',
+      desc:'集齊倩宇SSR、校長SSR、國霖SR、康榮SSR，管樂最強四人組',
+    },
+
+    // ★★★ 手搖飲（需要SSR+多SR或多SR組合，中高難）
+    {
+      id:'BOND_BRASS_TRIO', name:'法國號的傳承', emoji:'🎵',
+      needs:['C02','C03','C04'],  // 倩宇全系列（1SSR+1SR+1R，期望≈25抽）
+      reward:'任選手搖飲🧋', rewardType:'drink',
+      desc:'集齊倩宇老師的 R＋SR＋SSR，見證法國號的完整成長',
+    },
+    {
+      id:'BOND_LEGEND_TEACHER', name:'傳說教師天團', emoji:'🌙',
+      needs:['C01','C08','C09'],  // 旭成SR+國霖SR+康榮SSR（2SR+1SSR，期望≈34抽）
+      reward:'任選手搖飲🧋', rewardType:'drink',
+      desc:'集齊旭成SR、國霖SR、康榮SSR，三位傳說級老師同台',
+    },
+    {
+      id:'BOND_WIND_MASTER', name:'管樂四天王', emoji:'🎹',
+      needs:['C04','C08','C09','C11'],  // 2SSR+2SR（期望≈42抽）
+      reward:'任選手搖飲🧋', rewardType:'drink',
+      desc:'集齊倩宇SSR、國霖SR、康榮SSR、曉萱SR，管樂夢幻四人',
+    },
+    {
+      id:'BOND_SR_ALL', name:'SR 大豐收', emoji:'⭐',
+      needs:['C01','C03','C05','C08','C11'],  // 全5張SR（期望≈65抽）
+      reward:'任選手搖飲🧋', rewardType:'drink',
+      desc:'集齊全部5張 SR 卡，SR 全制霸！',
+    },
+
+    // ★★ 衛生紙（SR+R或3SR以下組合，中等難度）
     {
       id:'BOND_WOODWIND_SOUL', name:'木管靈魂', emoji:'🎷',
-      needs:['C08','C10','C11'],
-      reward:'金牌一面🥇', rewardType:'medals1',
+      needs:['C08','C10','C11'],  // 國霖SR+曉萱R+曉萱SR（2SR+1R，期望≈30抽）
+      reward:'衛生紙一包🧻', rewardType:'tissue',
       desc:'集齊國霖SR、曉萱R、曉萱SR，木管家族大集合',
     },
     {
-      id:'BOND_ALL_SSR', name:'SSR 全蒐集', emoji:'💎',
-      needs:['C04','C06','C09'],
-      reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊全部三張 SSR，感受稀有的重量',
+      id:'BOND_XUAN_DUO', name:'曉萱雙姝', emoji:'🌸',
+      needs:['C10','C11'],  // 曉萱R+SR（期望≈17抽）
+      reward:'衛生紙一包🧻', rewardType:'tissue',
+      desc:'集齊曉萱老師的 R 與 SR 兩張卡，低音管雙重奏',
     },
     {
-      id:'BOND_LOW_HIGH', name:'高低音的對話', emoji:'🎵',
-      needs:['C10','C07'],
-      reward:'泡麵一碗🍜', rewardType:'noodle',
-      desc:'集齊曉萱R（低音管）與校長UR，低音遇上最高峰',
+      id:'BOND_SCHOOL_SR', name:'莊敬校園日常', emoji:'🏫',
+      needs:['C01','C05','C08'],  // 旭成SR+校長SR+國霖SR（3SR，期望≈39抽）
+      reward:'衛生紙一包🧻', rewardType:'tissue',
+      desc:'集齊旭成SR、校長SR、國霖SR，莊敬日常三人組',
     },
     {
-      id:'BOND_FULL_HOUSE', name:'莊敬全明星', emoji:'🏆',
-      needs:['C01','C04','C07','C09','C11'],
+      id:'BOND_LOW_HIGH', name:'高低音對話', emoji:'🎵',
+      needs:['C07','C10'],  // 校長UR+曉萱R（期望≈54抽）
+      reward:'衛生紙一包🧻', rewardType:'tissue',
+      desc:'集齊校長UR（最高峰）與曉萱R（低音管），高低音的奇妙相遇',
+    },
+    {
+      id:'BOND_TEACHER_PAIR', name:'老師拍檔', emoji:'👬',
+      needs:['C01','C08'],  // 旭成SR+國霖SR（2SR，期望≈26抽）
+      reward:'衛生紙一包🧻', rewardType:'tissue',
+      desc:'集齊旭成SR與國霖SR，兩位帥氣老師的組合',
+    },
+
+    // ★ 金牌3面（2SR或1SSR+1R以下，較易）
+    {
+      id:'BOND_QIANYU_SR_R', name:'倩宇入門組', emoji:'🎀',
+      needs:['C02','C03'],  // 倩宇R+SR（期望≈17抽）
       reward:'金牌三面🥇🥇🥇', rewardType:'medals3',
-      desc:'集齊旭成、倩宇SSR、校長UR、康榮SSR、曉萱SR，全明星夢幻陣容',
+      desc:'集齊倩宇老師的 R 與 SR，法國號的初步相遇',
+    },
+    {
+      id:'BOND_SSR_DUO', name:'SSR 雙星', emoji:'✨',
+      needs:['C04','C09'],  // 倩宇SSR+康榮SSR（期望≈16抽）
+      reward:'金牌三面🥇🥇🥇', rewardType:'medals3',
+      desc:'集齊倩宇SSR與康榮SSR，兩位SSR強者的相遇',
+    },
+    {
+      id:'BOND_SCHOOL_START', name:'校長初登場', emoji:'🏅',
+      needs:['C05','C06'],  // 校長SR+SSR（期望≈21抽）
+      reward:'金牌三面🥇🥇🥇', rewardType:'medals3',
+      desc:'集齊校長SR與校長SSR，校長的雙面風采',
+    },
+
+    // 金牌2面（1SR+1R或純R，容易）
+    {
+      id:'BOND_MUSIC_STARTER', name:'音樂新鮮人', emoji:'🎵',
+      needs:['C02','C10'],  // 倩宇R+曉萱R（期望≈8抽，2張R）
+      reward:'金牌兩面🥇🥇', rewardType:'medals2',
+      desc:'集齊倩宇R與曉萱R，兩張R卡的基礎相遇',
+    },
+    {
+      id:'BOND_ROUSING_PAIR', name:'熱血搭檔', emoji:'🔥',
+      needs:['C01','C10'],  // 旭成SR+曉萱R（期望≈17抽）
+      reward:'金牌兩面🥇🥇', rewardType:'medals2',
+      desc:'集齊旭成SR與曉萱R，動靜之間的熱血組合',
+    },
+
+    // 金牌1面（單張SR+R，最容易）
+    {
+      id:'BOND_FIRST_R', name:'初心者之路', emoji:'🌱',
+      needs:['C02','C05'],  // 倩宇R+校長SR（期望≈17抽）
+      reward:'金牌一面🥇', rewardType:'medals1',
+      desc:'集齊倩宇R與校長SR，踏出收集的第一步',
+    },
+    {
+      id:'BOND_XUAN_START', name:'曉萱初見面', emoji:'🌷',
+      needs:['C10','C01'],  // 曉萱R+旭成SR（期望≈17抽）
+      reward:'金牌一面🥇', rewardType:'medals1',
+      desc:'集齊曉萱R與旭成SR，最親切的組合',
     },
   ];
-  // 只加入需求卡片全部存在於 CARD_DB 的羈絆
+
+  // 只加入所有所需卡片都存在於 CARD_DB 的羈絆
   musicBonds.forEach(b => {
     const allExist = b.needs.every(id => CARD_DB.some(c => c.id === id));
     if (allExist) bonds.push(b);
   });
 
-  // 【自訂羈絆】從 Firebase 讀取的 _customBonds
+  // 【自訂羈絆】從 Firebase 讀取
   if (typeof _customBonds !== 'undefined') {
     _customBonds.forEach(b => {
       const allExist = (b.needs||[]).every(id => CARD_DB.some(c=>c.id===id));
@@ -3281,7 +3397,6 @@ function generateDynamicBonds() {
   DYNAMIC_BONDS = bonds;
   return bonds;
 }
-
 // 在卡庫載入後立即生成
 generateDynamicBonds();
 
@@ -3566,20 +3681,27 @@ async function redeemBond(bondId) {
 
       // 發放獎勵
       const d = await dbGet(`students/${_currentStuId}`);
+      const stuName = byId(_currentStuId)?.name || '';
       if (bond.rewardType === 'medals3' || bond.rewardType === 'medals2' || bond.rewardType === 'medals1') {
         const n = bond.rewardType === 'medals3' ? 3 : bond.rewardType === 'medals2' ? 2 : 1;
         upd[`${ROOT}/students/${_currentStuId}/medals`] = (d?.medals||0) + n;
         upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」+${n}枚金牌`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, '', `${bond.emoji} 羈絆「${bond.name}」兌換成功！獲得${n}枚金牌🥇`, 'notice');
+        await sendNotifToStudent(_currentStuId, stuName, `${bond.emoji} 羈絆「${bond.name}」兌換成功！獲得${n}枚金牌🥇`, 'notice');
       } else if (bond.rewardType === 'starbucks') {
         upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」星巴克一杯，請找老師領取`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, '', `☕ 羈絆「${bond.name}」兌換成功！星巴克請找老師領取`, 'notice');
+        await sendNotifToStudent(_currentStuId, stuName, `☕ 羈絆「${bond.name}」兌換成功！【星巴克一杯】請找老師領取`, 'notice');
       } else if (bond.rewardType === 'noodle') {
-        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」泡麵一碗，請找老師領取`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, '', `🍜 羈絆「${bond.name}」兌換成功！泡麵請找老師領取`, 'notice');
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」一度贊泡麵，請找老師領取`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, stuName, `🍜 羈絆「${bond.name}」兌換成功！【一度贊泡麵】請找老師領取`, 'notice');
+      } else if (bond.rewardType === 'drink') {
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」任選手搖飲，請找老師領取`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, stuName, `🧋 羈絆「${bond.name}」兌換成功！【任選手搖飲】請找老師領取`, 'notice');
+      } else if (bond.rewardType === 'tissue') {
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」衛生紙一包，請找老師領取`, teacher:'系統', delta:0};
+        await sendNotifToStudent(_currentStuId, stuName, `🧻 羈絆「${bond.name}」兌換成功！【衛生紙一包】請找老師領取`, 'notice');
       } else {
         upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {time:t, action:'羈絆兌換', reason:`「${bond.name}」${bond.reward}`, teacher:'系統', delta:0};
-        await sendNotifToStudent(_currentStuId, '', `${bond.emoji} 羈絆「${bond.name}」兌換成功！${bond.reward}`, 'notice');
+        await sendNotifToStudent(_currentStuId, stuName, `${bond.emoji} 羈絆「${bond.name}」兌換成功！${bond.reward}，請找老師領取`, 'notice');
       }
 
       upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
@@ -3779,10 +3901,12 @@ async function delCard(fbKey, name) {
 function openAddBondDlg() {
   const cardOpts = CARD_DB.map(c=>`<option value="${c.id}">${c.id} ${c.name}(${c.rarity})</option>`).join('');
   const rewardOpts = [
-    {v:'starbucks',l:'星巴克一杯☕'},
-    {v:'noodle',   l:'泡麵一碗🍜'},
-    {v:'medals3',  l:'金牌三面🥇'},
-    {v:'medals2',  l:'金牌兩面🥇'},
+    {v:'starbucks',l:'星巴克一杯☕（最高）'},
+    {v:'noodle',   l:'一度贊泡麵🍜'},
+    {v:'drink',    l:'任選手搖飲🧋'},
+    {v:'tissue',   l:'衛生紙一包🧻'},
+    {v:'medals3',  l:'金牌三面🥇🥇🥇'},
+    {v:'medals2',  l:'金牌兩面🥇🥇'},
     {v:'medals1',  l:'金牌一面🥇'},
   ].map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
 
@@ -3807,7 +3931,7 @@ function openAddBondDlg() {
       const needs = needsRaw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
       const invalid = needs.filter(id=>!CARD_DB.some(c=>c.id===id));
       if (invalid.length) { toast(`找不到卡片 ID：${invalid.join(',')}`, 'err'); return false; }
-      const rewardLabels = {starbucks:'星巴克一杯☕',noodle:'泡麵一碗🍜',medals3:'金牌三面🥇',medals2:'金牌兩面🥇',medals1:'金牌一面🥇'};
+      const rewardLabels = {starbucks:'星巴克一杯☕',noodle:'一度贊泡麵🍜',drink:'任選手搖飲🧋',tissue:'衛生紙一包🧻',medals3:'金牌三面🥇🥇🥇',medals2:'金牌兩面🥇🥇',medals1:'金牌一面🥇'};
       const fbKey = 'bond_'+Date.now();
       const bondObj = {id:`BOND_CUSTOM_${fbKey}`, name, emoji, desc, needs, reward:rewardLabels[rewardType]||rewardType, rewardType, _fbKey:fbKey};
       await dbSet(`customBonds/${fbKey}`, bondObj);
