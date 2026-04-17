@@ -3318,19 +3318,29 @@ function _resetPackState() {
 }
 
 async function openCardPack() {
-  if (!_currentStuId) { toast('請先登入','err'); return; }
-  try {
-    // 抽卡系統開關檢查
-    const sysEnabled = await dbGet('cardSystemEnabled');
-    if (sysEnabled === false) { toast('🔒 抽卡系統目前已關閉，請等待老師開放', 'err'); return; }
-    const d = await dbGet(`students/${_currentStuId}`);
-    if ((d?.points||0) < 1) { toast('⭐ 星星點數不足，無法開卡包', 'err'); return; }
-  } catch(e) { toast('連線失敗，請重試','err'); return; }
+  if (!_currentStuId) { toast('請先登入學生帳號', 'err'); return; }
 
+  // 檢查抽卡開關（快速，若 Firebase 慢則跳過）
+  try {
+    const sysEnabled = await Promise.race([
+      dbGet('cardSystemEnabled'),
+      new Promise(resolve => setTimeout(() => resolve(null), 2000))
+    ]);
+    if (sysEnabled === false) {
+      toast('🔒 抽卡系統目前已關閉', 'err');
+      return;
+    }
+  } catch(e) { /* 開關讀取失敗就當作開放 */ }
+
+  // 立刻顯示 overlay，不等點數驗證
   _resetPackState();
-  document.getElementById('packWrap').style.display = 'flex';
-  document.getElementById('cardRevealWrap').classList.remove('on');
-  document.getElementById('cardOverlay').classList.add('on');
+  const overlay  = document.getElementById('cardOverlay');
+  const packWrap = document.getElementById('packWrap');
+  const reveal   = document.getElementById('cardRevealWrap');
+  if (!overlay) { toast('系統錯誤，請重新整理頁面', 'err'); return; }
+  packWrap.style.display = 'flex';
+  reveal.classList.remove('on');
+  overlay.classList.add('on');
 }
 
 function closeCardOverlay() {
@@ -3344,35 +3354,39 @@ async function triggerPackOpen() {
   if (!_currentStuId) return;
 
   const box = document.getElementById('packBox');
+  box.style.pointerEvents = 'none'; // 防連點
+
   try {
     const d = await dbGet(`students/${_currentStuId}`);
-    if ((d?.points||0) < 1) {
-      toast('⭐ 點數不足', 'err');
-      _resetPackState();
-      closeCardOverlay();
+    const pts = typeof d?.points === 'number' ? d.points : (parseInt(d?.points) || 0);
+
+    if (pts < 1) {
+      toast('⭐ 點數不足（目前 0 點），無法開卡包', 'err');
+      box.style.pointerEvents = '';
       return;
     }
 
     isOpening = true;
-    box.style.pointerEvents = 'none';
     box.classList.add('shaking');
 
     const card = drawCard();
     _pendingCard = card;
 
-    const lk = Date.now()+'';
+    const lk = Date.now() + '';
     await dbUpd(`students/${_currentStuId}`, {
-      points: Math.max(0,(d.points||0)-1),
-      [`log/${lk}`]: {time:now(), action:'開啟卡包', reason:`抽到 ${card.rarity} ${card.name}`, teacher:'系統', delta:-1}
+      points: pts - 1,
+      [`log/${lk}`]: { time: now(), action: '開啟卡包', reason: `抽到 ${card.rarity} ${card.name}`, teacher: '系統', delta: -1 }
     });
 
     setTimeout(() => {
-      document.getElementById('packWrap').style.display = 'none';
+      const pw = document.getElementById('packWrap');
+      if (pw) pw.style.display = 'none';
       revealCard(card);
     }, 1400);
 
   } catch(e) {
-    toast('抽卡失敗，點數已退還請重試','err');
+    console.error('triggerPackOpen error:', e);
+    toast('抽卡失敗，請重試', 'err');
     _resetPackState();
   }
 }
