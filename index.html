@@ -531,17 +531,15 @@ select:focus{border-color:var(--gold)}
 .stu-quick-btn.card{background:linear-gradient(135deg,#3d1a6b,#7b2ff7,#b06fff);color:#fff;border-color:#7b2ff7}
 .stu-quick-btn.card:hover{background:linear-gradient(135deg,#4d2a8b,#8b3fff)}
 
-/* ── 羈絆勳章 ── */
+/* ══════════════════════════════════
+   羈絆勳章系統
+══════════════════════════════════ */
 .bond-medal-showcase{
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   background:linear-gradient(135deg,#1a0a2e,#2d1357,#1a0a2e);
   border:2px solid #7b2ff7;border-radius:14px;padding:14px 16px;margin-bottom:12px;
   box-shadow:0 0 20px rgba(123,47,247,.3),inset 0 1px 0 rgba(255,255,255,.1);
 }
-.bond-medal-icon{font-size:36px;filter:drop-shadow(0 0 8px rgba(200,150,255,.8));animation:medalFloat 3s ease-in-out infinite}
-@keyframes medalFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
-.bond-medal-count{font-size:28px;font-weight:bold;color:#c89eff}
-.bond-medal-label{font-size:12px;color:rgba(200,150,255,.8)}
 .bond-medal-btn{
   margin-left:auto;padding:8px 14px;background:linear-gradient(135deg,#7b2ff7,#b06fff);
   color:#fff;border:none;border-radius:20px;font-size:12px;font-weight:bold;
@@ -549,6 +547,104 @@ select:focus{border-color:var(--gold)}
 }
 .bond-medal-btn:hover{background:linear-gradient(135deg,#9b4fff,#c890ff);transform:translateY(-1px)}
 .bond-medal-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+
+/* ── 5 種徽章外觀 ── */
+@keyframes medalFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes goldPulse{0%,100%{box-shadow:0 0 12px rgba(255,215,0,.5),0 4px 12px rgba(0,0,0,.6)}50%{box-shadow:0 0 28px rgba(255,215,0,.9),0 4px 12px rgba(0,0,0,.6)}}
+@keyframes diamondSpin{0%{filter:hue-rotate(0deg) drop-shadow(0 0 10px #58c4ff)}100%{filter:hue-rotate(360deg) drop-shadow(0 0 10px #58c4ff)}}
+@keyframes legendRainbow{0%{filter:hue-rotate(0deg) drop-shadow(0 0 14px gold)}50%{filter:hue-rotate(180deg) drop-shadow(0 0 22px #ff6b6b)}100%{filter:hue-rotate(360deg) drop-shadow(0 0 14px gold)}}
+@keyframes legendGlow{0%,100%{box-shadow:0 0 20px rgba(255,215,0,.6),0 0 40px rgba(255,100,50,.4),0 4px 16px rgba(0,0,0,.7)}50%{box-shadow:0 0 40px rgba(255,215,0,1),0 0 80px rgba(255,100,50,.7),0 4px 16px rgba(0,0,0,.7)}}
+
+.badge-tile{
+  display:flex;flex-direction:column;align-items:center;gap:5px;
+  padding:10px 8px;border-radius:12px;min-width:80px;max-width:100px;
+  background:rgba(0,0,0,.2);border:1px solid rgba(255,255,255,.08);
+  transition:.2s;
+}
+.badge-tile:hover{transform:translateY(-3px)}
+
+/* 徽章圓形本體 */
+.badge-circle{
+  width:60px;height:60px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:26px;position:relative;
+  animation:medalFloat 3s ease-in-out infinite;
+}
+.badge-circle::before{
+  content:'';position:absolute;top:10%;left:15%;
+  width:30%;height:18%;border-radius:50%;
+  background:rgba(255,255,255,.3);transform:rotate(-30deg);
+  pointer-events:none;
+}
+
+/* 銅牌：褐色啞光 */
+.badge-bronze .badge-circle{
+  background:radial-gradient(circle at 35% 30%,#d4956a,#a0622a 50%,#6b3c12 85%,#3e2008);
+  border:3px solid #c07840;
+  box-shadow:0 0 8px rgba(160,98,42,.5),inset 0 2px 4px rgba(255,180,80,.2);
+}
+.badge-bronze .badge-name{color:#d4956a;font-size:11px}
+.badge-bronze .badge-tier{color:rgba(212,149,106,.7);font-size:10px}
+
+/* 銀牌：銀白光澤 */
+.badge-silver .badge-circle{
+  background:radial-gradient(circle at 35% 30%,#ffffff,#c8d0d8 40%,#8898a8 75%,#5a6878);
+  border:3px solid #a0b0c0;
+  box-shadow:0 0 10px rgba(160,176,192,.5),inset 0 2px 4px rgba(255,255,255,.4);
+}
+.badge-silver .badge-name{color:#b0c0d0;font-size:11px}
+.badge-silver .badge-tier{color:rgba(176,192,208,.7);font-size:10px}
+
+/* 金牌：金色閃耀 */
+.badge-gold .badge-circle{
+  background:radial-gradient(circle at 35% 30%,#fff5a0,#f0c840 30%,#d4af37 55%,#8b6914 80%,#5a4009);
+  border:3px solid #f0c840;
+  animation:medalFloat 3s ease-in-out infinite, goldPulse 2s ease-in-out infinite;
+}
+.badge-gold .badge-name{color:#f0c840;font-size:11px}
+.badge-gold .badge-tier{color:rgba(240,200,64,.7);font-size:10px}
+
+/* 藍鑽：水晶旋轉光 */
+.badge-diamond .badge-circle{
+  background:radial-gradient(circle at 35% 30%,#a0e8ff,#40a8e8 35%,#1068c8 65%,#0030a0);
+  border:3px solid #58c4ff;
+  animation:medalFloat 3s ease-in-out infinite, diamondSpin 4s linear infinite;
+}
+.badge-diamond .badge-circle::after{
+  content:'◇';position:absolute;font-size:10px;color:rgba(255,255,255,.5);
+  top:2px;right:4px;animation:none;
+}
+.badge-diamond .badge-name{color:#80d8ff;font-size:11px}
+.badge-diamond .badge-tier{color:rgba(128,216,255,.7);font-size:10px}
+
+/* 傳說：彩虹流光 */
+.badge-legend .badge-circle{
+  background:radial-gradient(circle at 35% 30%,#fff5a0,#ffb040 25%,#ff6040 50%,#c040ff 75%,#4080ff);
+  border:3px solid gold;
+  animation:medalFloat 3s ease-in-out infinite, legendRainbow 3s linear infinite, legendGlow 2s ease-in-out infinite;
+}
+.badge-legend .badge-circle::after{
+  content:'★';position:absolute;font-size:11px;color:rgba(255,255,200,.8);
+  bottom:2px;right:3px;animation:none;
+}
+.badge-legend .badge-name{
+  background:linear-gradient(90deg,#ffd700,#ff6b6b,#c840ff,#4080ff,#ffd700);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:legendRainbow 3s linear infinite;font-size:11px;font-weight:bold;
+}
+.badge-legend .badge-tier{color:rgba(255,215,0,.8);font-size:10px}
+
+/* 徽章文字區 */
+.badge-name{font-weight:bold;text-align:center;line-height:1.3;word-break:break-all}
+.badge-tier{text-align:center;letter-spacing:.5px}
+
+/* 勳章收藏格子 */
+.badge-collection{
+  display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;
+}
+
+/* 老師端核銷列表 */
 .medal-redeem-item{
   background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);
   padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;
@@ -897,14 +993,18 @@ select:focus{border-color:var(--gold)}
     <button class="bag-close" onclick="closeBag()">✕</button>
     <div style="font-size:18px;font-weight:bold;color:var(--gold);margin-bottom:4px">🎒 我的卡簿與羈絆</div>
     <div style="font-size:11px;color:var(--tx3);margin-bottom:14px" id="bagSubtitle">載入中…</div>
-    <!-- 羈絆勳章展示 -->
+    <!-- 羈絆勳章收藏 -->
     <div class="bond-medal-showcase" id="bagMedalShowcase">
-      <div class="bond-medal-icon">🏵️</div>
-      <div>
-        <div class="bond-medal-count" id="bagMedalCount">0</div>
-        <div class="bond-medal-label">羈絆勳章</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;font-weight:bold;color:#c89eff;margin-bottom:6px">
+          🏵️ 羈絆勳章收藏 <span id="bagMedalCount" style="font-size:16px;color:#e0b0ff">（0 枚）</span>
+        </div>
+        <div class="badge-collection" id="bagBadgeCollection">
+          <div style="font-size:12px;color:rgba(200,150,255,.5);padding:8px 0">尚未獲得任何羈絆勳章</div>
+        </div>
       </div>
-      <button class="bond-medal-btn" id="bagMedalRedeemBtn" onclick="openMedalRedeemDlg()" disabled>
+      <button class="bond-medal-btn" id="bagMedalRedeemBtn" onclick="openMedalRedeemDlg()" disabled
+        style="align-self:flex-start">
         找老師兌獎
       </button>
     </div>
@@ -988,13 +1088,15 @@ select:focus{border-color:var(--gold)}
   </div>
   <div class="dp-sec">
     <div class="dp-sec-t">🏵️ 羈絆勳章</div>
-    <div style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;padding:12px 14px;margin-bottom:10px">
-      <div style="font-size:30px">🏵️</div>
-      <div>
-        <div style="font-size:22px;font-weight:bold;color:#c89eff" id="dpBondMedalN">0</div>
-        <div style="font-size:11px;color:rgba(200,150,255,.7)">枚勳章</div>
+    <div style="background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;padding:12px 14px;margin-bottom:10px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+        <span style="font-size:24px">🏵️</span>
+        <span style="font-size:20px;font-weight:bold;color:#c89eff" id="dpBondMedalN">0</span>
+        <span style="font-size:12px;color:rgba(200,150,255,.7)">枚未核銷勳章</span>
       </div>
-      <div style="margin-left:auto;font-size:11px;color:rgba(200,150,255,.6);line-height:1.5">由老師決定<br>兌換獎品</div>
+      <div id="dpBadgeArea" style="min-height:20px">
+        <div style="font-size:12px;color:var(--tx3);font-style:italic">尚無徽章</div>
+      </div>
     </div>
     <div class="row">
       <button class="btn s" onclick="chgBondMedal(1)" style="border-color:#7b2ff7;color:#c89eff;flex:1">＋ 加勳章</button>
@@ -3650,12 +3752,26 @@ async function renderBag() {
   const totalCards = Object.values(inv).reduce((a,b)=>a+(b||0),0);
   const stuData = await dbGet(`students/${_currentStuId}`);
   const bondMedals = stuData?.bondMedals || 0;
+  const earnedBonds = Object.keys(stuData?.claimedBonds || {});
   document.getElementById('bagSubtitle').textContent = `收藏 ${totalCards} 張卡片 · 羈絆勳章 ${bondMedals} 枚`;
-  // 更新勳章展示
+  // 更新勳章數量文字
   const medalCountEl = document.getElementById('bagMedalCount');
   const medalBtn = document.getElementById('bagMedalRedeemBtn');
-  if (medalCountEl) medalCountEl.textContent = bondMedals;
+  if (medalCountEl) medalCountEl.textContent = `（${bondMedals} 枚）`;
   if (medalBtn) medalBtn.disabled = bondMedals < 1;
+  // 渲染徽章收藏格子（已兌換的羈絆）
+  const badgeCol = document.getElementById('bagBadgeCollection');
+  if (badgeCol) {
+    if (!earnedBonds.length) {
+      badgeCol.innerHTML = '<div style="font-size:12px;color:rgba(200,150,255,.5);padding:8px 0">尚未獲得任何羈絆勳章</div>';
+    } else {
+      badgeCol.innerHTML = earnedBonds.map(bondId => {
+        const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
+        if (!bond) return '';
+        return renderBadgeHTML(bond, 1);
+      }).join('');
+    }
+  }
 
   // 卡牌格
   const grid = document.getElementById('bagCardGrid');
@@ -3710,7 +3826,18 @@ async function renderBag() {
       <div class="bond-title">${bond.emoji} ${bond.name}</div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">${bond.desc||''}</div>
       <div class="bond-cards">${chipsHtml}</div>
-      <div class="bond-reward" style="color:rgba(200,150,255,.9)">🏵️ 兌換後獲得羈絆勳章（數量依難度而定）<br><span style="font-size:11px;color:var(--tx3)">持勳章找老師核銷，換取你想要的獎品</span></div>
+      ${(()=>{
+        const tier = getBondTier(bond);
+        const info = TIER_INFO[tier];
+        const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+        return `<div style="display:flex;align-items:center;gap:8px;margin:6px 0;padding:8px 10px;border-radius:8px;background:rgba(0,0,0,.2)">
+          <div class="badge-circle ${info.tierClass}" style="width:36px;height:36px;font-size:16px;animation:none;flex-shrink:0">${iconMap[tier]}</div>
+          <div>
+            <div style="font-size:12px;font-weight:bold" class="${info.tierClass.replace('badge-','badge-')} badge-name">${bond.name} · ${info.name}</div>
+            <div style="font-size:11px;color:var(--tx3)">獲得 ${info.medals} 枚勳章 · 找老師核銷換獎品</div>
+          </div>
+        </div>`;
+      })()}
       ${alreadyClaimed
         ? `<div style="font-size:12px;color:var(--tx3)">✅ 已兌換（${alreadyClaimed}）</div>`
         : canRedeem
@@ -3726,20 +3853,26 @@ async function redeemBond(bondId) {
   const bond = DYNAMIC_BONDS.find(b => b.id === bondId);
   if (!bond) return;
 
-  // 計算可得勳章數（依難度給1~3枚）
-  const medalCount = bond.rarityPool
-    ? (bond.rarityCount >= 5 ? 3 : bond.rarityCount >= 3 ? 2 : 1)
-    : (bond.needs.length >= 5 ? 3 : bond.needs.length >= 3 ? 2 : 1);
+  // 計算可得勳章數（依 tier）
+  const medalCount = getBondMedalCount(bond);
+  const bondTier   = getBondTier(bond);
+  const tierInfo   = TIER_INFO[bondTier];
+  const iconMap2   = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
 
   openDlg(`🔗 兌換羈絆「${bond.name}」`,
     `<div class="dlg-msg" style="text-align:center">
       <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">${bond.desc||''}</div>
-      <div style="display:flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;padding:14px;margin-bottom:10px">
-        <span style="font-size:28px">🏵️</span>
-        <span style="font-size:20px;font-weight:bold;color:#c89eff">× ${medalCount}</span>
-        <span style="font-size:13px;color:rgba(200,150,255,.8)">羈絆勳章</span>
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;padding:14px;margin-bottom:10px">
+        <div class="badge-circle ${tierInfo.tierClass}" style="width:52px;height:52px;font-size:22px">
+          ${iconMap2[bondTier]}
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:14px;font-weight:bold;color:#e0c0ff">${bond.name}</div>
+          <div style="font-size:12px;color:#a080d0">${tierInfo.name}</div>
+          <div style="font-size:13px;color:#c89eff;margin-top:2px">× ${medalCount} 枚勳章</div>
+        </div>
       </div>
-      <div style="font-size:12px;color:var(--tx3)">消耗所需卡片各一張，換得羈絆勳章<br>持勳章找任一老師核銷，換取你想要的獎品</div>
+      <div style="font-size:12px;color:var(--tx3)">消耗所需卡片各一張，換得此羈絆徽章<br>持勳章找任一老師核銷，換取你想要的獎品</div>
      </div>`,
     [{label:'確認兌換', cls:'ok', fn: async () => {
       const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
@@ -4037,6 +4170,90 @@ async function applyCardTitleOverrides() {
 }
 
 
+
+// ════════════════════════════════════════════════════════════════
+// 羈絆徽章工具函數
+// ════════════════════════════════════════════════════════════════
+
+// 各羈絆的 tier 對照表
+const BOND_TIER_MAP = {
+  // 傳說（legend）
+  BOND_FULL_HOUSE:'legend', BOND_ALL_SSR_UR:'legend', BOND_RARITY_SR5:'legend',
+  // 藍鑽（diamond）
+  BOND_SCHOOL_POWER:'diamond', BOND_LEGEND_TRIO:'diamond', BOND_BRASS_KING:'diamond',
+  BOND_WIND_GOD:'diamond', BOND_WIND_MASTER:'diamond', BOND_RARITY_SSR3:'diamond',
+  // 金牌（gold）
+  BOND_BRASS_TRIO:'gold', BOND_LEGEND_TEACHER:'gold', BOND_SR_ALL:'gold',
+  BOND_RARITY_SR3:'gold', BOND_WOODWIND_SOUL:'gold', BOND_SCHOOL_SR:'gold',
+  // 銀牌（silver）
+  BOND_XUAN_DUO:'silver', BOND_LOW_HIGH:'silver', BOND_TEACHER_PAIR:'silver',
+  BOND_QIANYU_SR_R:'silver', BOND_SSR_DUO:'silver', BOND_SCHOOL_START:'silver',
+  BOND_RARITY_SR2:'silver',
+  // 銅牌（bronze）
+  BOND_MUSIC_STARTER:'bronze', BOND_ROUSING_PAIR:'bronze',
+  BOND_FIRST_R:'bronze', BOND_XUAN_START:'bronze', BOND_RARITY_R2:'bronze',
+};
+
+// 同名大滿貫 tier 依角色決定
+function getNameBondTier(bondId, hasUR, hasSSR) {
+  if (hasUR)  return 'legend';
+  if (hasSSR) return 'diamond';
+  return 'gold';
+}
+
+function getBondTier(bond) {
+  if (bond.id.startsWith('BOND_NAME_')) {
+    // 同名大滿貫：看該角色的卡片
+    const cards = CARD_DB.filter(c => c.name === bond.id.replace('BOND_NAME_',''));
+    const hasUR  = cards.some(c=>c.rarity==='UR');
+    const hasSSR = cards.some(c=>c.rarity==='SSR');
+    return getNameBondTier(bond.id, hasUR, hasSSR);
+  }
+  return BOND_TIER_MAP[bond.id] || 'bronze';
+}
+
+const TIER_INFO = {
+  bronze:  { name:'銅牌徽章', emoji:'🥉', medals:1, tierClass:'badge-bronze' },
+  silver:  { name:'銀牌徽章', emoji:'🥈', medals:1, tierClass:'badge-silver' },
+  gold:    { name:'金牌徽章', emoji:'🥇', medals:2, tierClass:'badge-gold'   },
+  diamond: { name:'藍鑽徽章', emoji:'💠', medals:2, tierClass:'badge-diamond' },
+  legend:  { name:'傳說徽章', emoji:'🏆', medals:3, tierClass:'badge-legend'  },
+};
+
+// 產生徽章 HTML（顯示羈絆名稱 + 等級名稱，外觀依 tier）
+function renderBadgeHTML(bond, count) {
+  const tier = getBondTier(bond);
+  const info = TIER_INFO[tier];
+  const badgeName = bond.name;        // 羈絆名稱
+  const tierName  = info.name;        // 徽章等級名稱
+
+  // 每種 tier 的圖示（用文字+emoji模擬）
+  const iconMap = {
+    bronze:  '🏅',
+    silver:  '🪙',
+    gold:    '⭐',
+    diamond: '💠',
+    legend:  '👑',
+  };
+
+  let badgesHtml = '';
+  for (let i = 0; i < (count||1); i++) {
+    badgesHtml += `
+      <div class="badge-tile ${info.tierClass}" title="${badgeName}·${tierName}">
+        <div class="badge-circle">${iconMap[tier]}</div>
+        <div class="badge-name">${badgeName}</div>
+        <div class="badge-tier">${tierName}</div>
+      </div>`;
+  }
+  return badgesHtml;
+}
+
+// 取得羈絆的勳章數量（依 tier）
+function getBondMedalCount(bond) {
+  const tier = getBondTier(bond);
+  return TIER_INFO[tier]?.medals || 1;
+}
+
 // ════════════════════════════════════════════════════════════════
 // 羈絆勳章系統
 // ════════════════════════════════════════════════════════════════
@@ -4141,6 +4358,28 @@ async function teacherRedeemBondMedal() {
 function _updateDetailBondMedal(d) {
   const el = document.getElementById('dpBondMedalN');
   if (el) el.textContent = d?.bondMedals || 0;
+  // 在徽章展示區顯示已兌換的徽章
+  const badgeArea = document.getElementById('dpBadgeArea');
+  if (!badgeArea || !curStu) return;
+  const claimedBonds = d?.claimedBonds || {};
+  const bondIds = Object.keys(claimedBonds);
+  if (!bondIds.length) {
+    badgeArea.innerHTML = '<div style="font-size:12px;color:var(--tx3);font-style:italic">尚無徽章</div>';
+    return;
+  }
+  badgeArea.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
+    bondIds.map(bondId => {
+      const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
+      if (!bond) return '';
+      const tier = getBondTier(bond);
+      const info = TIER_INFO[tier];
+      const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+      return `<div class="badge-tile ${info.tierClass}" style="min-width:64px;max-width:72px;padding:6px 4px" title="${bond.name}">
+        <div class="badge-circle" style="width:44px;height:44px;font-size:18px">${iconMap[tier]}</div>
+        <div class="badge-name" style="font-size:9px">${bond.name}</div>
+        <div class="badge-tier" style="font-size:9px">${info.name}</div>
+      </div>`;
+    }).join('') + '</div>';
 }
 
 // 老師端：從「報表」頁查看全班勳章（加在 renderRpt 末尾呼叫）
