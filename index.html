@@ -1849,7 +1849,14 @@ function renderTasks(tasks) {
 
 function renderLog(log) {
   const c = document.getElementById('dpLog');
-  const ents = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,60);
+  // 取 key 前13位數字作為時間戳比較，處理 _pt / _bolt 等後綴
+  const ents = Object.entries(log)
+    .sort((a, b) => {
+      const ta = parseInt(a[0]) || 0;
+      const tb = parseInt(b[0]) || 0;
+      return tb - ta;
+    })
+    .slice(0, 60);
   if (!ents.length) { c.innerHTML='<div style="color:var(--tx3);font-size:13px">尚無記錄</div>'; return; }
   c.innerHTML = ents.map(([,e])=>{
     const isExit = e.action?.includes('外出');
@@ -2508,7 +2515,9 @@ function _renderStuView(stu, d) {
         </div>`;
       }).join('');
 
-  const logHtml = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,10).map(([,e])=>`
+  const logHtml = Object.entries(log)
+    .sort((a, b) => (parseInt(b[0])||0) - (parseInt(a[0])||0))
+    .slice(0, 10).map(([,e])=>`
     <div class="log-item ${e.delta>0?'add':e.delta<0?'sub':''}">
       <div class="log-t">${e.time||''}</div>
       <div>${e.action||''}${e.reason?' — '+e.reason:''}</div>
