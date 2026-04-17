@@ -3162,6 +3162,10 @@ const CARD_DB = [
   {id:'C11',name:'曉萱',rarity:'SR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音管精靈'},
 ];
 
+// ── 自訂卡片/羈絆（必須在 generateDynamicBonds 之前宣告）──
+let _customCards = [];
+let _customBonds = [];
+
 // ── 稀有度機率（總和 100） ──
 const RARITY_WEIGHT = {UR:2, SSR:13, SR:40, R:45};
 
@@ -3592,8 +3596,7 @@ async function redeemBond(bondId) {
 // ════════════════════════════════════════════════════════════════
 
 // ── 自訂卡片資料庫（Firebase 儲存，合併進 CARD_DB）──
-let _customCards = [];  // { fbKey, ...card }
-let _customBonds = [];  // { fbKey, ...bond }
+// _customCards / _customBonds declared earlier (above CARD_DB)
 
 async function loadCustomCardData() {
   const cc = (await dbGet('customCards')) || {};
