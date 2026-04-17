@@ -707,11 +707,10 @@ select:focus{border-color:var(--gold)}
     </div>
     <div id="tabTeachers" style="display:none">
       <!-- 管理子分頁列 -->
-      <div style="display:flex;gap:0;border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:16px;flex-wrap:wrap">
-        <button class="mgmt-tab on" id="mgmtTeacherBtn" onclick="switchMgmt('teacher')" style="flex:1;min-width:80px;padding:10px 6px;background:var(--gold);color:#000;border:none;font-size:12px;font-weight:bold;font-family:inherit;cursor:pointer;transition:.2s">⚙️ 教師帳號</button>
-        <button class="mgmt-tab" id="mgmtClassBtn"   onclick="switchMgmt('class')"   style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🏫 班級管理</button>
-        <button class="mgmt-tab" id="mgmtStudentBtn" onclick="switchMgmt('student')" style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🧑‍🎓 學生管理</button>
-        <button class="mgmt-tab" id="mgmtCardBtn"    onclick="switchMgmt('card')"    style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🃏 卡片管理</button>
+      <div style="display:flex;gap:0;border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:16px">
+        <button class="mgmt-tab on" id="mgmtTeacherBtn" onclick="switchMgmt('teacher')" style="flex:1;padding:10px;background:var(--gold);color:#000;border:none;font-size:13px;font-weight:bold;font-family:inherit;cursor:pointer;transition:.2s">⚙️ 教師帳號</button>
+        <button class="mgmt-tab" id="mgmtClassBtn"   onclick="switchMgmt('class')"   style="flex:1;padding:10px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:13px;font-family:inherit;cursor:pointer;transition:.2s">🏫 班級管理</button>
+        <button class="mgmt-tab" id="mgmtStudentBtn" onclick="switchMgmt('student')" style="flex:1;padding:10px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:13px;font-family:inherit;cursor:pointer;transition:.2s">🧑‍🎓 學生管理</button>
       </div>
 
       <!-- 教師帳號面板 -->
@@ -749,45 +748,6 @@ select:focus{border-color:var(--gold)}
             style="width:100%;padding:8px 12px;background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);color:var(--tx);font-size:14px;font-family:inherit;outline:none">
         </div>
         <div id="studentMgmtList"></div>
-      </div>
-
-      <!-- 卡片管理面板（僅 master） -->
-      <div id="mgmtCardPanel" style="display:none">
-        <div class="row" style="margin-bottom:10px;flex-wrap:wrap;gap:8px">
-          <h3 style="color:var(--gold)">🃏 卡片管理系統</h3>
-        </div>
-
-        <!-- 抽卡開關 -->
-        <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:14px 16px;margin-bottom:14px">
-          <div class="row" style="margin-bottom:10px">
-            <div>
-              <div style="font-size:15px;font-weight:bold">🎴 抽卡系統開關</div>
-              <div style="font-size:12px;color:var(--tx3);margin-top:2px">關閉後學生無法使用抽卡功能</div>
-            </div>
-            <div id="cardSwitchStatus" style="margin-left:auto;font-size:13px;color:var(--tx3)">載入中…</div>
-          </div>
-          <div style="display:flex;gap:8px">
-            <button class="btn s" onclick="setCardSystemEnabled(true)"  style="flex:1;padding:10px;font-size:14px;font-weight:bold">✅ 開放抽卡</button>
-            <button class="btn d" onclick="setCardSystemEnabled(false)" style="flex:1;padding:10px;font-size:14px;font-weight:bold">🔒 關閉抽卡</button>
-          </div>
-        </div>
-
-        <!-- 現有卡片列表 + 編輯 -->
-        <div class="row" style="margin-bottom:10px">
-          <div style="font-size:14px;font-weight:bold;color:var(--gold)">📋 卡片列表</div>
-          <button class="btn g" style="margin-left:auto" onclick="openAddCardDlg()">＋ 新增卡片</button>
-        </div>
-        <div id="cardMgmtList"></div>
-
-        <!-- 羈絆管理 -->
-        <div class="row" style="margin-top:18px;margin-bottom:10px">
-          <div style="font-size:14px;font-weight:bold;color:var(--gold)">🔗 自訂羈絆</div>
-          <button class="btn g" style="margin-left:auto" onclick="openAddBondDlg()">＋ 新增羈絆</button>
-        </div>
-        <div style="font-size:12px;color:var(--tx3);margin-bottom:10px;padding:6px 10px;background:var(--bg1);border-radius:var(--r2);border:1px solid var(--bdr)">
-          ℹ️ 自動生成的羈絆（同名大滿貫、稀有度連線）無需設定，系統自動計算。以下為自訂固定羈絆。
-        </div>
-        <div id="bondMgmtList"></div>
       </div>
     </div>
   </div>
@@ -1322,25 +1282,12 @@ function doLogout() {
 function enterApp() {
   document.getElementById('curUser').textContent = me.name;
   document.getElementById('tab-teachers').style.display = me.role==='master'?'':'none';
-  const cardTabBtn = document.getElementById('mgmtCardBtn');
-  if (cardTabBtn) cardTabBtn.style.display = me.role==='master' ? '' : 'none';
   showScreen('appScreen');
   pendAtt = {};
-
-  // 先立刻建立班級按鈕和點名頁，不等卡片資料
   loadDynamicData().then(() => {
     buildClsBtns('clsBtns', switchCls);
     switchCls(me.classes[0]);
-    // 卡片資料在背景載入，失敗不影響主功能
-    applyCardTitleOverrides().catch(e=>console.warn('applyCardTitleOverrides:', e));
-    loadCustomCardData().catch(e=>console.warn('loadCustomCardData:', e));
-  }).catch(e => {
-    console.warn('loadDynamicData error:', e);
-    // 即使 loadDynamicData 失敗，也要讓點名正常運作
-    buildClsBtns('clsBtns', switchCls);
-    switchCls(me.classes[0]);
   });
-
   startApplyListener();
   startMsgListener();
 }
@@ -1366,9 +1313,9 @@ function switchTab(t) {
   const content = document.getElementById(map[t]);
   if (content) content.style.display = '';
 
-  if (t==='att') { if (!curCls && me?.classes?.[0]) { buildClsBtns('clsBtns', switchCls); switchCls(me.classes[0]); } else { renderGrid(); } }
+  if (t==='att') renderGrid();
   if (t==='report') { buildClsBtns('clsBtnsR', switchClsR); renderRpt(); renderStats(); loadDeductLog(); }
-  if (t==='teachers') { loadDynamicData().then(()=>{ renderTeachers(); renderClassMgmt(); renderStudentMgmt(); if(me?.role==='master') renderCardMgmt(); }); }
+  if (t==='teachers') { loadDynamicData().then(()=>{ renderTeachers(); renderClassMgmt(); renderStudentMgmt(); }); }
   if (t==='inbox') renderInbox();
   if (t==='exitlog') loadExitLog();
   if (t==='cal') loadCalendar();
@@ -1759,28 +1706,22 @@ async function chgBolt(delta) {
       [{label:'確認新增',cls:'ok',fn:async()=>{
         const reason = document.getElementById('boltReason').value.trim();
         if(!reason){toast('請填寫原因','err');return false;}
-
         const d = await dbGet(`students/${curStu.id}`);
         const curBolts = (d?.bolts||0) + 1;
-        const curPts = typeof d?.points === 'number' ? d.points : parseInt(d?.points)||0;
+        const curPts = d?.points||0;
         let deductMsg = '';
-        const lk = Date.now()+'';
+        const upd = {};
+        const t = Date.now();
 
-        // 先單獨寫 bolts
-        await dbUpd(`students/${curStu.id}`, {
-          bolts: curBolts,
-          [`log/${lk}_bolt`]: {time:now(), action:'⚡ 新增閃電警告', reason, teacher:me.name, delta:0}
-        });
-
-        // 若有星星，再單獨扣點
         if (curPts > 0) {
-          const newPts = curPts - 1;
-          await dbUpd(`students/${curStu.id}`, {
-            points: newPts,
-            [`log/${lk}_pt`]: {time:now(), action:'⚡ 閃電自動扣點', reason:'新增閃電，自動扣除1顆星星', teacher:me.name, delta:-1}
-          });
-          deductMsg = `，星星 ${curPts} → ${newPts}`;
+          upd[`students/${curStu.id}/points`] = curPts - 1;
+          upd[`students/${curStu.id}/log/${t}_pt`] = {time:now(), action:'閃電扣點', reason:'因新增閃電自動扣點', teacher:me.name, delta:-1};
+          deductMsg = '，並自動扣除 1 點';
         }
+
+        upd[`students/${curStu.id}/bolts`] = curBolts;
+        upd[`students/${curStu.id}/log/${t}_bolt`] = {time:now(), action:'⚡ 新增閃電警告', reason, teacher:me.name, delta:0};
+        await db.ref('/').update(upd);
 
         const newPen = Math.floor(curBolts/3);
         const oldPen = Math.floor((curBolts-1)/3);
@@ -1790,7 +1731,7 @@ async function chgBolt(delta) {
           toast(`⚠️ 累積 ${newPen} 次懲罰${deductMsg}！`, 'err');
         } else {
           await sendNotifToStudent(curStu.id, curStu.name, `⚡ 新增閃電警告！原因：${reason}`, 'punishment');
-          toast(`閃電已新增${deductMsg || '（目前無星星可扣）'}`);
+          toast(`閃電已新增${deductMsg}`);
         }
         openDetail(curStu); return true;
       }},{label:'取消',fn:()=>true}]
@@ -1849,14 +1790,7 @@ function renderTasks(tasks) {
 
 function renderLog(log) {
   const c = document.getElementById('dpLog');
-  // 取 key 前13位數字作為時間戳比較，處理 _pt / _bolt 等後綴
-  const ents = Object.entries(log)
-    .sort((a, b) => {
-      const ta = parseInt(a[0]) || 0;
-      const tb = parseInt(b[0]) || 0;
-      return tb - ta;
-    })
-    .slice(0, 60);
+  const ents = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,60);
   if (!ents.length) { c.innerHTML='<div style="color:var(--tx3);font-size:13px">尚無記錄</div>'; return; }
   c.innerHTML = ents.map(([,e])=>{
     const isExit = e.action?.includes('外出');
@@ -2515,9 +2449,7 @@ function _renderStuView(stu, d) {
         </div>`;
       }).join('');
 
-  const logHtml = Object.entries(log)
-    .sort((a, b) => (parseInt(b[0])||0) - (parseInt(a[0])||0))
-    .slice(0, 10).map(([,e])=>`
+  const logHtml = Object.entries(log).sort((a,b)=>b[0]-a[0]).slice(0,10).map(([,e])=>`
     <div class="log-item ${e.delta>0?'add':e.delta<0?'sub':''}">
       <div class="log-t">${e.time||''}</div>
       <div>${e.action||''}${e.reason?' — '+e.reason:''}</div>
@@ -2891,7 +2823,7 @@ async function loadDynamicData() {
 let _mgmtStuCls = 'all';
 
 function switchMgmt(tab) {
-  ['teacher','class','student','card'].forEach(t => {
+  ['teacher','class','student'].forEach(t => {
     const btn = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Btn`);
     const panel = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Panel`);
     const active = t === tab;
@@ -2900,7 +2832,6 @@ function switchMgmt(tab) {
   });
   if (tab === 'class') renderClassMgmt();
   if (tab === 'student') renderStudentMgmt();
-  if (tab === 'card') renderCardMgmt();
 }
 
 // ══════════════
@@ -3149,7 +3080,7 @@ async function delStudent(fbKey, name) {
 // ════════════════════════════════════════════════════════════════
 
 const CARD_DB = [
-  {id:'C01',name:'旭成',rarity:'SR', img:'CARDS/旭成SR_結果_結果.jpg', title:'三重金城武'},
+  {id:'C01',name:'旭成',rarity:'SR', img:'CARDS/旭成SR_結果_結果.jpg', title:'教務大總管'},
   {id:'C02',name:'倩宇',rarity:'R',  img:'CARDS/倩宇R_結果.jpg',       title:'法國號導師'},
   {id:'C03',name:'倩宇',rarity:'SR', img:'CARDS/倩宇SR_結果.jpg',      title:'銅管首席'},
   {id:'C04',name:'倩宇',rarity:'SSR',img:'CARDS/倩宇SSR_結果.jpg',     title:'法國號女神'},
@@ -3209,71 +3140,6 @@ function generateDynamicBonds() {
     }
   });
 
-  // 【音樂性羈絆】— 固定組合，有趣主題
-  const musicBonds = [
-    {
-      id:'BOND_BRASS_TRIO', name:'銅管鐵三角', emoji:'🎺',
-      needs:['C02','C03','C04'],
-      reward:'泡麵一碗🍜', rewardType:'noodle',
-      desc:'集齊倩宇老師的 R＋SR＋SSR 三張卡，見證法國號的全面成長',
-    },
-    {
-      id:'BOND_SCHOOL_POWER', name:'莊敬最強組合', emoji:'👑',
-      needs:['C07','C06','C05'],
-      reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊校長 UR＋SSR＋SR，莊敬最高決策天團',
-    },
-    {
-      id:'BOND_WIND_MASTER', name:'管樂界四天王', emoji:'🎼',
-      needs:['C04','C08','C09','C11'],
-      reward:'金牌兩面🥇🥇', rewardType:'medals2',
-      desc:'集齊倩宇SSR、國霖SR、康榮SSR、曉萱SR，打造管樂夢幻隊伍',
-    },
-    {
-      id:'BOND_LEGEND_TEACHER', name:'傳說中的教師天團', emoji:'🌟',
-      needs:['C01','C09','C08'],
-      reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊旭成SR、康榮SSR、國霖SR，三位傳說級老師同台',
-    },
-    {
-      id:'BOND_WOODWIND_SOUL', name:'木管靈魂', emoji:'🎷',
-      needs:['C08','C10','C11'],
-      reward:'金牌一面🥇', rewardType:'medals1',
-      desc:'集齊國霖SR、曉萱R、曉萱SR，木管家族大集合',
-    },
-    {
-      id:'BOND_ALL_SSR', name:'SSR 全蒐集', emoji:'💎',
-      needs:['C04','C06','C09'],
-      reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊全部三張 SSR，感受稀有的重量',
-    },
-    {
-      id:'BOND_LOW_HIGH', name:'高低音的對話', emoji:'🎵',
-      needs:['C10','C07'],
-      reward:'泡麵一碗🍜', rewardType:'noodle',
-      desc:'集齊曉萱R（低音管）與校長UR，低音遇上最高峰',
-    },
-    {
-      id:'BOND_FULL_HOUSE', name:'莊敬全明星', emoji:'🏆',
-      needs:['C01','C04','C07','C09','C11'],
-      reward:'金牌三面🥇🥇🥇', rewardType:'medals3',
-      desc:'集齊旭成、倩宇SSR、校長UR、康榮SSR、曉萱SR，全明星夢幻陣容',
-    },
-  ];
-  // 只加入需求卡片全部存在於 CARD_DB 的羈絆
-  musicBonds.forEach(b => {
-    const allExist = b.needs.every(id => CARD_DB.some(c => c.id === id));
-    if (allExist) bonds.push(b);
-  });
-
-  // 【自訂羈絆】從 Firebase 讀取的 _customBonds
-  if (typeof _customBonds !== 'undefined') {
-    _customBonds.forEach(b => {
-      const allExist = (b.needs||[]).every(id => CARD_DB.some(c=>c.id===id));
-      if (allExist && !bonds.some(x=>x.id===b.id)) bonds.push(b);
-    });
-  }
-
   DYNAMIC_BONDS = bonds;
   return bonds;
 }
@@ -3318,29 +3184,16 @@ function _resetPackState() {
 }
 
 async function openCardPack() {
-  if (!_currentStuId) { toast('請先登入學生帳號', 'err'); return; }
-
-  // 檢查抽卡開關（快速，若 Firebase 慢則跳過）
+  if (!_currentStuId) { toast('請先登入','err'); return; }
   try {
-    const sysEnabled = await Promise.race([
-      dbGet('cardSystemEnabled'),
-      new Promise(resolve => setTimeout(() => resolve(null), 2000))
-    ]);
-    if (sysEnabled === false) {
-      toast('🔒 抽卡系統目前已關閉', 'err');
-      return;
-    }
-  } catch(e) { /* 開關讀取失敗就當作開放 */ }
+    const d = await dbGet(`students/${_currentStuId}`);
+    if ((d?.points||0) < 1) { toast('⭐ 星星點數不足，無法開卡包', 'err'); return; }
+  } catch(e) { toast('連線失敗，請重試','err'); return; }
 
-  // 立刻顯示 overlay，不等點數驗證
   _resetPackState();
-  const overlay  = document.getElementById('cardOverlay');
-  const packWrap = document.getElementById('packWrap');
-  const reveal   = document.getElementById('cardRevealWrap');
-  if (!overlay) { toast('系統錯誤，請重新整理頁面', 'err'); return; }
-  packWrap.style.display = 'flex';
-  reveal.classList.remove('on');
-  overlay.classList.add('on');
+  document.getElementById('packWrap').style.display = 'flex';
+  document.getElementById('cardRevealWrap').classList.remove('on');
+  document.getElementById('cardOverlay').classList.add('on');
 }
 
 function closeCardOverlay() {
@@ -3354,39 +3207,35 @@ async function triggerPackOpen() {
   if (!_currentStuId) return;
 
   const box = document.getElementById('packBox');
-  box.style.pointerEvents = 'none'; // 防連點
-
   try {
     const d = await dbGet(`students/${_currentStuId}`);
-    const pts = typeof d?.points === 'number' ? d.points : (parseInt(d?.points) || 0);
-
-    if (pts < 1) {
-      toast('⭐ 點數不足（目前 0 點），無法開卡包', 'err');
-      box.style.pointerEvents = '';
+    if ((d?.points||0) < 1) {
+      toast('⭐ 點數不足', 'err');
+      _resetPackState();
+      closeCardOverlay();
       return;
     }
 
     isOpening = true;
+    box.style.pointerEvents = 'none';
     box.classList.add('shaking');
 
     const card = drawCard();
     _pendingCard = card;
 
-    const lk = Date.now() + '';
+    const lk = Date.now()+'';
     await dbUpd(`students/${_currentStuId}`, {
-      points: pts - 1,
-      [`log/${lk}`]: { time: now(), action: '開啟卡包', reason: `抽到 ${card.rarity} ${card.name}`, teacher: '系統', delta: -1 }
+      points: Math.max(0,(d.points||0)-1),
+      [`log/${lk}`]: {time:now(), action:'開啟卡包', reason:`抽到 ${card.rarity} ${card.name}`, teacher:'系統', delta:-1}
     });
 
     setTimeout(() => {
-      const pw = document.getElementById('packWrap');
-      if (pw) pw.style.display = 'none';
+      document.getElementById('packWrap').style.display = 'none';
       revealCard(card);
     }, 1400);
 
   } catch(e) {
-    console.error('triggerPackOpen error:', e);
-    toast('抽卡失敗，請重試', 'err');
+    toast('抽卡失敗，點數已退還請重試','err');
     _resetPackState();
   }
 }
@@ -3581,257 +3430,6 @@ async function redeemBond(bondId) {
       return true;
     }}, {label:'取消', fn:()=>true}]
   );
-}
-
-// ════════════════════════════════════════════════════════════════
-// 卡片管理系統（master 限定）
-// ════════════════════════════════════════════════════════════════
-
-// ── 自訂卡片資料庫（Firebase 儲存，合併進 CARD_DB）──
-let _customCards = [];  // { fbKey, ...card }
-let _customBonds = [];  // { fbKey, ...bond }
-
-async function loadCustomCardData() {
-  const cc = (await dbGet('customCards')) || {};
-  _customCards = Object.entries(cc).map(([k,v])=>({...v, _fbKey:k}));
-  const cb = (await dbGet('customBonds')) || {};
-  _customBonds = Object.entries(cb).map(([k,v])=>({...v, _fbKey:k}));
-  // 合併自訂卡片到 CARD_DB（避免重複）
-  const baseIds = CARD_DB.filter(c=>!c._fbKey).map(c=>c.id);
-  CARD_DB.splice(0, CARD_DB.length,
-    ...CARD_DB.filter(c=>!c._fbKey),
-    ..._customCards.filter(c=>!baseIds.includes(c.id))
-  );
-  generateDynamicBonds();
-}
-
-// ── 抽卡開關 ──
-async function setCardSystemEnabled(enabled) {
-  await dbSet('cardSystemEnabled', enabled);
-  toast(enabled ? '✅ 抽卡系統已開放' : '🔒 抽卡系統已關閉', enabled ? 'ok' : 'err');
-  renderCardMgmt();
-}
-
-// ── 渲染卡片管理面板 ──
-async function renderCardMgmt() {
-  // 更新開關狀態顯示
-  const enabled = await dbGet('cardSystemEnabled');
-  const statusEl = document.getElementById('cardSwitchStatus');
-  if (statusEl) {
-    statusEl.textContent = enabled === false ? '🔒 目前關閉' : '✅ 目前開放';
-    statusEl.style.color = enabled === false ? 'var(--red)' : 'var(--green)';
-    statusEl.style.fontWeight = 'bold';
-  }
-
-  await loadCustomCardData();
-
-  // 卡片列表
-  const list = document.getElementById('cardMgmtList');
-  if (!list) return;
-  list.innerHTML = '';
-  CARD_DB.forEach(card => {
-    const isCustom = !!card._fbKey;
-    const div = document.createElement('div');
-    div.className = 'titem';
-    div.style.marginBottom = '6px';
-    div.innerHTML = `
-      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
-        <div style="width:36px;height:50px;border-radius:6px;overflow:hidden;border:1px solid var(--bdr);flex-shrink:0;background:var(--bg2)">
-          <img src="${card.img}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
-        </div>
-        <div style="min-width:0">
-          <div class="ti-name" style="font-size:13px">${card.name}
-            <span class="ct-rarity ct-rarity-${card.rarity}" style="font-size:10px;padding:1px 6px;border-radius:8px;margin-left:4px">${card.rarity}</span>
-            ${isCustom?'<span style="font-size:10px;padding:1px 5px;border-radius:6px;background:rgba(46,204,113,.15);color:var(--green);margin-left:3px">自訂</span>':''}
-          </div>
-          <div class="ti-cls" style="font-size:11px">${card.title} · ${card.id}</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:5px;flex-shrink:0">
-        <button class="btn" onclick="openEditCardDlg('${card.id}')" style="font-size:11px;padding:3px 9px">✏️</button>
-        ${isCustom?`<button class="btn d" onclick="delCard('${card._fbKey}','${card.name}')" style="font-size:11px;padding:3px 9px">🗑️</button>`:''}
-      </div>`;
-    list.appendChild(div);
-  });
-
-  // 自訂羈絆列表
-  const bondList = document.getElementById('bondMgmtList');
-  if (!bondList) return;
-  bondList.innerHTML = '';
-  if (!_customBonds.length) {
-    bondList.innerHTML = '<div class="empty" style="padding:20px">尚無自訂羈絆</div>';
-    return;
-  }
-  _customBonds.forEach(bond => {
-    const div = document.createElement('div');
-    div.className = 'titem';
-    div.style.marginBottom = '6px';
-    div.innerHTML = `
-      <div style="flex:1">
-        <div class="ti-name">${bond.emoji||'🔗'} ${bond.name}</div>
-        <div class="ti-cls">需求：${(bond.needs||[]).join('、')} → ${bond.reward}</div>
-        <div style="font-size:11px;color:var(--tx3)">${bond.desc||''}</div>
-      </div>
-      <div style="display:flex;gap:5px;flex-shrink:0">
-        <button class="btn d" onclick="delCustomBond('${bond._fbKey}','${bond.name}')" style="font-size:11px;padding:3px 9px">🗑️</button>
-      </div>`;
-    bondList.appendChild(div);
-  });
-}
-
-// ── 新增卡片 ──
-function openAddCardDlg() {
-  openDlg('🃏 新增卡片',
-    `<div class="dlg-label">卡片 ID（唯一，例：C12）</div>
-     <input class="dlg-input" type="text" id="ncId" placeholder="C12">
-     <div class="dlg-label">角色名稱</div>
-     <input class="dlg-input" type="text" id="ncName" placeholder="例：國霖">
-     <div class="dlg-label">稱號</div>
-     <input class="dlg-input" type="text" id="ncTitle" placeholder="例：音樂守護者">
-     <div class="dlg-label">稀有度</div>
-     <select class="dlg-input" id="ncRarity" style="width:100%;margin-bottom:10px">
-       <option value="R">R</option>
-       <option value="SR" selected>SR</option>
-       <option value="SSR">SSR</option>
-       <option value="UR">UR</option>
-     </select>
-     <div class="dlg-label">圖片路徑（相對路徑，例：CARDS/國霖SR2_結果.jpg）</div>
-     <input class="dlg-input" type="text" id="ncImg" placeholder="CARDS/xxx_結果.jpg">`,
-    [{label:'新增',cls:'ok',fn:async()=>{
-      const id    = document.getElementById('ncId').value.trim().toUpperCase();
-      const name  = document.getElementById('ncName').value.trim();
-      const title = document.getElementById('ncTitle').value.trim();
-      const rar   = document.getElementById('ncRarity').value;
-      const img   = document.getElementById('ncImg').value.trim();
-      if (!id||!name||!title||!img) { toast('請填寫所有欄位','err'); return false; }
-      if (CARD_DB.some(c=>c.id===id)) { toast('此 ID 已存在','err'); return false; }
-      const fbKey = 'card_'+Date.now();
-      await dbSet(`customCards/${fbKey}`, {id, name, title, rarity:rar, img, _fbKey:fbKey});
-      toast(`卡片「${name}」已新增`,'ok');
-      await loadCustomCardData();
-      renderCardMgmt();
-      return true;
-    }},{label:'取消',fn:()=>true}]);
-}
-
-// ── 編輯卡片（包含內建卡片的稱號） ──
-function openEditCardDlg(cardId) {
-  const card = CARD_DB.find(c=>c.id===cardId);
-  if (!card) return;
-  const isCustom = !!card._fbKey;
-  openDlg(`✏️ 編輯「${card.name}」`,
-    `<div class="dlg-label">卡片 ID</div>
-     <input class="dlg-input" value="${card.id}" readonly style="opacity:.5">
-     <div class="dlg-label">角色名稱${isCustom?'':' （內建卡，唯讀）'}</div>
-     <input class="dlg-input" type="text" id="ecName" value="${card.name}" ${isCustom?'':'readonly style="opacity:.5"'}>
-     <div class="dlg-label">稱號</div>
-     <input class="dlg-input" type="text" id="ecTitle" value="${card.title}">
-     <div class="dlg-label">稀有度${isCustom?'':' （內建卡，唯讀）'}</div>
-     <select class="dlg-input" id="ecRarity" style="width:100%;margin-bottom:10px" ${isCustom?'':'disabled'}>
-       <option value="R" ${card.rarity==='R'?'selected':''}>R</option>
-       <option value="SR" ${card.rarity==='SR'?'selected':''}>SR</option>
-       <option value="SSR" ${card.rarity==='SSR'?'selected':''}>SSR</option>
-       <option value="UR" ${card.rarity==='UR'?'selected':''}>UR</option>
-     </select>
-     <div class="dlg-label">圖片路徑</div>
-     <input class="dlg-input" type="text" id="ecImg" value="${card.img}" ${isCustom?'':'readonly style="opacity:.5"'}>`,
-    [{label:'儲存',cls:'ok',fn:async()=>{
-      const newTitle = document.getElementById('ecTitle').value.trim();
-      if (!newTitle) { toast('稱號不能為空','err'); return false; }
-      if (isCustom) {
-        const newName  = document.getElementById('ecName').value.trim();
-        const newRar   = document.getElementById('ecRarity').value;
-        const newImg   = document.getElementById('ecImg').value.trim();
-        await dbUpd(`customCards/${card._fbKey}`, {name:newName, title:newTitle, rarity:newRar, img:newImg});
-      } else {
-        // 內建卡：只能修改稱號，存入 Firebase 覆蓋表
-        await dbSet(`cardTitleOverride/${card.id}`, newTitle);
-        // 同步到記憶體
-        card.title = newTitle;
-      }
-      toast('已儲存','ok');
-      await loadCustomCardData();
-      renderCardMgmt();
-      return true;
-    }},{label:'取消',fn:()=>true}]);
-}
-
-async function delCard(fbKey, name) {
-  openDlg(`🗑️ 刪除卡片「${name}」`,
-    '<div class="dlg-msg" style="color:var(--red)">確認刪除此卡片？學生背包中的此卡不受影響。</div>',
-    [{label:'確認刪除',cls:'del',fn:async()=>{
-      await db.ref(`${ROOT}/customCards/${fbKey}`).remove();
-      toast(`卡片「${name}」已刪除`,'ok');
-      await loadCustomCardData();
-      renderCardMgmt();
-      return true;
-    }},{label:'取消',fn:()=>true}]);
-}
-
-// ── 新增自訂羈絆 ──
-function openAddBondDlg() {
-  const cardOpts = CARD_DB.map(c=>`<option value="${c.id}">${c.id} ${c.name}(${c.rarity})</option>`).join('');
-  const rewardOpts = [
-    {v:'starbucks',l:'星巴克一杯☕'},
-    {v:'noodle',   l:'泡麵一碗🍜'},
-    {v:'medals3',  l:'金牌三面🥇'},
-    {v:'medals2',  l:'金牌兩面🥇'},
-    {v:'medals1',  l:'金牌一面🥇'},
-  ].map(o=>`<option value="${o.v}">${o.l}</option>`).join('');
-
-  openDlg('🔗 新增自訂羈絆',
-    `<div class="dlg-label">羈絆名稱</div>
-     <input class="dlg-input" type="text" id="nbName" placeholder="例：木管雙傑">
-     <div class="dlg-label">Emoji 圖示</div>
-     <input class="dlg-input" type="text" id="nbEmoji" placeholder="例：🎷" maxlength="4">
-     <div class="dlg-label">說明文字</div>
-     <input class="dlg-input" type="text" id="nbDesc" placeholder="例：集齊兩位木管老師">
-     <div class="dlg-label">所需卡片 ID（用逗號分隔，例：C08,C10）</div>
-     <input class="dlg-input" type="text" id="nbNeeds" placeholder="C08,C10">
-     <div class="dlg-label">獎勵類型</div>
-     <select class="dlg-input" id="nbReward" style="width:100%;margin-bottom:10px">${rewardOpts}</select>`,
-    [{label:'新增',cls:'ok',fn:async()=>{
-      const name   = document.getElementById('nbName').value.trim();
-      const emoji  = document.getElementById('nbEmoji').value.trim() || '🔗';
-      const desc   = document.getElementById('nbDesc').value.trim();
-      const needsRaw = document.getElementById('nbNeeds').value.trim();
-      const rewardType = document.getElementById('nbReward').value;
-      if (!name||!needsRaw) { toast('請填寫名稱與所需卡片','err'); return false; }
-      const needs = needsRaw.split(',').map(s=>s.trim().toUpperCase()).filter(Boolean);
-      const invalid = needs.filter(id=>!CARD_DB.some(c=>c.id===id));
-      if (invalid.length) { toast(`找不到卡片 ID：${invalid.join(',')}`, 'err'); return false; }
-      const rewardLabels = {starbucks:'星巴克一杯☕',noodle:'泡麵一碗🍜',medals3:'金牌三面🥇',medals2:'金牌兩面🥇',medals1:'金牌一面🥇'};
-      const fbKey = 'bond_'+Date.now();
-      const bondObj = {id:`BOND_CUSTOM_${fbKey}`, name, emoji, desc, needs, reward:rewardLabels[rewardType]||rewardType, rewardType, _fbKey:fbKey};
-      await dbSet(`customBonds/${fbKey}`, bondObj);
-      toast(`羈絆「${name}」已新增`,'ok');
-      await loadCustomCardData();
-      generateDynamicBonds();
-      renderCardMgmt();
-      return true;
-    }},{label:'取消',fn:()=>true}]);
-}
-
-async function delCustomBond(fbKey, name) {
-  openDlg(`🗑️ 刪除羈絆「${name}」`,
-    '<div class="dlg-msg" style="color:var(--red)">確認刪除此羈絆？已兌換的記錄不受影響。</div>',
-    [{label:'確認刪除',cls:'del',fn:async()=>{
-      await db.ref(`${ROOT}/customBonds/${fbKey}`).remove();
-      toast(`羈絆「${name}」已刪除`,'ok');
-      await loadCustomCardData();
-      generateDynamicBonds();
-      renderCardMgmt();
-      return true;
-    }},{label:'取消',fn:()=>true}]);
-}
-
-// ── 啟動時套用內建卡片稱號覆蓋 ──
-async function applyCardTitleOverrides() {
-  const overrides = (await dbGet('cardTitleOverride')) || {};
-  Object.entries(overrides).forEach(([id, title]) => {
-    const card = CARD_DB.find(c=>c.id===id);
-    if (card) card.title = title;
-  });
 }
 
 window.addEventListener('keydown', e => {
