@@ -3976,10 +3976,29 @@ async function renderBag() {
   // 更新勳章數量文字
   const medalCountEl = document.getElementById('bagMedalCount');
   const medalBtn = document.getElementById('bagMedalRedeemBtn');
-  // 讀取徽章資訊（待核銷 + 已核銷）
+  // 合併讀取：unredeemedBadges（新）+ claimedBonds（舊格式相容）
   const allBadgesData = stuData?.unredeemedBadges || {};
-  const pendingBadges  = Object.entries(allBadgesData).filter(([,b])=>!b.redeemed);
-  const redeemedBadges = Object.entries(allBadgesData).filter(([,b])=> b.redeemed);
+  const oldClaimed    = stuData?.claimedBonds || {};
+
+  // 把舊格式 claimedBonds 轉成展示用物件（沒有 tier 資訊，用 bond 名稱補）
+  const oldEntries = Object.entries(oldClaimed)
+    .filter(([bondId]) => !allBadgesData[bondId]) // 新格式已有的不重複
+    .map(([bondId, claimedAt]) => {
+      const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
+      if (!bond) return null;
+      const tier = getBondTier(bond);
+      return [bondId, {
+        bondId, bondName: bond.name, tier,
+        tierName: (TIER_INFO[tier]||TIER_INFO.bronze).name,
+        claimedAt: typeof claimedAt === 'string' ? claimedAt : new Date(claimedAt).toLocaleString('zh-TW'),
+        redeemed: false, _legacy: true
+      }];
+    }).filter(Boolean);
+
+  // 合併新舊
+  const allEntries = [...Object.entries(allBadgesData), ...oldEntries];
+  const pendingBadges  = allEntries.filter(([,b])=>!b.redeemed);
+  const redeemedBadges = allEntries.filter(([,b])=> b.redeemed);
   const pendingCount = pendingBadges.length;
 
   if (medalCountEl) medalCountEl.textContent = `（待核銷 ${pendingCount} 枚）`;
@@ -3989,7 +4008,7 @@ async function renderBag() {
   const badgeCol = document.getElementById('bagBadgeCollection');
   const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
   if (badgeCol) {
-    if (!Object.keys(allBadgesData).length) {
+    if (!allEntries.length) {
       badgeCol.innerHTML = '<div style="font-size:12px;color:rgba(200,150,255,.5);padding:8px 0">尚未獲得任何羈絆徽章</div>';
     } else {
       let bHtml = '';
@@ -4056,13 +4075,15 @@ async function renderBag() {
   // 羈絆列表（動態生成）
   const bondList = document.getElementById('bagBondList');
   bondList.innerHTML = '';
-  const claimedBonds = (await dbGet(`students/${_currentStuId}/claimedBonds`)) || {};
+  const claimedBonds      = (await dbGet(`students/${_currentStuId}/claimedBonds`)) || {};
+  const unredeemedBadges  = (await dbGet(`students/${_currentStuId}/unredeemedBadges`)) || {};
 
   for (const bond of DYNAMIC_BONDS) {
     const isRarityType = !!bond.rarityPool;
     const canRedeem    = isRarityType ? checkRarityBond(bond, inv)
                                       : bond.needs.every(id => (inv[id]||0) >= 1);
-    const alreadyClaimed = claimedBonds[bond.id];
+    // 檢查兩個欄位（舊格式 claimedBonds 或新格式 unredeemedBadges）
+    const alreadyClaimed = claimedBonds[bond.id] || (unredeemedBadges[bond.id] ? unredeemedBadges[bond.id].claimedAt : null);
 
     let chipsHtml = '';
     if (isRarityType) {
@@ -4528,7 +4549,18 @@ function getBondMedalCount(bond) {
 async function openMedalRedeemDlg() {
   if (!_currentStuId) return;
   const d = await dbGet(`students/${_currentStuId}`);
-  const badges = d?.unredeemedBadges || {};
+  // 合併新舊格式
+  const newBadges2 = d?.unredeemedBadges || {};
+  const oldClaimed2 = d?.claimedBonds || {};
+  const allBadges2 = {...newBadges2};
+  Object.entries(oldClaimed2).forEach(([bondId, claimedAt]) => {
+    if (allBadges2[bondId]) return;
+    const bond2 = DYNAMIC_BONDS.find(b=>b.id===bondId);
+    if (!bond2) return;
+    const tier2 = getBondTier(bond2);
+    allBadges2[bondId] = {bondId, bondName:bond2.name, tier:tier2, tierName:(TIER_INFO[tier2]||TIER_INFO.bronze).name, redeemed:false};
+  });
+  const badges = allBadges2;
   const pending = Object.entries(badges).filter(([,b])=>!b.redeemed);
   const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
 
@@ -4645,9 +4677,25 @@ function _updateDetailBondMedal(d) {
   const badgeArea = document.getElementById('dpBadgeArea');
   if (!badgeArea || !curStu) return;
 
-  const allBadges = d?.unredeemedBadges || {};
-  const entries = Object.entries(allBadges);
+  // 合併新（unredeemedBadges）和舊（claimedBonds）格式
+  const newBadges = d?.unredeemedBadges || {};
+  const oldClaimed = d?.claimedBonds || {};
+  const allBadges = {...newBadges};
+  // 補入舊格式（尚未遷移到 unredeemedBadges 的）
+  Object.entries(oldClaimed).forEach(([bondId, claimedAt]) => {
+    if (allBadges[bondId]) return; // 新格式已有，跳過
+    const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
+    if (!bond) return;
+    const tier = getBondTier(bond);
+    allBadges[bondId] = {
+      bondId, bondName: bond.name, tier,
+      tierName: (TIER_INFO[tier]||TIER_INFO.bronze).name,
+      claimedAt: typeof claimedAt==='string' ? claimedAt : '',
+      redeemed: false, _legacy: true
+    };
+  });
 
+  const entries = Object.entries(allBadges);
   const pending  = entries.filter(([,b])=>!b.redeemed);
   const redeemed = entries.filter(([,b])=> b.redeemed);
 
@@ -4742,10 +4790,23 @@ async function loadBondMedalPanel() {
     return;
   }
 
-  // 改為讀取 unredeemedBadges
-  const allData = await Promise.all(allStus.map(s => dbGet(`students/${s.id}/unredeemedBadges`)));
+  // 合併讀取 unredeemedBadges（新）和 claimedBonds（舊）
+  const allNewData = await Promise.all(allStus.map(s => dbGet(`students/${s.id}/unredeemedBadges`)));
+  const allOldData = await Promise.all(allStus.map(s => dbGet(`students/${s.id}/claimedBonds`)));
   const withBadges = allStus
-    .map((s,i) => ({...s, badges: allData[i] || {}}))
+    .map((s,i) => {
+      const newB = allNewData[i] || {};
+      const oldB = allOldData[i] || {};
+      const merged = {...newB};
+      Object.entries(oldB).forEach(([bondId, claimedAt]) => {
+        if (merged[bondId]) return;
+        const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
+        if (!bond) return;
+        const tier = getBondTier(bond);
+        merged[bondId] = {bondId, bondName:bond.name, tier, tierName:(TIER_INFO[tier]||TIER_INFO.bronze).name, claimedAt:'', redeemed:false, _legacy:true};
+      });
+      return {...s, badges: merged};
+    })
     .map(s => ({...s, pending: Object.entries(s.badges).filter(([,b])=>!b.redeemed)}))
     .filter(s => s.pending.length > 0)
     .sort((a,b) => b.pending.length - a.pending.length);
