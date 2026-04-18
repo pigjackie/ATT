@@ -652,6 +652,32 @@ select:focus{border-color:var(--gold)}
 .medal-redeem-item.has-medals{border-color:rgba(123,47,247,.5);background:rgba(123,47,247,.05)}
 .mri-info{flex:1}.mri-name{font-size:15px;font-weight:bold;margin-bottom:2px}
 .mri-count{font-size:13px;color:rgba(160,100,255,.9);font-weight:bold}.mri-cls{font-size:11px;color:var(--tx3)}
+
+/* ================== 新增：遊戲化升級 CSS 與 Z-index 修復 ================== */
+#dlgOverlay { z-index: 11000 !important; }
+#toast { z-index: 11001 !important; }
+.new-badge {
+  position: absolute; top: -4px; right: -4px; background: var(--red); color: white;
+  font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 8px;
+  border: 2px solid var(--bg2); box-shadow: 0 2px 5px rgba(0,0,0,0.5);
+  animation: pulse 1.5s infinite; z-index: 10;
+}
+#cardDetailOverlay {
+  display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.9); z-index: 11005 !important;
+  flex-direction: column; align-items: center; justify-content: center;
+}
+#cardDetailOverlay.on { display: flex; }
+.detail-card {
+  width: 300px; max-width: 80vw; border-radius: 20px;
+  box-shadow: 0 0 40px rgba(212,175,55,0.5), 0 10px 30px rgba(0,0,0,0.8);
+  border: 4px solid var(--gold); background: var(--bg2); position: relative;
+  overflow: hidden; animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+@keyframes popIn { 0% {transform: scale(0.8); opacity:0;} 100% {transform: scale(1); opacity:1;} }
+.detail-card img { width: 100%; display: block; object-fit: cover; }
+.detail-card.rarity-UR { border-color: #ffd700; box-shadow: 0 0 80px rgba(255,100,100,.8), 0 0 160px rgba(255,215,0,.5); }
+.detail-card.rarity-SSR { border-color: #ffd700; box-shadow: 0 0 70px rgba(212,175,55,.9); }
 </style>
 </head>
 <body>
@@ -963,6 +989,7 @@ select:focus{border-color:var(--gold)}
 <!-- ══ 抽卡動畫 Overlay ══ -->
 <div id="cardOverlay">
   <div class="pack-wrap" id="packWrap">
+    <div id="pityDisplay" style="color:var(--gold); font-size:13px; margin-bottom:4px; font-weight:bold; letter-spacing:1px;">SSR 保底進度：0/10</div>
     <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px">消耗 1 顆 ⭐ 開啟卡包</div>
     <div class="pack-box" id="packBox" onclick="triggerPackOpen()">🎴</div>
     <div class="pack-instruction">點擊卡包開啟</div>
@@ -3708,6 +3735,156 @@ async function collectCard() {
     toast('已收下 ' + card.rarity + ' ' + card.name + '！', 'ok');
   } catch(e) {
     toast('儲存失敗，請重試', 'err');
+ // ── 抽卡邏輯：動態卡池與 SSR 保底機制 ──
+function drawCard(pityCount) {
+  const roll = Math.random() * 100;
+  let rarity;
+  // 保底機制：第 10 抽強制給出 SSR 或 UR
+  if (pityCount >= 9) {
+    rarity = Math.random() > 0.1 ? 'SSR' : 'UR';
+  } else {
+    if      (roll < 2)  rarity = 'UR';
+    else if (roll < 12) rarity = 'SSR';
+    else if (roll < 45) rarity = 'SR';
+    else                rarity = 'R';
+  }
+
+  let pool = CARD_DB.filter(c => c.rarity === rarity);
+  if (!pool.length && rarity === 'UR')  pool = CARD_DB.filter(c => c.rarity === 'SSR');
+  if (!pool.length && rarity === 'SSR') pool = CARD_DB.filter(c => c.rarity === 'SR');
+  if (!pool.length && rarity === 'SR')  pool = CARD_DB.filter(c => c.rarity === 'R');
+  if (!pool.length) pool = CARD_DB;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+
+// ── 重置卡包狀態 ──
+function _resetPackState() {
+  isOpening = false;
+  _pendingCard = null;
+  const box = document.getElementById('packBox');
+  if (box) {
+    box.classList.remove('shaking');
+    box.style.pointerEvents = '';
+  }
+}
+
+function openCardPack() {
+  if (!_currentStuId) {
+    toast('請先以學生帳號登入', 'err');
+    return;
+  }
+  _resetPackState();
+  // 讀取並顯示目前的保底進度
+  dbGet('students/' + _currentStuId).then(d => {
+    const pityEl = document.getElementById('pityDisplay');
+    if (pityEl) pityEl.textContent = `SSR 保底進度：${d?.pityCount || 0}/10`;
+  });
+  document.getElementById('packWrap').style.display = 'flex';
+  document.getElementById('cardRevealWrap').classList.remove('on');
+  document.getElementById('cardOverlay').classList.add('on');
+}
+
+function closeCardOverlay() {
+  if (isOpening) return;
+  _resetPackState();
+  document.getElementById('cardOverlay').classList.remove('on');
+}
+
+async function triggerPackOpen() {
+  if (isOpening || !_currentStuId) return;
+
+  const box = document.getElementById('packBox');
+  box.style.pointerEvents = 'none';
+
+  try {
+    const sysEnabled = await Promise.race([
+      dbGet('cardSystemEnabled'),
+      new Promise(r => setTimeout(() => r(null), 2000))
+    ]);
+    if (sysEnabled === false) {
+      toast('🔒 抽卡系統目前已關閉', 'err');
+      box.style.pointerEvents = '';
+      return;
+    }
+
+    const d = await dbGet('students/' + _currentStuId);
+    const pts = Number(d && d.points != null ? d.points : 0);
+    if (pts < 1) {
+      toast('⭐ 點數不足（目前 ' + pts + ' 點）', 'err');
+      box.style.pointerEvents = '';
+      return;
+    }
+
+    let pity = Number(d?.pityCount || 0);
+    isOpening = true;
+    box.classList.add('shaking');
+
+    const card = drawCard(pity);
+    _pendingCard = card;
+
+    // 若抽到 SSR 或 UR，保底歸零；否則 +1
+    const newPity = (card.rarity === 'SSR' || card.rarity === 'UR') ? 0 : pity + 1;
+    const lk = Date.now() + '';
+    
+    await dbUpd('students/' + _currentStuId, {
+      points: pts - 1,
+      pityCount: newPity,
+      ['log/' + lk]: { time: now(), action: '開啟卡包', reason: '抽到 ' + card.rarity + ' ' + card.name, teacher: '系統', delta: -1 }
+    });
+
+    setTimeout(function() {
+      document.getElementById('packWrap').style.display = 'none';
+      revealCard(card);
+      // 更新畫面上的保底數字
+      const pityEl = document.getElementById('pityDisplay');
+      if (pityEl) pityEl.textContent = `SSR 保底進度：${newPity}/10`;
+    }, 1400);
+
+  } catch(e) {
+    toast('抽卡失敗，請重試', 'err');
+    _resetPackState();
+  }
+}
+
+function revealCard(card) {
+  var rarityColors = { R: '#3498DB', SR: '#9B59B6', SSR: '#D4AF37', UR: '#FF6B6B' };
+  var rarityGlow   = { R: '', SR: '', SSR: '✨ SSR ✨', UR: '🌟 UR 🌟' };
+
+  document.getElementById('cardRevealImg').src = card.img;
+  document.getElementById('cardRevealBadge').textContent = card.rarity;
+  document.getElementById('cardRevealName').textContent = card.name;
+  document.getElementById('cardRevealTitle').textContent = card.title;
+  document.getElementById('cardRevealRarity').textContent = rarityGlow[card.rarity] || card.rarity;
+  document.getElementById('cardRevealRarity').style.color = rarityColors[card.rarity] || '#fff';
+
+  var card3d = document.getElementById('card3d');
+  card3d.className = 'card-3d rarity-' + card.rarity;
+
+  var msg = card.rarity === 'UR'  ? '🎉 恭喜！超稀有 UR 卡！' :
+            card.rarity === 'SSR' ? '✨ 太棒了！SSR 稀有卡！' :
+            card.rarity === 'SR'  ? '👍 SR 卡，不錯喔！' : '';
+  document.getElementById('cardRevealMsg').textContent = msg;
+  document.getElementById('cardRevealWrap').classList.add('on');
+}
+
+async function collectCard() {
+  if (!_pendingCard || !_currentStuId) {
+    _resetPackState();
+    document.getElementById('cardOverlay').classList.remove('on');
+    return;
+  }
+  var card = _pendingCard;
+  try {
+    var invPath = 'students/' + _currentStuId + '/inventory/' + card.id;
+    var cur = (await dbGet(invPath)) || 0;
+    await dbSet(invPath, cur + 1);
+    
+    // 標記為新卡，用於顯示 NEW 標籤
+    await dbSet(`students/${_currentStuId}/newFlags/${card.id}`, true);
+
+    toast('已收下 ' + card.rarity + ' ' + card.name + '！', 'ok');
+  } catch(e) {
+    toast('儲存失敗，請重試', 'err');
   } finally {
     _resetPackState();
     document.getElementById('cardOverlay').classList.remove('on');
@@ -3774,25 +3951,47 @@ async function renderBag() {
   }
 
   // 卡牌格
+// 卡牌格
   const grid = document.getElementById('bagCardGrid');
+  const newFlags = stuData?.newFlags || {}; // 讀取 NEW 旗標
   grid.innerHTML = '';
   CARD_DB.forEach(card => {
     const count = inv[card.id] || 0;
     const div = document.createElement('div');
     div.className = 'card-thumb' + (count===0 ? ' empty-slot' : '');
     if (count > 0) {
+      const isNew = newFlags[card.id] === true;
       div.innerHTML = `
+        ${isNew ? '<div class="new-badge">NEW!</div>' : ''}
         <img src="${card.img}" alt="${card.name}" onerror="this.parentNode.classList.add('empty-slot');this.remove()">
         <div class="ct-rarity ct-rarity-${card.rarity}">${card.rarity}</div>
         <div class="ct-name">${card.name}</div>
         ${count>1 ? `<div class="ct-count">×${count}</div>` : ''}`;
+      div.onclick = () => showCardDetailPop(card); // 點擊放大並消除 NEW
     } else {
       div.innerHTML = '🂠';
       div.title = '尚未獲得';
     }
     grid.appendChild(div);
   });
+}
 
+// 點擊放大檢視卡片 (並消除 NEW 紅點)
+function showCardDetailPop(card) {
+  const overlay = document.getElementById('cardDetailOverlay');
+  const img = document.getElementById('detailCardImg');
+  const container = document.getElementById('detailCardElement');
+  
+  img.src = card.img;
+  container.className = 'detail-card rarity-' + card.rarity;
+  overlay.classList.add('on');
+  overlay.style.display = 'flex';
+
+  // 點擊後消除 Firebase 中的 NEW 旗標，並重新整理背景的卡簿
+  dbSet(`students/${_currentStuId}/newFlags/${card.id}`, null).then(() => {
+    renderBag(); 
+  });
+}
   // 羈絆列表（動態生成）
   const bondList = document.getElementById('bagBondList');
   bondList.innerHTML = '';
