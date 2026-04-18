@@ -550,6 +550,59 @@ select:focus{border-color:var(--gold)}
   font-size:28px;color:var(--tx3);
 }
 
+/* ── 卡片放大 Overlay ── */
+#cardZoomOverlay{
+  display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;
+  background:rgba(0,0,0,.88);z-index:10010;
+  align-items:center;justify-content:center;
+  flex-direction:column;gap:16px;
+  padding:20px;
+}
+#cardZoomOverlay.on{display:flex}
+
+.zoom-card-wrap{
+  position:relative;
+  width:min(320px, 72vw);
+  animation:cardPopIn .4s cubic-bezier(.17,.67,.35,1.25) forwards;
+}
+.zoom-card-img{
+  width:100%;border-radius:20px;
+  box-shadow:0 0 60px rgba(0,0,0,.9),0 20px 60px rgba(0,0,0,.8);
+  display:block;
+}
+.zoom-card-badge{
+  position:absolute;top:12px;left:12px;
+  font-size:14px;font-weight:bold;padding:4px 12px;border-radius:20px;
+}
+.zoom-card-new{
+  position:absolute;top:12px;right:12px;
+}
+.zoom-info-bar{
+  width:min(320px, 72vw);
+  background:rgba(255,255,255,.06);
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:14px;padding:12px 16px;
+  text-align:center;
+}
+.zoom-char-name{font-size:22px;font-weight:bold;color:#fff;margin-bottom:2px}
+.zoom-char-title{font-size:13px;color:rgba(255,255,255,.6);margin-bottom:8px}
+.zoom-count-badge{
+  display:inline-block;background:rgba(212,175,55,.2);
+  border:1px solid var(--gold-d);border-radius:20px;
+  padding:3px 14px;font-size:12px;color:var(--gold);
+}
+.zoom-close-hint{font-size:12px;color:rgba(255,255,255,.35);margin-top:4px}
+
+/* SSR/UR 放大光暈 */
+.zoom-card-wrap.rarity-SSR .zoom-card-img{
+  box-shadow:0 0 60px rgba(212,175,55,.6),0 0 120px rgba(212,175,55,.3),0 20px 60px rgba(0,0,0,.8);
+}
+.zoom-card-wrap.rarity-UR .zoom-card-img{
+  box-shadow:0 0 80px rgba(255,100,100,.7),0 0 160px rgba(255,215,0,.4),0 20px 60px rgba(0,0,0,.8);
+  animation:cardPopIn .4s cubic-bezier(.17,.67,.35,1.25) forwards, urGlow 2s infinite alternate;
+}
+.zoom-card-wrap.rarity-UR{animation:none}
+
 .bond-item{
   background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;
   padding:14px;margin-bottom:10px;
@@ -1064,6 +1117,23 @@ select:focus{border-color:var(--gold)}
   </div>
 </div>
 
+<!-- ══ 卡片放大 Overlay ══ -->
+<div id="cardZoomOverlay" onclick="closeCardZoom()">
+  <div class="zoom-card-wrap" id="zoomCardWrap">
+    <img id="zoomCardImg" class="zoom-card-img" src="" alt="">
+    <div class="zoom-card-badge" id="zoomCardBadge"></div>
+    <div class="zoom-card-new" id="zoomCardNew" style="display:none">
+      <div class="card-new-badge" style="position:static">NEW</div>
+    </div>
+  </div>
+  <div class="zoom-info-bar">
+    <div class="zoom-char-name" id="zoomCharName"></div>
+    <div class="zoom-char-title" id="zoomCharTitle"></div>
+    <div class="zoom-count-badge" id="zoomCountBadge"></div>
+  </div>
+  <div class="zoom-close-hint">點擊任意處關閉</div>
+</div>
+
 <div id="stuCalOverlay" onclick="if(event.target===this)closeStuCal()">
   <div class="stu-cal-box">
     <button class="stu-cal-close" onclick="closeStuCal()">✕</button>
@@ -1136,21 +1206,14 @@ select:focus{border-color:var(--gold)}
     </div>
   </div>
   <div class="dp-sec">
-    <div class="dp-sec-t">🏵️ 羈絆勳章</div>
-    <div style="background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;padding:12px 14px;margin-bottom:10px">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
-        <span style="font-size:24px">🏵️</span>
-        <span style="font-size:20px;font-weight:bold;color:#c89eff" id="dpBondMedalN">0</span>
-        <span style="font-size:12px;color:rgba(200,150,255,.7)">枚未核銷勳章</span>
-      </div>
-      <div id="dpBadgeArea" style="min-height:20px">
-        <div style="font-size:12px;color:var(--tx3);font-style:italic">尚無徽章</div>
-      </div>
+    <div class="dp-sec-t">🏵️ 羈絆徽章
+      <span style="font-weight:normal;color:rgba(200,150,255,.8);margin-left:6px">待核銷 <b id="dpBondMedalN" style="color:#c89eff">0</b> 枚</span>
     </div>
-    <div class="row">
-      <button class="btn s" onclick="chgBondMedal(1)" style="border-color:#7b2ff7;color:#c89eff;flex:1">＋ 加勳章</button>
-      <button class="btn d" onclick="chgBondMedal(-1)" style="flex:1">－ 扣勳章</button>
-      <button class="btn" onclick="teacherRedeemBondMedal()" style="flex:2;border-color:#7b2ff7;color:#c89eff;font-weight:bold">🎁 核銷兌獎</button>
+    <div style="font-size:11px;color:rgba(200,150,255,.6);margin-bottom:8px;padding:4px 8px;background:rgba(123,47,247,.1);border-radius:6px;border:1px solid rgba(123,47,247,.3)">
+      💡 點擊下方徽章可直接核銷兌獎
+    </div>
+    <div id="dpBadgeArea" style="min-height:28px">
+      <div style="font-size:12px;color:var(--tx3);font-style:italic">尚無徽章記錄</div>
     </div>
   </div>
   <div class="dp-sec">
@@ -3829,6 +3892,52 @@ async function clearNewCard(cardId) {
     setTimeout(function() { if (badge.parentNode) badge.parentNode.removeChild(badge); }, 200);
   }
 }
+// ── 卡片放大預覽 ──
+function openCardZoom(card, count, isNew) {
+  const rarityBadgeBg = {
+    R:   'rgba(52,152,219,.85)',
+    SR:  'rgba(155,89,182,.85)',
+    SSR: 'rgba(212,175,55,.92)',
+    UR:  'linear-gradient(135deg,#ff6b6b,#ffd700)',
+  };
+  const rarityBadgeColor = { R:'#fff', SR:'#fff', SSR:'#000', UR:'#000' };
+
+  // 卡片圖片
+  document.getElementById('zoomCardImg').src = card.img;
+
+  // 稀有度徽章
+  const badge = document.getElementById('zoomCardBadge');
+  badge.textContent = card.rarity;
+  badge.style.background = rarityBadgeBg[card.rarity] || 'rgba(100,100,100,.8)';
+  badge.style.color = rarityBadgeColor[card.rarity] || '#fff';
+
+  // NEW 標記
+  document.getElementById('zoomCardNew').style.display = isNew ? '' : 'none';
+
+  // 資訊列
+  document.getElementById('zoomCharName').textContent = card.name;
+  document.getElementById('zoomCharTitle').textContent = card.title;
+  document.getElementById('zoomCountBadge').textContent =
+    count > 1 ? `擁有 ${count} 張` : '擁有 1 張';
+
+  // 設定 rarity class 給光暈效果
+  const wrap = document.getElementById('zoomCardWrap');
+  wrap.className = 'zoom-card-wrap rarity-' + card.rarity;
+
+  // 強制重播 pop-in 動畫
+  void wrap.offsetWidth;
+  wrap.style.animation = 'none';
+  void wrap.offsetWidth;
+  wrap.style.animation = '';
+
+  document.getElementById('cardZoomOverlay').classList.add('on');
+}
+
+function closeCardZoom() {
+  document.getElementById('cardZoomOverlay').classList.remove('on');
+}
+
+
 
 
 // ── 背包 ──
@@ -3867,19 +3976,48 @@ async function renderBag() {
   // 更新勳章數量文字
   const medalCountEl = document.getElementById('bagMedalCount');
   const medalBtn = document.getElementById('bagMedalRedeemBtn');
-  if (medalCountEl) medalCountEl.textContent = `（${bondMedals} 枚）`;
-  if (medalBtn) medalBtn.disabled = bondMedals < 1;
-  // 渲染徽章收藏格子（已兌換的羈絆）
+  // 讀取徽章資訊（待核銷 + 已核銷）
+  const allBadgesData = stuData?.unredeemedBadges || {};
+  const pendingBadges  = Object.entries(allBadgesData).filter(([,b])=>!b.redeemed);
+  const redeemedBadges = Object.entries(allBadgesData).filter(([,b])=> b.redeemed);
+  const pendingCount = pendingBadges.length;
+
+  if (medalCountEl) medalCountEl.textContent = `（待核銷 ${pendingCount} 枚）`;
+  if (medalBtn) medalBtn.disabled = pendingCount < 1;
+
+  // 渲染徽章收藏格子
   const badgeCol = document.getElementById('bagBadgeCollection');
+  const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
   if (badgeCol) {
-    if (!earnedBonds.length) {
-      badgeCol.innerHTML = '<div style="font-size:12px;color:rgba(200,150,255,.5);padding:8px 0">尚未獲得任何羈絆勳章</div>';
+    if (!Object.keys(allBadgesData).length) {
+      badgeCol.innerHTML = '<div style="font-size:12px;color:rgba(200,150,255,.5);padding:8px 0">尚未獲得任何羈絆徽章</div>';
     } else {
-      badgeCol.innerHTML = earnedBonds.map(bondId => {
-        const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
-        if (!bond) return '';
-        return renderBadgeHTML(bond, 1);
-      }).join('');
+      let bHtml = '';
+      if (pendingBadges.length) {
+        bHtml += '<div style="font-size:10px;color:#c89eff;margin-bottom:4px">⏳ 待核銷</div><div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px">';
+        pendingBadges.forEach(([,b]) => {
+          const info = TIER_INFO[b.tier]||TIER_INFO.bronze;
+          bHtml += `<div class="badge-tile ${info.tierClass}" style="min-width:68px;max-width:78px;padding:6px 4px">
+            <div class="badge-circle" style="width:44px;height:44px;font-size:18px">${iconMap[b.tier]||'🏵️'}</div>
+            <div class="badge-name" style="font-size:9px">${b.bondName}</div>
+            <div class="badge-tier" style="font-size:9px">${info.name}</div>
+          </div>`;
+        });
+        bHtml += '</div>';
+      }
+      if (redeemedBadges.length) {
+        bHtml += '<div style="font-size:10px;color:var(--green);margin-bottom:4px">✅ 已核銷</div><div style="display:flex;flex-wrap:wrap;gap:6px">';
+        redeemedBadges.forEach(([,b]) => {
+          const info = TIER_INFO[b.tier]||TIER_INFO.bronze;
+          bHtml += `<div class="badge-tile ${info.tierClass}" style="min-width:68px;max-width:78px;padding:6px 4px;opacity:.4">
+            <div class="badge-circle" style="width:44px;height:44px;font-size:18px">${iconMap[b.tier]||'🏵️'}</div>
+            <div class="badge-name" style="font-size:9px">${b.bondName}</div>
+            <div class="badge-tier" style="font-size:9px">${info.name}</div>
+          </div>`;
+        });
+        bHtml += '</div>';
+      }
+      badgeCol.innerHTML = bHtml;
     }
   }
 
@@ -3902,11 +4040,12 @@ async function renderBag() {
         <div class="ct-name">${card.name}</div>
         ${count>1 ? `<div class="ct-count">×${count}</div>` : ''}
         ${isNew ? `<div class="card-new-badge" id="new-badge-${card.id}">NEW</div>` : ''}`;
-      // 點擊卡片清除 NEW 標記
-      if (isNew) {
-        div.addEventListener('click', function() { clearNewCard(card.id); }, { once: true });
-        div.style.cursor = 'pointer';
-      }
+      // 所有擁有的卡片都可點擊放大，同時清除 NEW 標記
+      div.style.cursor = 'pointer';
+      div.addEventListener('click', function() {
+        if (isNew) clearNewCard(card.id);
+        openCardZoom(card, count, isNew);
+      });
     } else {
       div.innerHTML = '🂠';
       div.title = '尚未獲得';
@@ -4020,11 +4159,17 @@ async function redeemBond(bondId) {
       // 發放羈絆勳章（統一獎勵）
       const d = await dbGet(`students/${_currentStuId}`);
       const stuName = byId(_currentStuId)?.name || '';
-      upd[`${ROOT}/students/${_currentStuId}/bondMedals`] = (d?.bondMedals||0) + medalCount;
-      upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
-        time:t, action:'羈絆兌換', reason:`「${bond.name}」獲得 ${medalCount} 枚羈絆勳章🏵️`, teacher:'系統', delta:0
-      };
+      // 記錄羈絆已兌換
       upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
+      // 存入「待核銷徽章」，key = bondId，value = 徽章資訊
+      upd[`${ROOT}/students/${_currentStuId}/unredeemedBadges/${bondId}`] = {
+        bondId, bondName: bond.name, tier: bondTier,
+        tierName: tierInfo.name, medalCount, claimedAt: t,
+        redeemed: false
+      };
+      upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
+        time:t, action:'羈絆兌換', reason:`「${bond.name}」獲得 ${tierInfo.name}🏵️，待老師核銷`, teacher:'系統', delta:0
+      };
 
       await db.ref('/').update(upd);
       await sendNotifToStudent(_currentStuId, stuName,
@@ -4380,24 +4525,32 @@ function getBondMedalCount(bond) {
 // ════════════════════════════════════════════════════════════════
 
 // 學生端：找老師兌獎對話框
-function openMedalRedeemDlg() {
+async function openMedalRedeemDlg() {
   if (!_currentStuId) return;
-  openDlg('🏵️ 找老師兌換獎品',
-    `<div style="text-align:center;padding:8px 0">
-       <div style="font-size:48px;margin-bottom:8px">🏵️</div>
-       <div style="font-size:14px;color:var(--tx);margin-bottom:12px;line-height:1.6">
-         請出示此畫面給老師<br>老師將幫你核銷勳章、兌換獎品
-       </div>
-       <div id="medalRedeemCount" style="font-size:22px;font-weight:bold;color:#c89eff;margin-bottom:8px">載入中…</div>
-       <div style="font-size:12px;color:var(--tx3)">每位老師提供的獎品可能不同<br>請直接詢問老師！</div>
-     </div>`,
+  const d = await dbGet(`students/${_currentStuId}`);
+  const badges = d?.unredeemedBadges || {};
+  const pending = Object.entries(badges).filter(([,b])=>!b.redeemed);
+  const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+
+  const badgesHtml = pending.length ? pending.map(([,b]) => {
+    const info = TIER_INFO[b.tier] || TIER_INFO.bronze;
+    return `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(123,47,247,.1);border:1px solid rgba(123,47,247,.3);border-radius:10px;margin-bottom:6px">
+      <span style="font-size:22px">${iconMap[b.tier]||'🏵️'}</span>
+      <div>
+        <div style="font-size:13px;font-weight:bold;color:#e0c0ff">${b.bondName}</div>
+        <div style="font-size:11px;color:#a080d0">${info.name}</div>
+      </div>
+    </div>`;
+  }).join('') : '<div style="color:var(--tx3);font-size:13px;text-align:center;padding:12px 0">目前沒有待核銷徽章</div>';
+
+  openDlg('🏵️ 出示給老師核銷',
+    `<div style="text-align:center;margin-bottom:12px">
+       <div style="font-size:13px;color:var(--tx2);line-height:1.6">請出示此畫面給老師<br>老師將核銷對應徽章並給予獎品</div>
+     </div>
+     <div>${badgesHtml}</div>
+     <div style="font-size:11px;color:var(--tx3);text-align:center;margin-top:8px">不同徽章對應不同獎品，請詢問老師</div>`,
     [{label:'關閉',fn:()=>true}]
   );
-  // 顯示勳章數量
-  dbGet(`students/${_currentStuId}`).then(d => {
-    const el = document.getElementById('medalRedeemCount');
-    if (el) el.textContent = `持有 ${d?.bondMedals||0} 枚羈絆勳章`;
-  });
 }
 
 // 老師端：加減羈絆勳章
@@ -4442,65 +4595,115 @@ async function chgBondMedal(delta) {
 }
 
 // 老師端：核銷兌獎（消耗勳章 + 記錄獎品）
-async function teacherRedeemBondMedal() {
-  if (!curStu) return;
-  const d = await dbGet(`students/${curStu.id}`);
-  const cur = d?.bondMedals || 0;
-  if (cur < 1) { toast(`${curStu.name} 目前沒有羈絆勳章`, 'err'); return; }
+// 老師直接點徽章核銷
+async function teacherRedeemSingleBadge(stuId, stuName, bondId, badgeInfo) {
+  const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+  const icon = iconMap[badgeInfo.tier] || '🏵️';
 
-  openDlg(`🎁 核銷羈絆勳章 — ${curStu.name}`,
-    `<div style="text-align:center;margin-bottom:14px">
-       <div style="font-size:32px">🏵️ × <b style="color:#c89eff;font-size:28px">${cur}</b></div>
-       <div style="font-size:12px;color:var(--tx3);margin-top:4px">現有羈絆勳章</div>
+  openDlg(`🎁 核銷徽章 — ${stuName}`,
+    `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border-radius:12px;margin-bottom:14px">
+       <div class="badge-circle badge-${badgeInfo.tier}" style="width:52px;height:52px;font-size:22px;flex-shrink:0">${icon}</div>
+       <div>
+         <div style="font-size:15px;font-weight:bold;color:#e0c0ff">${badgeInfo.bondName}</div>
+         <div style="font-size:12px;color:#a080d0">${badgeInfo.tierName}</div>
+         <div style="font-size:11px;color:rgba(200,150,255,.6);margin-top:2px">兌換於 ${badgeInfo.claimedAt?.slice(0,10)||'—'}</div>
+       </div>
      </div>
-     <div class="dlg-label">消耗勳章數量</div>
-     <input class="dlg-input" type="number" id="redeemN" value="1" min="1" max="${cur}">
-     <div class="dlg-label">兌換的獎品（記錄用）</div>
-     <input class="dlg-input" type="text" id="redeemPrize" placeholder="例：手搖飲一杯、泡麵、星巴克…">
-     <div style="font-size:11px;color:var(--tx3);margin-top:-8px;margin-bottom:8px">此欄位僅供記錄，實際獎品由老師自行決定</div>`,
+     <div class="dlg-label">給予的獎品（記錄用）</div>
+     <input class="dlg-input" type="text" id="badgePrize" placeholder="例：星巴克、手搖飲、泡麵…">
+     <div style="font-size:11px;color:var(--tx3);margin-top:-8px;margin-bottom:4px">填寫後按確認，此徽章將標記為已核銷</div>`,
     [{label:'確認核銷', cls:'ok', fn: async () => {
-      const n = Math.min(parseInt(document.getElementById('redeemN').value)||1, cur);
-      const prize = document.getElementById('redeemPrize').value.trim() || '獎品';
-      if (n < 1) { toast('請輸入正確數量', 'err'); return false; }
+      const prize = document.getElementById('badgePrize').value.trim() || '獎品';
       const lk = Date.now()+'';
       const t = now();
-      await dbUpd(`students/${curStu.id}`, {
-        bondMedals: cur - n,
-        [`log/${lk}`]: {time:t, action:`🏵️ 羈絆勳章核銷 -${n} 枚`, reason:`兌換：${prize}（核銷老師：${me.name}）`, teacher:me.name, delta:0}
+      // 標記為已核銷（不刪除，保留記錄）
+      await db.ref(`${ROOT}/students/${stuId}/unredeemedBadges/${bondId}`).update({
+        redeemed: true, redeemedAt: t, redeemedBy: me.name, prize
       });
-      await sendNotifToStudent(curStu.id, curStu.name,
-        `🏵️ ${me.name} 老師已幫你核銷 ${n} 枚羈絆勳章，兌換獎品：${prize}`, 'notice');
-      toast(`核銷成功！${curStu.name} 剩餘 ${cur-n} 枚勳章`, 'ok');
+      await dbUpd(`students/${stuId}`, {
+        [`log/${lk}`]: {time:t, action:`🏵️ 徽章核銷 ${badgeInfo.tierName}「${badgeInfo.bondName}」`, reason:`獎品：${prize}（${me.name} 老師核銷）`, teacher:me.name, delta:0}
+      });
+      await sendNotifToStudent(stuId, stuName,
+        `🏵️ ${me.name} 老師已核銷你的「${badgeInfo.bondName}」${badgeInfo.tierName}，兌換獎品：${prize}！`, 'notice');
+      toast(`✅ 核銷成功！`, 'ok');
       openDetail(curStu); return true;
     }}, {label:'取消', fn:()=>true}]);
 }
 
+async function teacherRedeemBondMedal() {
+  if (!curStu) return;
+  const d = await dbGet(`students/${curStu.id}`);
+  const badges = d?.unredeemedBadges || {};
+  const pending = Object.entries(badges).filter(([,b])=>!b.redeemed);
+  if (!pending.length) { toast(`${curStu.name} 目前沒有待核銷徽章`, 'err'); return; }
+  // 直接刷新 detail panel 的徽章區（已有按鈕可直接點）
+  toast('請點擊下方的徽章進行核銷', 'ok');
+}
+
 // openDetail 加載勳章數量（在 openDetail 函數末尾呼叫）
 function _updateDetailBondMedal(d) {
-  const el = document.getElementById('dpBondMedalN');
-  if (el) el.textContent = d?.bondMedals || 0;
-  // 在徽章展示區顯示已兌換的徽章
   const badgeArea = document.getElementById('dpBadgeArea');
   if (!badgeArea || !curStu) return;
-  const claimedBonds = d?.claimedBonds || {};
-  const bondIds = Object.keys(claimedBonds);
-  if (!bondIds.length) {
-    badgeArea.innerHTML = '<div style="font-size:12px;color:var(--tx3);font-style:italic">尚無徽章</div>';
+
+  const allBadges = d?.unredeemedBadges || {};
+  const entries = Object.entries(allBadges);
+
+  const pending  = entries.filter(([,b])=>!b.redeemed);
+  const redeemed = entries.filter(([,b])=> b.redeemed);
+
+  // 更新數字（待核銷數）
+  const el = document.getElementById('dpBondMedalN');
+  if (el) el.textContent = pending.length;
+
+  const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+
+  if (!entries.length) {
+    badgeArea.innerHTML = '<div style="font-size:12px;color:var(--tx3);font-style:italic;padding:4px 0">尚無徽章記錄</div>';
     return;
   }
-  badgeArea.innerHTML = '<div style="display:flex;flex-wrap:wrap;gap:6px">' +
-    bondIds.map(bondId => {
-      const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
-      if (!bond) return '';
-      const tier = getBondTier(bond);
-      const info = TIER_INFO[tier];
-      const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
-      return `<div class="badge-tile ${info.tierClass}" style="min-width:64px;max-width:72px;padding:6px 4px" title="${bond.name}">
-        <div class="badge-circle" style="width:44px;height:44px;font-size:18px">${iconMap[tier]}</div>
-        <div class="badge-name" style="font-size:9px">${bond.name}</div>
+
+  let html = '';
+
+  // 待核銷徽章（可點擊核銷）
+  if (pending.length) {
+    html += '<div style="font-size:10px;color:#c89eff;letter-spacing:1px;margin-bottom:6px">⏳ 待核銷</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">';
+    pending.forEach(([bondId, b]) => {
+      const info = TIER_INFO[b.tier] || TIER_INFO.bronze;
+      const icon = iconMap[b.tier] || '🏵️';
+      html += `<div onclick="teacherRedeemSingleBadge('${curStu.id}','${curStu.name}','${bondId}',${JSON.stringify(b).replace(/"/g,"'")})"
+        class="badge-tile ${info.tierClass}"
+        style="min-width:68px;max-width:80px;padding:7px 5px;cursor:pointer;position:relative;border:2px solid #7b2ff7"
+        title="點擊核銷「${b.bondName}」">
+        <div class="badge-circle" style="width:46px;height:46px;font-size:19px">${icon}</div>
+        <div class="badge-name" style="font-size:9px">${b.bondName}</div>
         <div class="badge-tier" style="font-size:9px">${info.name}</div>
+        <div style="position:absolute;top:-8px;right:-8px;background:#7b2ff7;color:#fff;font-size:9px;padding:2px 5px;border-radius:8px;font-weight:bold">核銷</div>
       </div>`;
-    }).join('') + '</div>';
+    });
+    html += '</div>';
+  }
+
+  // 已核銷徽章（灰色，顯示核銷資訊）
+  if (redeemed.length) {
+    html += '<div style="font-size:10px;color:var(--green);letter-spacing:1px;margin-bottom:6px">✅ 已核銷</div>';
+    html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    redeemed.forEach(([bondId, b]) => {
+      const info = TIER_INFO[b.tier] || TIER_INFO.bronze;
+      const icon = iconMap[b.tier] || '🏵️';
+      html += `<div class="badge-tile ${info.tierClass}"
+        style="min-width:68px;max-width:80px;padding:7px 5px;opacity:.45;position:relative"
+        title="已核銷：${b.prize||''}（${b.redeemedBy||''}）">
+        <div class="badge-circle" style="width:46px;height:46px;font-size:19px">${icon}</div>
+        <div class="badge-name" style="font-size:9px">${b.bondName}</div>
+        <div class="badge-tier" style="font-size:9px">${info.name}</div>
+        <div style="position:absolute;top:-6px;right:-6px;background:var(--green);color:#fff;font-size:9px;padding:2px 5px;border-radius:8px">✓</div>
+      </div>`;
+    });
+    html += '</div>';
+  }
+
+  badgeArea.innerHTML = html;
 }
 
 // 老師端：從「報表」頁查看全班勳章（加在 renderRpt 末尾呼叫）
@@ -4539,7 +4742,49 @@ async function loadBondMedalPanel() {
     return;
   }
 
-  list.innerHTML = withMedals.map(s => `
+  // 改為讀取 unredeemedBadges
+  const allData = await Promise.all(allStus.map(s => dbGet(`students/${s.id}/unredeemedBadges`)));
+  const withBadges = allStus
+    .map((s,i) => ({...s, badges: allData[i] || {}}))
+    .map(s => ({...s, pending: Object.entries(s.badges).filter(([,b])=>!b.redeemed)}))
+    .filter(s => s.pending.length > 0)
+    .sort((a,b) => b.pending.length - a.pending.length);
+
+  if (!withBadges.length) {
+    list.innerHTML = '<div class="empty" style="padding:20px">目前沒有學生有待核銷徽章</div>';
+    return;
+  }
+
+  const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+
+  list.innerHTML = withBadges.map(s => {
+    const badgesHtml = s.pending.map(([bondId, b]) => {
+      const info = TIER_INFO[b.tier] || TIER_INFO.bronze;
+      const icon = iconMap[b.tier] || '🏵️';
+      return `<div onclick="quickRedeemBadge('${s.id}','${s.name}','${bondId}',${JSON.stringify(b).replace(/"/g,"'")})"
+        class="badge-tile ${info.tierClass}"
+        style="min-width:64px;max-width:76px;padding:6px 4px;cursor:pointer;border:2px solid #7b2ff7;position:relative"
+        title="核銷「${b.bondName}」${info.name}">
+        <div class="badge-circle" style="width:42px;height:42px;font-size:17px">${icon}</div>
+        <div class="badge-name" style="font-size:8px">${b.bondName}</div>
+        <div class="badge-tier" style="font-size:8px">${info.name}</div>
+        <div style="position:absolute;top:-7px;right:-7px;background:#7b2ff7;color:#fff;font-size:8px;padding:1px 5px;border-radius:6px;font-weight:bold">點擊核銷</div>
+      </div>`;
+    }).join('');
+    return `<div class="medal-redeem-item has-medals" style="flex-direction:column;align-items:flex-start">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;width:100%">
+        <div class="mri-info">
+          <div class="mri-name">${s.name}</div>
+          <div class="mri-cls">${s.cls} · ${s.id}</div>
+        </div>
+        <div class="mri-count">待核銷 ${s.pending.length} 枚</div>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${badgesHtml}</div>
+    </div>`;
+  }).join('');
+  return; // early return, skip old code
+  // (legacy placeholder below — unreachable)
+  withMedals.map(s => `
     <div class="medal-redeem-item has-medals">
       <div class="mri-info">
         <div class="mri-name">${s.name}</div>
@@ -4556,30 +4801,35 @@ async function loadBondMedalPanel() {
     </div>`).join('');
 }
 
-async function quickRedeemMedal(stuId, stuName, curMedals) {
-  openDlg(`🎁 核銷羈絆勳章 — ${stuName}`,
-    `<div style="text-align:center;margin-bottom:14px">
-       <div style="font-size:32px">🏵️ × <b style="color:#c89eff;font-size:28px">${curMedals}</b></div>
-       <div style="font-size:12px;color:var(--tx3);margin-top:4px">現有羈絆勳章</div>
+async function quickRedeemBadge(stuId, stuName, bondId, badgeInfo) {
+  const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+  const icon = iconMap[badgeInfo.tier] || '🏵️';
+  const info = TIER_INFO[badgeInfo.tier] || TIER_INFO.bronze;
+
+  openDlg(`🎁 核銷徽章 — ${stuName}`,
+    `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border-radius:12px;margin-bottom:14px">
+       <div class="badge-circle ${info.tierClass}" style="width:52px;height:52px;font-size:22px;flex-shrink:0">${icon}</div>
+       <div>
+         <div style="font-size:15px;font-weight:bold;color:#e0c0ff">${badgeInfo.bondName}</div>
+         <div style="font-size:13px;color:#a080d0">${info.name}</div>
+       </div>
      </div>
-     <div class="dlg-label">消耗勳章數量</div>
-     <input class="dlg-input" type="number" id="qrN" value="1" min="1" max="${curMedals}">
-     <div class="dlg-label">兌換的獎品（記錄用）</div>
-     <input class="dlg-input" type="text" id="qrPrize" placeholder="例：手搖飲、泡麵、衛生紙…">`,
+     <div class="dlg-label">給予的獎品（記錄用）</div>
+     <input class="dlg-input" type="text" id="qrBadgePrize" placeholder="例：星巴克、手搖飲、泡麵…">`,
     [{label:'確認核銷', cls:'ok', fn: async () => {
-      const n = Math.min(parseInt(document.getElementById('qrN').value)||1, curMedals);
-      const prize = document.getElementById('qrPrize').value.trim() || '獎品';
+      const prize = document.getElementById('qrBadgePrize').value.trim() || '獎品';
       const lk = Date.now()+'';
-      const fresh = await dbGet(`students/${stuId}`);
-      const cur2 = fresh?.bondMedals || 0;
+      const t = now();
+      await db.ref(`${ROOT}/students/${stuId}/unredeemedBadges/${bondId}`).update({
+        redeemed: true, redeemedAt: t, redeemedBy: me.name, prize
+      });
       await dbUpd(`students/${stuId}`, {
-        bondMedals: Math.max(0, cur2 - n),
-        [`log/${lk}`]: {time:now(), action:`🏵️ 羈絆勳章核銷 -${n} 枚`, reason:`兌換：${prize}（核銷老師：${me.name}）`, teacher:me.name, delta:0}
+        [`log/${lk}`]: {time:t, action:`🏵️ 徽章核銷 ${info.name}「${badgeInfo.bondName}」`, reason:`獎品：${prize}（${me.name} 老師核銷）`, teacher:me.name, delta:0}
       });
       await db.ref(`${ROOT}/stuMsgs/${stuId}/${lk}_msg`).set({
-        from:me.name, content:`🏵️ ${me.name} 老師已幫你核銷 ${n} 枚羈絆勳章，兌換獎品：${prize}`, type:'notice', time:now(), read:false
+        from:me.name, content:`🏵️ ${me.name} 老師已核銷你的「${badgeInfo.bondName}」${info.name}，兌換獎品：${prize}！`, type:'notice', time:t, read:false
       });
-      toast(`核銷成功！${stuName} 剩餘 ${Math.max(0,cur2-n)} 枚勳章`, 'ok');
+      toast(`✅ 核銷成功！`, 'ok');
       loadBondMedalPanel();
       return true;
     }}, {label:'取消', fn:()=>true}]);
@@ -4587,6 +4837,7 @@ async function quickRedeemMedal(stuId, stuName, curMedals) {
 
 window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
+    closeCardZoom();
     closeBag();
     if (!isOpening) closeCardOverlay();
   }
