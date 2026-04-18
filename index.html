@@ -243,7 +243,7 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
 .ep-info{font-size:22px;opacity:.85;margin-bottom:5px}
 .ep-close{margin-top:36px;padding:13px 38px;background:#fff;color:#1a9e50;border:none;border-radius:30px;font-size:17px;font-weight:bold;cursor:pointer}
 
-#dlgOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:1000;align-items:center;justify-content:center}
+#dlgOverlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.72);z-index:10005;align-items:center;justify-content:center}
 #dlgOverlay.on{display:flex}
 .dlg{background:var(--bg2);border:1px solid var(--bdr);border-radius:15px;padding:28px;width:380px;max-width:92vw;box-shadow:0 0 20px rgba(212,175,55,.15),0 8px 30px rgba(0,0,0,.6);position:relative}
 .dlg::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--gold),transparent);border-radius:15px 15px 0 0}
@@ -397,16 +397,15 @@ select:focus{border-color:var(--gold)}
 
 .card-3d{
   width:300px;height:420px;
-  transform-style:preserve-3d;
-  animation:cardFlipIn .7s ease forwards;
   border-radius:22px;
   position:relative;
+  animation:cardPopIn .55s cubic-bezier(.17,.67,.35,1.3) forwards;
 }
-@keyframes cardFlipIn{
-  0%{transform:rotateY(180deg) scale(.5);opacity:0}
-  60%{transform:rotateY(-10deg) scale(1.05);opacity:1}
-  80%{transform:rotateY(5deg) scale(1.02)}
-  100%{transform:rotateY(0deg) scale(1);opacity:1}
+@keyframes cardPopIn{
+  0%  {transform:scale(.2) translateY(40px);opacity:0;filter:brightness(3)}
+  50% {transform:scale(1.08) translateY(-8px);opacity:1;filter:brightness(1.4)}
+  75% {transform:scale(.97) translateY(2px);filter:brightness(1)}
+  100%{transform:scale(1) translateY(0);opacity:1;filter:brightness(1)}
 }
 .card-inner{
   width:100%;height:100%;border-radius:22px;overflow:hidden;
@@ -448,6 +447,45 @@ select:focus{border-color:var(--gold)}
 }
 
 .pack-instruction{font-size:14px;color:rgba(255,255,255,.7);text-align:center}
+
+/* ── 保底進度條 ── */
+.pity-bar-wrap{
+  width:240px;background:rgba(255,255,255,.08);border-radius:20px;
+  padding:6px 14px;border:1px solid rgba(255,215,0,.2);
+}
+.pity-label{font-size:11px;color:rgba(255,255,255,.6);margin-bottom:4px;display:flex;justify-content:space-between}
+.pity-label span{color:var(--gold);font-weight:bold}
+.pity-track{height:6px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden}
+.pity-fill{height:100%;border-radius:3px;transition:width .4s ease;
+  background:linear-gradient(90deg,#a0a0ff,#ffd700)}
+.pity-fill.danger{background:linear-gradient(90deg,#ff6060,#ffd700);animation:pityPulse .8s ease-in-out infinite}
+@keyframes pityPulse{0%,100%{opacity:1}50%{opacity:.6}}
+
+/* ── NEW 標籤 ── */
+.card-new-badge{
+  position:absolute;top:-6px;right:-6px;
+  background:#ff3333;color:#fff;font-size:10px;font-weight:bold;
+  padding:2px 7px;border-radius:10px;
+  box-shadow:0 0 8px rgba(255,50,50,.7);
+  animation:newBlink 1s ease-in-out infinite;
+  z-index:2;pointer-events:none;
+}
+@keyframes newBlink{0%,100%{transform:scale(1)}50%{transform:scale(1.15)}}
+
+/* SSR/UR 揭曉光束 */
+.card-reveal-backdrop{
+  position:absolute;inset:0;pointer-events:none;border-radius:22px;
+  opacity:0;transition:opacity .3s;
+}
+.rarity-SSR .card-reveal-backdrop{
+  background:radial-gradient(circle,rgba(255,215,0,.35) 0%,transparent 70%);
+  animation:ssrBeam .6s ease-out .1s forwards;
+}
+.rarity-UR .card-reveal-backdrop{
+  background:radial-gradient(circle,rgba(255,100,100,.5) 0%,rgba(255,215,0,.3) 40%,transparent 70%);
+  animation:ssrBeam .5s ease-out .05s forwards;
+}
+@keyframes ssrBeam{0%{opacity:0;transform:scale(.8)}60%{opacity:1;transform:scale(1.1)}100%{opacity:.8;transform:scale(1)}}
 .pack-cost-tag{
   background:rgba(212,175,55,.15);border:1px solid var(--gold-d);
   border-radius:20px;padding:6px 16px;font-size:13px;color:var(--gold);
@@ -966,6 +1004,16 @@ select:focus{border-color:var(--gold)}
     <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px">消耗 1 顆 ⭐ 開啟卡包</div>
     <div class="pack-box" id="packBox" onclick="triggerPackOpen()">🎴</div>
     <div class="pack-instruction">點擊卡包開啟</div>
+    <!-- 保底進度條 -->
+    <div class="pity-bar-wrap" id="pityBarWrap">
+      <div class="pity-label">
+        <span>SSR 保底進度</span>
+        <span id="pityText">0 / 10</span>
+      </div>
+      <div class="pity-track">
+        <div class="pity-fill" id="pityFill" style="width:0%"></div>
+      </div>
+    </div>
     <div style="display:flex;gap:10px;margin-top:8px">
       <button class="btn" onclick="closeCardOverlay()" style="border-color:rgba(255,255,255,.3);color:rgba(255,255,255,.6)">✕ 取消</button>
     </div>
@@ -975,6 +1023,7 @@ select:focus{border-color:var(--gold)}
     <div class="card-3d" id="card3d">
       <div class="card-inner" id="cardInner">
         <img id="cardRevealImg" src="" alt="card">
+        <div class="card-reveal-backdrop"></div>
         <div class="card-rarity-badge" id="cardRevealBadge"></div>
         <div class="card-name-bar">
           <div class="card-char-name" id="cardRevealName"></div>
@@ -3571,11 +3620,35 @@ generateDynamicBonds();
 let isOpening = false;
 let _pendingCard = null;
 
-// ── 抽卡邏輯：動態卡池，未來新增卡片自動納入 ──
-function drawCard() {
+// ══════════════════════════════════════════════════════════════
+// 保底機制（Pity System）：連續未抽中 SSR/UR 達 10 次強制給出
+// Firebase 路徑：students/{id}/pityCount
+// ══════════════════════════════════════════════════════════════
+const PITY_THRESHOLD = 10;
+
+// 更新保底進度條 UI
+function _updatePityUI(count) {
+  const fill = document.getElementById('pityFill');
+  const text = document.getElementById('pityText');
+  if (!fill || !text) return;
+  const pct = Math.min(100, (count / PITY_THRESHOLD) * 100);
+  fill.style.width = pct + '%';
+  fill.className = 'pity-fill' + (count >= 8 ? ' danger' : '');
+  text.textContent = count + ' / ' + PITY_THRESHOLD;
+}
+
+// ── 抽卡邏輯：動態卡池 + 保底機制 ──
+function drawCard(pityCount) {
+  // 達到保底門檻：強制 SSR（從所有 SSR+UR 中隨機）
+  if (pityCount >= PITY_THRESHOLD) {
+    let pool = CARD_DB.filter(c => c.rarity === 'SSR' || c.rarity === 'UR');
+    if (!pool.length) pool = CARD_DB;
+    return { card: pool[Math.floor(Math.random() * pool.length)], pityTriggered: true };
+  }
+
   const roll = Math.random() * 100;
   const thUR  = RARITY_WEIGHT.UR;
-  const thSSR = thUR  + RARITY_WEIGHT.SSR;
+  const thSSR = thUR + RARITY_WEIGHT.SSR;
   const thSR  = thSSR + RARITY_WEIGHT.SR;
 
   let rarity;
@@ -3584,32 +3657,29 @@ function drawCard() {
   else if (roll < thSR)  rarity = 'SR';
   else                   rarity = 'R';
 
-  // 自動從 CARD_DB 中篩出對應稀有度，均勻隨機
   let pool = CARD_DB.filter(c => c.rarity === rarity);
   if (!pool.length && rarity === 'UR')  pool = CARD_DB.filter(c => c.rarity === 'SSR');
   if (!pool.length && rarity === 'SSR') pool = CARD_DB.filter(c => c.rarity === 'SR');
   if (!pool.length && rarity === 'SR')  pool = CARD_DB.filter(c => c.rarity === 'R');
   if (!pool.length) pool = CARD_DB;
-  return pool[Math.floor(Math.random() * pool.length)];
+  return { card: pool[Math.floor(Math.random() * pool.length)], pityTriggered: false };
 }
 
-// ── 重置卡包狀態（Bug修復：任何中斷都能復原） ──
+// ── 重置卡包狀態 ──
 function _resetPackState() {
   isOpening = false;
   _pendingCard = null;
   const box = document.getElementById('packBox');
-  if (box) {
-    box.classList.remove('shaking');
-    box.style.pointerEvents = '';
-  }
+  if (box) { box.classList.remove('shaking'); box.style.pointerEvents = ''; }
 }
 
 function openCardPack() {
-  if (!_currentStuId) {
-    toast('請先以學生帳號登入', 'err');
-    return;
-  }
+  if (!_currentStuId) { toast('請先以學生帳號登入', 'err'); return; }
   _resetPackState();
+  // 讀取保底進度後更新 UI
+  dbGet('students/' + _currentStuId + '/pityCount').then(function(cnt) {
+    _updatePityUI(Number(cnt) || 0);
+  });
   document.getElementById('packWrap').style.display = 'flex';
   document.getElementById('cardRevealWrap').classList.remove('on');
   document.getElementById('cardOverlay').classList.add('on');
@@ -3629,7 +3699,7 @@ async function triggerPackOpen() {
   box.style.pointerEvents = 'none';
 
   try {
-    // 先查抽卡開關
+    // 抽卡開關
     const sysEnabled = await Promise.race([
       dbGet('cardSystemEnabled'),
       new Promise(r => setTimeout(() => r(null), 2000))
@@ -3640,7 +3710,7 @@ async function triggerPackOpen() {
       return;
     }
 
-    // 讀點數
+    // 讀取點數 + 保底計數
     const d = await dbGet('students/' + _currentStuId);
     const pts = Number(d && d.points != null ? d.points : 0);
     if (pts < 1) {
@@ -3649,21 +3719,36 @@ async function triggerPackOpen() {
       return;
     }
 
+    const currentPity = Number(d.pityCount) || 0;
+
     isOpening = true;
     box.classList.add('shaking');
 
-    const card = drawCard();
+    // 抽卡（含保底判斷）
+    const { card, pityTriggered } = drawCard(currentPity);
     _pendingCard = card;
 
+    // 計算新保底計數
+    const isHighRarity = (card.rarity === 'SSR' || card.rarity === 'UR');
+    const newPity = isHighRarity ? 0 : currentPity + 1;
+
     const lk = Date.now() + '';
+    const logReason = pityTriggered
+      ? '【保底觸發】抽到 ' + card.rarity + ' ' + card.name
+      : '抽到 ' + card.rarity + ' ' + card.name;
+
     await dbUpd('students/' + _currentStuId, {
       points: pts - 1,
-      ['log/' + lk]: { time: now(), action: '開啟卡包', reason: '抽到 ' + card.rarity + ' ' + card.name, teacher: '系統', delta: -1 }
+      pityCount: newPity,
+      ['log/' + lk]: { time: now(), action: '開啟卡包', reason: logReason, teacher: '系統', delta: -1 }
     });
+
+    // 更新進度條 UI（顯示抽後的保底值）
+    _updatePityUI(newPity);
 
     setTimeout(function() {
       document.getElementById('packWrap').style.display = 'none';
-      revealCard(card);
+      revealCard(card, pityTriggered);
     }, 1400);
 
   } catch(e) {
@@ -3673,21 +3758,29 @@ async function triggerPackOpen() {
   }
 }
 
-function revealCard(card) {
+function revealCard(card, pityTriggered) {
   var rarityColors = { R: '#3498DB', SR: '#9B59B6', SSR: '#D4AF37', UR: '#FF6B6B' };
   var rarityGlow   = { R: '', SR: '', SSR: '✨ SSR ✨', UR: '🌟 UR 🌟' };
+
+  // 重置動畫：移除再加回 card-3d 強制重播 pop-in
+  var card3d = document.getElementById('card3d');
+  var inner  = document.getElementById('cardInner');
+  card3d.className = '';
+  void card3d.offsetWidth; // reflow
+  card3d.className = 'card-3d rarity-' + card.rarity;
 
   document.getElementById('cardRevealImg').src = card.img;
   document.getElementById('cardRevealBadge').textContent = card.rarity;
   document.getElementById('cardRevealName').textContent = card.name;
   document.getElementById('cardRevealTitle').textContent = card.title;
-  document.getElementById('cardRevealRarity').textContent = rarityGlow[card.rarity] || card.rarity;
+
+  var glowText = rarityGlow[card.rarity] || card.rarity;
+  if (pityTriggered) glowText = '🌈 保底！' + glowText;
+  document.getElementById('cardRevealRarity').textContent = glowText;
   document.getElementById('cardRevealRarity').style.color = rarityColors[card.rarity] || '#fff';
 
-  var card3d = document.getElementById('card3d');
-  card3d.className = 'card-3d rarity-' + card.rarity;
-
-  var msg = card.rarity === 'UR'  ? '🎉 恭喜！超稀有 UR 卡！' :
+  var msg = pityTriggered ? '🌈 第10抽保底觸發！' :
+            card.rarity === 'UR'  ? '🎉 恭喜！超稀有 UR 卡！' :
             card.rarity === 'SSR' ? '✨ 太棒了！SSR 稀有卡！' :
             card.rarity === 'SR'  ? '👍 SR 卡，不錯喔！' : '';
   document.getElementById('cardRevealMsg').textContent = msg;
@@ -3705,6 +3798,8 @@ async function collectCard() {
     var invPath = 'students/' + _currentStuId + '/inventory/' + card.id;
     var cur = (await dbGet(invPath)) || 0;
     await dbSet(invPath, cur + 1);
+    // 寫入 NEW 標記
+    await dbSet('students/' + _currentStuId + '/newCards/' + card.id, Date.now());
     toast('已收下 ' + card.rarity + ' ' + card.name + '！', 'ok');
   } catch(e) {
     toast('儲存失敗，請重試', 'err');
@@ -3717,6 +3812,21 @@ async function collectCard() {
         _renderStuView(stu, d || {});
       });
     }
+  }
+}
+
+// 清除某張卡的 NEW 標記
+async function clearNewCard(cardId) {
+  if (!_currentStuId) return;
+  await db.ref(ROOT + '/students/' + _currentStuId + '/newCards/' + cardId).remove();
+  // 移除 DOM 上的 NEW 標籤
+  var badge = document.getElementById('new-badge-' + cardId);
+  if (badge) {
+    badge.style.animation = 'none';
+    badge.style.opacity = '0';
+    badge.style.transform = 'scale(0)';
+    badge.style.transition = 'all .2s';
+    setTimeout(function() { if (badge.parentNode) badge.parentNode.removeChild(badge); }, 200);
   }
 }
 
@@ -3773,19 +3883,30 @@ async function renderBag() {
     }
   }
 
+  // 讀取 NEW 標記
+  const newCards = stuData?.newCards || {};
+
   // 卡牌格
   const grid = document.getElementById('bagCardGrid');
   grid.innerHTML = '';
   CARD_DB.forEach(card => {
     const count = inv[card.id] || 0;
+    const isNew = !!newCards[card.id];
     const div = document.createElement('div');
     div.className = 'card-thumb' + (count===0 ? ' empty-slot' : '');
+    div.style.position = 'relative';
     if (count > 0) {
       div.innerHTML = `
         <img src="${card.img}" alt="${card.name}" onerror="this.parentNode.classList.add('empty-slot');this.remove()">
         <div class="ct-rarity ct-rarity-${card.rarity}">${card.rarity}</div>
         <div class="ct-name">${card.name}</div>
-        ${count>1 ? `<div class="ct-count">×${count}</div>` : ''}`;
+        ${count>1 ? `<div class="ct-count">×${count}</div>` : ''}
+        ${isNew ? `<div class="card-new-badge" id="new-badge-${card.id}">NEW</div>` : ''}`;
+      // 點擊卡片清除 NEW 標記
+      if (isNew) {
+        div.addEventListener('click', function() { clearNewCard(card.id); }, { once: true });
+        div.style.cursor = 'pointer';
+      }
     } else {
       div.innerHTML = '🂠';
       div.title = '尚未獲得';
