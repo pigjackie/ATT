@@ -937,6 +937,7 @@ select:focus{border-color:var(--gold)}
         <button class="mgmt-tab" id="mgmtClassBtn"   onclick="switchMgmt('class')"   style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🏫 班級管理</button>
         <button class="mgmt-tab" id="mgmtStudentBtn" onclick="switchMgmt('student')" style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🧑‍🎓 學生管理</button>
         <button class="mgmt-tab" id="mgmtCardBtn"    onclick="switchMgmt('card')"    style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🃏 卡片管理</button>
+        <button class="mgmt-tab" id="mgmtRewardBtn"  onclick="switchMgmt('reward')"  style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🎁 獎品設定</button>
       </div>
 
       <!-- 教師帳號面板 -->
@@ -975,6 +976,75 @@ select:focus{border-color:var(--gold)}
         </div>
         <div id="studentMgmtList"></div>
       </div>
+
+      <!-- 獎品設定面板 -->
+<div id="mgmtRewardPanel" style="display:none">
+  <div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px">
+    <h3 style="color:var(--gold)">🎁 班級專屬獎品設定</h3>
+  </div>
+  <div style="font-size:12px;color:var(--tx3);margin-bottom:14px;padding:8px 12px;background:var(--bg1);border-radius:var(--r2);border:1px solid var(--bdr);line-height:1.8">
+    ℹ️ 各班導師可自訂五種徽章等級對應的獎品。核銷時系統將自動帶入，不需要老師手動輸入。<br>
+    若未設定，系統將使用預設獎品。
+  </div>
+
+  <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:14px">
+    <div class="dlg-label" style="margin-bottom:8px">選擇班級</div>
+    <select id="rewardClsSelect" class="dlg-input" style="width:100%;margin-bottom:16px" onchange="loadClassRewards()"></select>
+
+    <div style="display:grid;gap:12px">
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div class="badge-circle badge-bronze" style="width:28px;height:28px;font-size:13px;flex-shrink:0">🏅</div>
+          <div class="dlg-label" style="margin:0">銅牌徽章獎品</div>
+          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.bronze}）</div>
+        </div>
+        <input class="dlg-input" type="text" id="reward_bronze" placeholder="例：實體點數 2 點⭐" style="margin:0">
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div class="badge-circle badge-silver" style="width:28px;height:28px;font-size:13px;flex-shrink:0">🪙</div>
+          <div class="dlg-label" style="margin:0">銀牌徽章獎品</div>
+          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.silver}）</div>
+        </div>
+        <input class="dlg-input" type="text" id="reward_silver" placeholder="例：實體點數 3 點⭐" style="margin:0">
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div class="badge-circle badge-gold" style="width:28px;height:28px;font-size:13px;flex-shrink:0">⭐</div>
+          <div class="dlg-label" style="margin:0">金牌徽章獎品</div>
+          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.gold}）</div>
+        </div>
+        <input class="dlg-input" type="text" id="reward_gold" placeholder="例：金牌一面🥇" style="margin:0">
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div class="badge-circle badge-diamond" style="width:28px;height:28px;font-size:13px;flex-shrink:0">💠</div>
+          <div class="dlg-label" style="margin:0">藍鑽徽章獎品</div>
+          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.diamond}）</div>
+        </div>
+        <input class="dlg-input" type="text" id="reward_diamond" placeholder="例：任選手搖飲🧋" style="margin:0">
+      </div>
+      <div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+          <div class="badge-circle badge-legend" style="width:28px;height:28px;font-size:13px;flex-shrink:0">👑</div>
+          <div class="dlg-label" style="margin:0">傳說徽章獎品</div>
+          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.legend}）</div>
+        </div>
+        <input class="dlg-input" type="text" id="reward_legend" placeholder="例：星巴克一杯☕" style="margin:0">
+      </div>
+    </div>
+
+    <button class="btn g" onclick="saveClassRewards()" style="width:100%;padding:12px;font-size:14px;margin-top:16px">
+      💾 儲存班級專屬獎品
+    </button>
+  </div>
+
+  <!-- 全校獎品預覽 -->
+  <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px">
+    <div style="font-size:13px;font-weight:bold;color:var(--gold);margin-bottom:12px">📋 全校獎品設定一覽</div>
+    <div id="rewardPreviewList"><div class="empty" style="padding:20px">載入中…</div></div>
+  </div>
+</div>
 
       <!-- 卡片管理面板（僅 master） -->
       <div id="mgmtCardPanel" style="display:none">
@@ -1619,7 +1689,7 @@ function enterApp() {
     buildClsBtns('clsBtns', switchCls);
     switchCls(me.classes[0]);
   });
-
+loadAllClassRewards().catch(e => console.warn('loadAllClassRewards:', e));
   startApplyListener();
   startMsgListener();
 }
@@ -3171,16 +3241,21 @@ async function loadDynamicData() {
 let _mgmtStuCls = 'all';
 
 function switchMgmt(tab) {
-  ['teacher','class','student','card'].forEach(t => {
-    const btn = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Btn`);
+  ['teacher','class','student','card','reward'].forEach(t => {
+    const btn   = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Btn`);
     const panel = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Panel`);
     const active = t === tab;
-    if (btn) { btn.style.background = active ? 'var(--gold)' : 'transparent'; btn.style.color = active ? '#000' : 'var(--tx2)'; btn.style.fontWeight = active ? 'bold' : 'normal'; }
+    if (btn) {
+      btn.style.background  = active ? 'var(--gold)' : 'transparent';
+      btn.style.color       = active ? '#000' : 'var(--tx2)';
+      btn.style.fontWeight  = active ? 'bold' : 'normal';
+    }
     if (panel) panel.style.display = active ? '' : 'none';
   });
-  if (tab === 'class') renderClassMgmt();
+  if (tab === 'class')   renderClassMgmt();
   if (tab === 'student') renderStudentMgmt();
-  if (tab === 'card') renderCardMgmt();
+  if (tab === 'card')    renderCardMgmt();
+  if (tab === 'reward')  initRewardPanel();
 }
 
 // ══════════════
@@ -3441,7 +3516,33 @@ const CARD_DB = [
   {id:'C10',name:'曉萱',rarity:'R',  img:'CARDS/曉萱R_結果.jpg',       title:'低音管導師'},
   {id:'C11',name:'曉萱',rarity:'SR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音管精靈'},
 ];
+// ════════════════════════════════════════════════════════════════
+// 班級專屬獎品設定
+// ════════════════════════════════════════════════════════════════
+let classRewardsCache = {};
 
+const DEFAULT_CLASS_REWARDS = {
+  bronze:  '實體點數 2 點⭐',
+  silver:  '實體點數 3 點⭐',
+  gold:    '金牌一面🥇',
+  diamond: '任選手搖飲🧋',
+  legend:  '星巴克一杯☕',
+};
+
+async function loadAllClassRewards() {
+  try {
+    const data = await dbGet('classRewards') || {};
+    classRewardsCache = data;
+  } catch(e) {
+    console.warn('loadAllClassRewards error:', e);
+    classRewardsCache = {};
+  }
+}
+
+function getClassReward(clsName, tier) {
+  const clsData = classRewardsCache[clsName.replace(/\//g,'_')] || {};
+  return clsData[tier] || DEFAULT_CLASS_REWARDS[tier] || '獎品待設定';
+}
 // ── 自訂卡片/羈絆（必須在 generateDynamicBonds 之前宣告）──
 let _customCards = [];
 let _customBonds = [];
@@ -4629,39 +4730,54 @@ async function chgBondMedal(delta) {
 // 老師端：核銷兌獎（消耗勳章 + 記錄獎品）
 // 老師直接點徽章核銷
 async function teacherRedeemSingleBadge(stuId, stuName, bondId, badgeInfo) {
-  const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
-  const icon = iconMap[badgeInfo.tier] || '🏵️';
+  const iconMap  = { bronze:'🏅', silver:'🪙', gold:'⭐', diamond:'💠', legend:'👑' };
+  const icon     = iconMap[badgeInfo.tier] || '🏵️';
+  const info     = TIER_INFO[badgeInfo.tier] || TIER_INFO.bronze;
+  // 自動查詢學生班級對應的獎品
+  const stuObj   = byId(stuId);
+  const stuCls   = stuObj?.cls || curStu?.cls || '';
+  const autoPrize = getClassReward(stuCls, badgeInfo.tier);
 
   openDlg(`🎁 核銷徽章 — ${stuName}`,
-    `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border-radius:12px;margin-bottom:14px">
-       <div class="badge-circle badge-${badgeInfo.tier}" style="width:52px;height:52px;font-size:22px;flex-shrink:0">${icon}</div>
+    `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;margin-bottom:14px">
+       <div class="badge-circle ${info.tierClass}" style="width:52px;height:52px;font-size:22px;flex-shrink:0">${icon}</div>
        <div>
          <div style="font-size:15px;font-weight:bold;color:#e0c0ff">${badgeInfo.bondName}</div>
-         <div style="font-size:12px;color:#a080d0">${badgeInfo.tierName}</div>
-         <div style="font-size:11px;color:rgba(200,150,255,.6);margin-top:2px">兌換於 ${badgeInfo.claimedAt?.slice(0,10)||'—'}</div>
+         <div style="font-size:12px;color:#a080d0">${info.name}</div>
+         <div style="font-size:11px;color:rgba(200,150,255,.6);margin-top:2px">兌換於 ${(badgeInfo.claimedAt||'').slice(0,10)||'—'}</div>
        </div>
      </div>
-     <div class="dlg-label">給予的獎品（記錄用）</div>
-     <input class="dlg-input" type="text" id="badgePrize" placeholder="例：星巴克、手搖飲、泡麵…">
-     <div style="font-size:11px;color:var(--tx3);margin-top:-8px;margin-bottom:4px">填寫後按確認，此徽章將標記為已核銷</div>`,
+     <div style="background:rgba(212,175,55,.1);border:2px solid var(--gold);border-radius:10px;padding:14px;margin-bottom:10px">
+       <div style="font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:6px">🎁 ${stuCls} 班級專屬獎品（系統自動帶入）</div>
+       <div style="font-size:18px;font-weight:bold;color:var(--tx)">${autoPrize}</div>
+       ${stuCls ? '' : '<div style="font-size:11px;color:var(--tx3);margin-top:4px">⚠️ 查無班級資訊，已使用預設獎品</div>'}
+     </div>
+     <div style="font-size:11px;color:var(--tx3);text-align:center">確認核銷後，系統將自動通知學生並記錄</div>`,
     [{label:'確認核銷', cls:'ok', fn: async () => {
-      const prize = document.getElementById('badgePrize').value.trim() || '獎品';
       const lk = Date.now()+'';
-      const t = now();
-      // 標記為已核銷（不刪除，保留記錄）
+      const t  = now();
       await db.ref(`${ROOT}/students/${stuId}/unredeemedBadges/${bondId}`).update({
-        redeemed: true, redeemedAt: t, redeemedBy: me.name, prize
+        redeemed: true, redeemedAt: t, redeemedBy: me.name, prize: autoPrize
       });
       await dbUpd(`students/${stuId}`, {
-        [`log/${lk}`]: {time:t, action:`🏵️ 徽章核銷 ${badgeInfo.tierName}「${badgeInfo.bondName}」`, reason:`獎品：${prize}（${me.name} 老師核銷）`, teacher:me.name, delta:0}
+        [`log/${lk}`]: {
+          time: t,
+          action: `🏵️ 徽章核銷 ${info.name}「${badgeInfo.bondName}」`,
+          reason: `獎品：${autoPrize}（${me.name} 老師核銷）`,
+          teacher: me.name, delta: 0
+        }
       });
-      await sendNotifToStudent(stuId, stuName,
-        `🏵️ ${me.name} 老師已核銷你的「${badgeInfo.bondName}」${badgeInfo.tierName}，兌換獎品：${prize}！`, 'notice');
-      toast(`✅ 核銷成功！`, 'ok');
-      openDetail(curStu); return true;
-    }}, {label:'取消', fn:()=>true}]);
+      await db.ref(`${ROOT}/stuMsgs/${stuId}/${lk}_msg`).set({
+        from: me.name,
+        content: `🏵️ ${me.name} 老師已核銷你的「${badgeInfo.bondName}」${info.name}，班級專屬獎品：${autoPrize}！`,
+        type: 'notice', time: t, read: false
+      });
+      toast('✅ 核銷成功！', 'ok');
+      openDetail(curStu);
+      return true;
+    }}, {label:'取消', fn:()=>true}]
+  );
 }
-
 async function teacherRedeemBondMedal() {
   if (!curStu) return;
   const d = await dbGet(`students/${curStu.id}`);
@@ -4862,40 +4978,137 @@ async function loadBondMedalPanel() {
     </div>`).join('');
 }
 
-async function quickRedeemBadge(stuId, stuName, bondId, badgeInfo) {
-  const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
-  const icon = iconMap[badgeInfo.tier] || '🏵️';
-  const info = TIER_INFO[badgeInfo.tier] || TIER_INFO.bronze;
+  async function quickRedeemBadge(stuId, stuName, bondId, badgeInfo) {
+  const iconMap  = { bronze:'🏅', silver:'🪙', gold:'⭐', diamond:'💠', legend:'👑' };
+  const icon     = iconMap[badgeInfo.tier] || '🏵️';
+  const info     = TIER_INFO[badgeInfo.tier] || TIER_INFO.bronze;
+  // 自動查詢學生班級對應的獎品
+  const stuObj   = byId(stuId);
+  const stuCls   = stuObj?.cls || '';
+  const autoPrize = getClassReward(stuCls, badgeInfo.tier);
 
   openDlg(`🎁 核銷徽章 — ${stuName}`,
-    `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border-radius:12px;margin-bottom:14px">
+    `<div style="display:flex;align-items:center;gap:14px;padding:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;margin-bottom:14px">
        <div class="badge-circle ${info.tierClass}" style="width:52px;height:52px;font-size:22px;flex-shrink:0">${icon}</div>
        <div>
          <div style="font-size:15px;font-weight:bold;color:#e0c0ff">${badgeInfo.bondName}</div>
          <div style="font-size:13px;color:#a080d0">${info.name}</div>
        </div>
      </div>
-     <div class="dlg-label">給予的獎品（記錄用）</div>
-     <input class="dlg-input" type="text" id="qrBadgePrize" placeholder="例：星巴克、手搖飲、泡麵…">`,
+     <div style="background:rgba(212,175,55,.1);border:2px solid var(--gold);border-radius:10px;padding:14px;margin-bottom:10px">
+       <div style="font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:6px">🎁 ${stuCls} 班級專屬獎品（系統自動帶入）</div>
+       <div style="font-size:18px;font-weight:bold;color:var(--tx)">${autoPrize}</div>
+     </div>
+     <div style="font-size:11px;color:var(--tx3);text-align:center">確認後將通知學生並記錄</div>`,
     [{label:'確認核銷', cls:'ok', fn: async () => {
-      const prize = document.getElementById('qrBadgePrize').value.trim() || '獎品';
       const lk = Date.now()+'';
-      const t = now();
+      const t  = now();
       await db.ref(`${ROOT}/students/${stuId}/unredeemedBadges/${bondId}`).update({
-        redeemed: true, redeemedAt: t, redeemedBy: me.name, prize
+        redeemed: true, redeemedAt: t, redeemedBy: me.name, prize: autoPrize
       });
       await dbUpd(`students/${stuId}`, {
-        [`log/${lk}`]: {time:t, action:`🏵️ 徽章核銷 ${info.name}「${badgeInfo.bondName}」`, reason:`獎品：${prize}（${me.name} 老師核銷）`, teacher:me.name, delta:0}
+        [`log/${lk}`]: {
+          time: t,
+          action: `🏵️ 徽章核銷 ${info.name}「${badgeInfo.bondName}」`,
+          reason: `獎品：${autoPrize}（${me.name} 老師核銷）`,
+          teacher: me.name, delta: 0
+        }
       });
       await db.ref(`${ROOT}/stuMsgs/${stuId}/${lk}_msg`).set({
-        from:me.name, content:`🏵️ ${me.name} 老師已核銷你的「${badgeInfo.bondName}」${info.name}，兌換獎品：${prize}！`, type:'notice', time:t, read:false
+        from: me.name,
+        content: `🏵️ ${me.name} 老師已核銷你的「${badgeInfo.bondName}」${info.name}，班級專屬獎品：${autoPrize}！`,
+        type: 'notice', time: t, read: false
       });
-      toast(`✅ 核銷成功！`, 'ok');
+      toast('✅ 核銷成功！', 'ok');
       loadBondMedalPanel();
       return true;
-    }}, {label:'取消', fn:()=>true}]);
+    }}, {label:'取消', fn:()=>true}]
+  );
+}
+// ════════════════════════════════════════════════════════════════
+// 班級專屬獎品設定功能
+// ════════════════════════════════════════════════════════════════
+
+function initRewardPanel() {
+  // 填入班級選單
+  const sel = document.getElementById('rewardClsSelect');
+  if (!sel) return;
+  sel.innerHTML = CLASSES.map(c => `<option value="${c}">${c}</option>`).join('');
+  loadClassRewards();
+  renderRewardPreview();
 }
 
+async function loadClassRewards() {
+  const sel = document.getElementById('rewardClsSelect');
+  if (!sel) return;
+  const cls = sel.value;
+  if (!cls) return;
+  const key = cls.replace(/\//g,'_');
+  // 先嘗試從快取讀，若無則從 Firebase 讀
+  let data = classRewardsCache[key];
+  if (!data) {
+    data = await dbGet(`classRewards/${key}`) || {};
+    classRewardsCache[key] = data;
+  }
+  const tiers = ['bronze','silver','gold','diamond','legend'];
+  tiers.forEach(tier => {
+    const el = document.getElementById(`reward_${tier}`);
+    if (el) el.value = data[tier] || '';
+  });
+}
+
+async function saveClassRewards() {
+  const sel = document.getElementById('rewardClsSelect');
+  if (!sel || !sel.value) { toast('請選擇班級','err'); return; }
+  const cls = sel.value;
+  const key = cls.replace(/\//g,'_');
+  const tiers = ['bronze','silver','gold','diamond','legend'];
+  const payload = {};
+  tiers.forEach(tier => {
+    const val = (document.getElementById(`reward_${tier}`)?.value || '').trim();
+    payload[tier] = val || DEFAULT_CLASS_REWARDS[tier];
+  });
+  try {
+    await dbSet(`classRewards/${key}`, payload);
+    classRewardsCache[key] = payload;
+    toast(`「${cls}」獎品已儲存`, 'ok');
+    renderRewardPreview();
+  } catch(e) {
+    toast('儲存失敗：' + e.message, 'err');
+  }
+}
+
+async function renderRewardPreview() {
+  const el = document.getElementById('rewardPreviewList');
+  if (!el) return;
+  el.innerHTML = '<div class="spin"></div>';
+  await loadAllClassRewards();
+  const iconMap = { bronze:'🏅', silver:'🪙', gold:'⭐', diamond:'💠', legend:'👑' };
+  const tierLabel = { bronze:'銅牌', silver:'銀牌', gold:'金牌', diamond:'藍鑽', legend:'傳說' };
+  let html = '';
+  CLASSES.forEach(cls => {
+    const key = cls.replace(/\//g,'_');
+    const data = classRewardsCache[key] || {};
+    const hasCustom = Object.keys(data).length > 0;
+    html += `<div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 14px;margin-bottom:8px">
+      <div style="font-size:13px;font-weight:bold;color:var(--gold);margin-bottom:8px">
+        ${cls} ${hasCustom ? '<span style="font-size:10px;padding:1px 7px;border-radius:8px;background:rgba(46,204,113,.15);color:var(--green);margin-left:6px">已自訂</span>' : '<span style="font-size:10px;color:var(--tx3);margin-left:6px">（使用預設）</span>'}
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${['bronze','silver','gold','diamond','legend'].map(tier => {
+          const reward = data[tier] || DEFAULT_CLASS_REWARDS[tier];
+          const custom = !!data[tier];
+          return `<div style="flex:1;min-width:120px;background:var(--bg1);border:1px solid ${custom?'rgba(46,204,113,.3)':'var(--bdr)'};border-radius:6px;padding:7px 10px">
+            <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">${iconMap[tier]} ${tierLabel[tier]}</div>
+            <div style="font-size:12px;color:${custom?'var(--green)':'var(--tx2)'}">${reward}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  });
+  el.innerHTML = html || '<div class="empty" style="padding:20px">尚無資料</div>';
+}
+  
 window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeCardZoom();
