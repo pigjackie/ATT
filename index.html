@@ -1131,7 +1131,7 @@ select:focus{border-color:var(--gold)}
     <div class="pity-bar-wrap" id="pityBarWrap">
       <div class="pity-label">
         <span>SSR 保底進度</span>
-        <span id="pityText">0 / 10</span>
+        <span id="pityText">0 / 7</span>
       </div>
       <div class="pity-track">
         <div class="pity-fill" id="pityFill" style="width:0%"></div>
@@ -1645,6 +1645,7 @@ async function refreshStuView(stuId) {
   try {
     const d = (await dbGet(`students/${id}`))||{};
     _renderStuView(stu, d);
+    await renderStudentCardExtras(stu, d);
     await _renderStuMsgs(id);
     toast('已重新整理','ok');
   } catch(e) {
@@ -2772,10 +2773,71 @@ async function loadStuView(stu) {
     ref(`students/${_stuViewListener}`).off('value');
   }
   _stuViewListener = stu.id;
-  ref(`students/${stu.id}`).on('value', snap => {
-    _renderStuView(stu, snap.val()||{});
+  ref(`students/${stu.id}`).on('value', async snap => {
+    const data = snap.val()||{};
+    _renderStuView(stu, data);
+    await renderStudentCardExtras(stu, data);
   });
   listenMyApprovalStu(stu.name);
+}
+
+async function getCardCollectionLeaderboard(classes, limit) {
+  const classList = Array.isArray(classes) ? classes : [classes];
+  const studentMap = new Map();
+  classList.filter(Boolean).forEach(cls => {
+    byCls(cls).forEach(stu => studentMap.set(stu.id, stu));
+  });
+  const stus = [...studentMap.values()];
+  const inventories = await Promise.all(stus.map(s => dbGet(`students/${s.id}/inventory`)));
+  const ranked = stus.map((stu, idx) => {
+    const inv = inventories[idx] || {};
+    const counts = Object.values(inv).map(v => Number(v)||0);
+    const uniqueCards = counts.filter(v => v > 0).length;
+    const totalCards = counts.reduce((sum, v) => sum + v, 0);
+    return {...stu, uniqueCards, totalCards};
+  }).sort((a,b) => b.uniqueCards - a.uniqueCards || b.totalCards - a.totalCards || a.id.localeCompare(b.id));
+  const finalRanked = ranked.map((row, index) => ({...row, rank:index + 1}));
+  return typeof limit === 'number' ? finalRanked.slice(0, limit) : finalRanked;
+}
+
+async function renderStudentCardExtras(stu, d) {
+  const featuredEl = document.getElementById('stuFeaturedCardSection');
+  const rankingEl = document.getElementById('stuCollectionRanking');
+  const inv = d?.inventory || {};
+  const featuredCard = CARD_DB.find(card => card.id === d?.featuredCardId && (inv[card.id]||0) > 0);
+
+  if (featuredEl) {
+    featuredEl.innerHTML = featuredCard ? `
+      <div style="display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(0,0,0,.2));border:1px solid rgba(212,175,55,.3);border-radius:14px;padding:12px">
+        <img src="${featuredCard.img}" alt="${featuredCard.name}" style="width:82px;height:112px;object-fit:cover;border-radius:10px;border:1px solid rgba(212,175,55,.35);background:var(--bg2)" onerror="this.style.display='none'">
+        <div style="min-width:0;flex:1">
+          <div style="font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:4px">看板星卡</div>
+          <div style="font-size:20px;font-weight:bold">${featuredCard.name}</div>
+          <div style="font-size:13px;color:var(--tx2);margin:4px 0">${featuredCard.title}</div>
+          <div style="font-size:12px;color:var(--tx3);line-height:1.6">「${featuredCard.quote||'—'}」</div>
+          <div style="font-size:11px;color:var(--gold);margin-top:6px">${featuredCard.rarity} · 持有 ${inv[featuredCard.id]||1} 張</div>
+        </div>
+      </div>` : `
+      <div style="font-size:13px;color:var(--tx3);padding:10px 12px;border:1px dashed var(--bdr);border-radius:12px">
+        目前尚未設定看板星卡，前往卡簿即可指定。
+      </div>`;
+  }
+
+  if (rankingEl) {
+    const ranking = await getCardCollectionLeaderboard(stu.cls);
+    const myRank = ranking.findIndex(row => row.id === stu.id) + 1;
+    const topRows = ranking.slice(0, 5).map(row => `
+      <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(212,175,55,.08)">
+        <div style="width:28px;text-align:center;font-weight:bold;color:${row.id===stu.id?'var(--gold)':'var(--tx2)'}">${row.rank}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:${row.id===stu.id?'bold':'normal'}">${row.name}</div>
+          <div style="font-size:11px;color:var(--tx3)">${row.uniqueCards} 種 · ${row.totalCards} 張</div>
+        </div>
+      </div>`).join('') || '<div style="font-size:13px;color:var(--tx3)">目前還沒有任何卡片收藏紀錄。</div>';
+    rankingEl.innerHTML = `
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">班級排名：<b style="color:var(--gold)">第 ${myRank||'-'} 名</b></div>
+      <div>${topRows}</div>`;
+  }
 }
 
 function openStuPiano() {
@@ -2881,6 +2943,12 @@ function _renderStuView(stu, d) {
         <div style="font-size:15px;color:var(--tx2)">今日出勤：<span style="color:${attColor};font-weight:bold;font-size:18px">${att}</span></div>
         <button class="btn" onclick="refreshStuView()" style="margin-top:8px;font-size:11px;padding:3px 12px">🔄 重新整理</button>
       </div>
+
+      <div class="dp-sec-t">🌟 看板星卡</div>
+      <div id="stuFeaturedCardSection" style="margin-bottom:14px"></div>
+
+      <div class="dp-sec-t">🏆 卡片收藏排行榜</div>
+      <div id="stuCollectionRanking" style="margin-bottom:14px"></div>
 
       <hr class="sep">
 
@@ -3126,7 +3194,30 @@ async function renderRpt() {
   grid.innerHTML='<div class="spin"></div>';
   const stus=byCls(curCls);
   const res=await Promise.all(stus.map(s=>dbGet(`students/${s.id}`)));
+  const ranking = await getCardCollectionLeaderboard(curCls, 10);
   grid.innerHTML='';
+
+  const leaderboardCard = document.createElement('div');
+  leaderboardCard.className = 'scard';
+  leaderboardCard.style.gridColumn = '1 / -1';
+  leaderboardCard.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;flex-wrap:wrap">
+      <div>
+        <div style="font-size:15px;font-weight:bold;color:var(--gold)">🏆 ${curCls} 卡片收藏排行榜</div>
+        <div style="font-size:12px;color:var(--tx3)">依收藏卡種數優先，其次比較總張數</div>
+      </div>
+      <div style="font-size:12px;color:var(--tx2)">共 ${ranking.length} 名上榜</div>
+    </div>
+    ${ranking.length ? ranking.map(row => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(212,175,55,.08)">
+        <div style="width:32px;text-align:center;font-weight:bold;color:${row.rank===1?'var(--gold)':'var(--tx2)'}">${row.rank}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:14px;font-weight:bold">${row.name} <span style="font-size:11px;color:var(--tx3)">${row.id}</span></div>
+          <div style="font-size:11px;color:var(--tx3)">${row.uniqueCards} 種收藏 · ${row.totalCards} 張總數</div>
+        </div>
+      </div>`).join('') : '<div style="font-size:13px;color:var(--tx3)">目前尚無卡片收藏資料。</div>'}`;
+  grid.appendChild(leaderboardCard);
+
   stus.forEach((s,i)=>{
     const d=res[i]||{};
     const card=document.createElement('div');
@@ -3232,6 +3323,9 @@ async function loadDynamicData() {
     const baseIds = STUDENTS.filter(s=>!s._fbKey).map(s=>s.id);
     const basePart = STUDENTS.filter(s=>!s._fbKey);
     STUDENTS = [...basePart, ...extraStuArr.filter(s=>!baseIds.includes(s.id))];
+
+    await loadCustomCardData();
+    await applyCardTitleOverrides();
   } catch(e) {
     console.warn('loadDynamicData error:', e);
   }
@@ -3504,17 +3598,21 @@ async function delStudent(fbKey, name) {
 // ════════════════════════════════════════════════════════════════
 
 const CARD_DB = [
-  {id:'C01',name:'旭成',rarity:'SR', img:'CARDS/旭成SR_結果_結果.jpg', title:'三重金城武'},
-  {id:'C02',name:'倩宇',rarity:'R',  img:'CARDS/倩宇R_結果.jpg',       title:'法國號導師'},
-  {id:'C03',name:'倩宇',rarity:'SR', img:'CARDS/倩宇SR_結果.jpg',      title:'銅管首席'},
-  {id:'C04',name:'倩宇',rarity:'SSR',img:'CARDS/倩宇SSR_結果.jpg',     title:'法國號女神'},
-  {id:'C05',name:'校長',rarity:'SR', img:'CARDS/校長SR_結果.jpg',      title:'親民校長'},
-  {id:'C06',name:'校長',rarity:'SSR',img:'CARDS/校長SSR_結果.jpg',     title:'大提琴守護者'},
-  {id:'C07',name:'校長',rarity:'UR', img:'CARDS/校長UR_結果.jpg',      title:'莊敬大家長'},
-  {id:'C08',name:'國霖',rarity:'SR', img:'CARDS/國霖SR_結果.jpg',      title:'單簧管大師'},
-  {id:'C09',name:'康榮',rarity:'SSR',img:'CARDS/康榮SSR_結果.jpg',     title:'音樂總監'},
-  {id:'C10',name:'曉萱',rarity:'R',  img:'CARDS/曉萱R_結果.jpg',       title:'低音管導師'},
-  {id:'C11',name:'曉萱',rarity:'SR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音管精靈'},
+  {id:'C01',name:'旭成',rarity:'SR',  img:'CARDS/旭成SR_結果_結果.jpg', title:'班級經營講師', quote:'先把今天該做的事做好。'},
+  {id:'C02',name:'倩宇',rarity:'R',   img:'CARDS/倩宇R_結果.jpg',       title:'法國號導師', quote:'先把嘴型站穩，再談音量。'},
+  {id:'C03',name:'倩宇',rarity:'SR',  img:'CARDS/倩宇SR_結果.jpg',      title:'銅管首席', quote:'每一個進拍點都要更乾淨。'},
+  {id:'C04',name:'倩宇',rarity:'SSR', img:'CARDS/倩宇SSR_結果.jpg',     title:'法國號聲部統籌', quote:'音色一致，合奏才會亮。'},
+  {id:'C05',name:'校長',rarity:'SR',  img:'CARDS/校長SR_結果.jpg',      title:'校務總籌', quote:'把秩序做好，學習才會穩。'},
+  {id:'C06',name:'校長',rarity:'SSR', img:'CARDS/校長SSR_結果.jpg',     title:'弦樂行政指揮', quote:'團隊一穩，聲音就會站起來。'},
+  {id:'C07',name:'校長',rarity:'UR',  img:'CARDS/校長UR_結果.jpg',      title:'莊敬大家長', quote:'今天的標準，要比昨天更整齊。'},
+  {id:'C08',name:'國霖',rarity:'SR',  img:'CARDS/國霖SR_結果.jpg',      title:'單簧管大師', quote:'音準站穩，整段就會發光。'},
+  {id:'C09',name:'康榮',rarity:'SSR', img:'CARDS/康榮SSR_結果.jpg',     title:'音樂總監', quote:'你們的聲音，要有同一個方向。'},
+  {id:'C10',name:'曉萱',rarity:'R',   img:'CARDS/曉萱R_結果.jpg',       title:'低音管導師', quote:'低音穩住，全團才有地板。'},
+  {id:'C11',name:'曉萱',rarity:'SR',  img:'CARDS/曉萱SR_結果.jpg',      title:'低音管精靈', quote:'低音不是背景，是支撐。'},
+  {id:'C12',name:'旭成',rarity:'SSR', img:'CARDS/旭成SR_結果_結果.jpg', title:'學務協調長', quote:'上課不要看手機。'},
+  {id:'C13',name:'國霖',rarity:'SSR', img:'CARDS/國霖SR_結果.jpg',      title:'木管聲部統籌', quote:'音色先站穩，技巧自然跟上。'},
+  {id:'C14',name:'康榮',rarity:'UR',  img:'CARDS/康榮SSR_結果.jpg',     title:'合奏總指揮', quote:'進來就要一起把聲音做滿。'},
+  {id:'C15',name:'曉萱',rarity:'SSR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音域守護者', quote:'低音站穩，樂團才會穩。'},
 ];
 // ════════════════════════════════════════════════════════════════
 // 班級專屬獎品設定
@@ -3555,219 +3653,51 @@ let DYNAMIC_BONDS = [];
 
 function generateDynamicBonds() {
   const bonds = [];
-
-  // ══════════════════════════════════════════
-  // 【同名大滿貫】—— 集齊同一老師的全部卡片
-  // 難度依老師卡片組合而定，獎品對應
-  // ══════════════════════════════════════════
-  const nameMap = {};
-  CARD_DB.forEach(c => {
-    if (!nameMap[c.name]) nameMap[c.name] = [];
-    nameMap[c.name].push(c);
-  });
-  // 同名大滿貫獎品：含 UR → 星巴克；含 SSR（無UR）→ 手搖飲；純SR+R → 金牌2
-  Object.entries(nameMap).forEach(([name, cards]) => {
-    if (cards.length < 2) return;
-    const hasUR  = cards.some(c => c.rarity === 'UR');
-    const hasSSR = cards.some(c => c.rarity === 'SSR');
-    let reward, rewardType, emoji;
-    if (hasUR)       { reward = '星巴克一杯☕';   rewardType = 'starbucks'; emoji = '☕'; }
-    else if (hasSSR) { reward = '任選手搖飲🧋';   rewardType = 'drink';     emoji = '🧋'; }
-    else             { reward = '金牌兩面🥇🥇';   rewardType = 'medals2';   emoji = '🥇'; }
+  const rewardText = {
+    bronze: '自動發放：點數 +2',
+    silver: '自動發放：點數 +3',
+    gold: '自動發放：金牌 +1',
+    diamond: '需找老師兌換：藍鑽徽章',
+    legend: '需找老師兌換：傳說徽章',
+  };
+  const pushBond = bond => {
+    const allExist = (bond.needs||[]).every(id => CARD_DB.some(c => c.id === id));
+    if (!allExist) return;
     bonds.push({
-      id: `BOND_NAME_${name}`,
-      name: `${name}大滿貫`,
+      ...bond,
+      reward: bond.reward || rewardText[bond.tier] || '待設定',
+    });
+  };
+
+  const specialistBondMeta = {
+    '旭成': { id:'BOND_XUCHENG_TRACK', name:'行政節奏統籌', emoji:'🗂️', tier:'gold', desc:'集齊旭成老師的全部卡片，完成班級經營與行政節奏配置。' },
+    '倩宇': { id:'BOND_QIANYU_TRACK', name:'法國號聲部全修', emoji:'🎺', tier:'gold', desc:'集齊倩宇老師的全部卡片，完成法國號教學線。' },
+    '校長': { id:'BOND_PRINCIPAL_TRACK', name:'校務弦樂全修', emoji:'🎻', tier:'diamond', desc:'集齊校長的全部卡片，完成校務與弦樂主線配置。' },
+    '國霖': { id:'BOND_GUOLIN_TRACK', name:'單簧管聲線全修', emoji:'🎶', tier:'gold', desc:'集齊王國霖老師的全部卡片，完成單簧管聲線鍛鍊。' },
+    '康榮': { id:'BOND_KANGRONG_TRACK', name:'合奏指揮全修', emoji:'🎼', tier:'diamond', desc:'集齊康榮老師的全部卡片，完成合奏指揮主線。' },
+    '曉萱': { id:'BOND_XIAOXUAN_TRACK', name:'低音管聲域全修', emoji:'🪵', tier:'gold', desc:'集齊曉萱老師的全部卡片，完成低音管聲域培養。' },
+  };
+
+  Object.entries(specialistBondMeta).forEach(([name, meta]) => {
+    const cards = CARD_DB.filter(c => c.name === name);
+    if (cards.length < 2) return;
+    pushBond({
+      ...meta,
       needs: cards.map(c => c.id),
-      reward, rewardType, emoji,
-      desc: `集齊 ${name} 老師的全部 ${cards.length} 張卡片`,
     });
   });
 
-  // ══════════════════════════════════════════
-  // 【稀有度連線】—— 任意N張同稀有度
-  // ══════════════════════════════════════════
-  // 全部3張SSR（難度：各SSR期望8抽，共3張≈24抽）→ 星巴克
-  // 任意3張SR（期望≈39抽）→ 手搖飲
-  // 任意2張SR（期望≈26抽）→ 衛生紙
-  // 任意2張R（期望≈9抽）→ 金牌1
-  const rarityBonds = [
-    { rarity:'SSR', count:3, id:'BOND_RARITY_SSR3', name:'SSR 三星連線',  reward:'星巴克一杯☕',   rewardType:'starbucks', emoji:'💎', desc:'集齊任意 3 張不同 SSR 卡（高難度）' },
-    { rarity:'SR',  count:5, id:'BOND_RARITY_SR5',  name:'SR 五星全制霸', reward:'一度贊泡麵🍜',   rewardType:'noodle',    emoji:'🍜', desc:'集齊全部 5 張不同 SR 卡（超高難度）' },
-    { rarity:'SR',  count:3, id:'BOND_RARITY_SR3',  name:'SR 三星連線',   reward:'任選手搖飲🧋',   rewardType:'drink',     emoji:'🥤', desc:'集齊任意 3 張不同 SR 卡' },
-    { rarity:'SR',  count:2, id:'BOND_RARITY_SR2',  name:'SR 雙星邂逅',   reward:'衛生紙一包🧻',   rewardType:'tissue',    emoji:'🧻', desc:'集齊任意 2 張不同 SR 卡' },
-    { rarity:'R',   count:2, id:'BOND_RARITY_R2',   name:'R 雙子星',      reward:'金牌一面🥇',     rewardType:'medals1',   emoji:'🎖️', desc:'集齊任意 2 張不同 R 卡' },
-  ];
-  rarityBonds.forEach(rb => {
-    const pool = CARD_DB.filter(c => c.rarity === rb.rarity);
-    if (pool.length >= rb.count) {
-      bonds.push({
-        id: rb.id, name: rb.name, reward: rb.reward,
-        rewardType: rb.rewardType, emoji: rb.emoji, desc: rb.desc,
-        rarityPool: rb.rarity, rarityCount: rb.count,
-      });
-    }
-  });
+  [
+    { id:'BOND_ADMIN_DUO', name:'行政雙雄', emoji:'🏛️', tier:'silver', needs:['C12','C09'], desc:'旭成與康榮組成行政與音樂執行雙核心。' },
+    { id:'BOND_BRASS_CHAIN', name:'銅管教學鏈', emoji:'🎺', tier:'silver', needs:['C02','C03','C04'], desc:'由倩宇老師串起法國號入門到聲部統籌的完整教學線。' },
+    { id:'BOND_LOW_REGISTER_GUARDIANS', name:'低音域守護者', emoji:'🧱', tier:'gold', needs:['C10','C11','C15'], desc:'曉萱老師從基礎到高階，完整守住樂團低音域。' },
+    { id:'BOND_WOODWIND_AXIS', name:'木管低音軸線', emoji:'🎷', tier:'silver', needs:['C13','C15'], desc:'國霖與曉萱共同構成木管聲部的中低音支撐。' },
+    { id:'BOND_STAGE_COMMAND', name:'合奏指揮中樞', emoji:'🎼', tier:'diamond', needs:['C07','C14'], desc:'校長與康榮的最高階卡片同場，形成合奏指揮中樞。' },
+    { id:'BOND_CAMPUS_ROUTINE', name:'校園教學主軸', emoji:'🏫', tier:'bronze', needs:['C01','C05','C10'], desc:'由旭成、校長、曉萱構成日常教學與行政支撐。' },
+    { id:'BOND_ENSEMBLE_CORE', name:'管樂教學核心', emoji:'🎵', tier:'gold', needs:['C04','C13','C15'], desc:'倩宇、國霖、曉萱組成完整的管樂教學核心。' },
+    { id:'BOND_GRAND_REUNION', name:'莊敬大團圓', emoji:'🌟', tier:'legend', needs:['C12','C04','C07','C13','C14','C15'], desc:'集齊所有老師最高階卡片各一張，完成莊敬音樂科終極陣容。' },
+  ].forEach(pushBond);
 
-  // ══════════════════════════════════════════
-  // 【音樂性固定羈絆】—— 依難度排序
-  // 難度計算：UR期望50抽、各SSR期望8抽、各SR期望13抽、各R期望4抽
-  // ══════════════════════════════════════════
-  const musicBonds = [
-
-    // ★★★★★ 星巴克（需要UR或多張SSR，極難）
-    {
-      id:'BOND_SCHOOL_POWER', name:'莊敬權力核心', emoji:'👑',
-      needs:['C07','C06','C09'],  // 校長UR + 校長SSR + 康榮SSR（1UR+2SSR，期望≈66抽）
-      reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊校長UR、校長SSR、康榮SSR，莊敬最高權力天團',
-    },
-    {
-      id:'BOND_LEGEND_TRIO', name:'傳說三巨頭', emoji:'🌟',
-      needs:['C07','C04','C09'],  // 校長UR + 倩宇SSR + 康榮SSR（1UR+2SSR，期望≈66抽）
-      reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊校長UR、倩宇SSR、康榮SSR，傳說級稀有三重奏',
-    },
-    {
-      id:'BOND_ALL_SSR_UR', name:'稀有完全制霸', emoji:'💫',
-      needs:['C04','C06','C07','C09'],  // 全SSR+UR（1UR+3SSR，期望≈74抽）
-      reward:'星巴克一杯☕', rewardType:'starbucks',
-      desc:'集齊校長UR與全部三張SSR，傳說中的稀有全收集',
-    },
-
-    // ★★★★ 一度贊泡麵（需要UR或多張SSR+SR，高難）
-    {
-      id:'BOND_FULL_HOUSE', name:'莊敬全明星', emoji:'🏆',
-      needs:['C01','C04','C07','C09','C11'],  // UR+2SSR+2SR（期望≈90抽）
-      reward:'一度贊泡麵🍜', rewardType:'noodle',
-      desc:'集齊旭成SR、倩宇SSR、校長UR、康榮SSR、曉萱SR，全明星陣容',
-    },
-    {
-      id:'BOND_BRASS_KING', name:'銅管帝國', emoji:'🎺',
-      needs:['C07','C05','C06'],  // 校長全系列（1UR+1SSR+1SR，期望≈71抽）
-      reward:'一度贊泡麵🍜', rewardType:'noodle',
-      desc:'集齊校長的 SR＋SSR＋UR 三張卡，校長的三個面貌',
-    },
-    {
-      id:'BOND_WIND_GOD', name:'管樂之神', emoji:'🎼',
-      needs:['C04','C06','C08','C09'],  // 2SSR+2SR（期望≈42抽）
-      reward:'一度贊泡麵🍜', rewardType:'noodle',
-      desc:'集齊倩宇SSR、校長SSR、國霖SR、康榮SSR，管樂最強四人組',
-    },
-
-    // ★★★ 手搖飲（需要SSR+多SR或多SR組合，中高難）
-    {
-      id:'BOND_BRASS_TRIO', name:'法國號的傳承', emoji:'🎵',
-      needs:['C02','C03','C04'],  // 倩宇全系列（1SSR+1SR+1R，期望≈25抽）
-      reward:'任選手搖飲🧋', rewardType:'drink',
-      desc:'集齊倩宇老師的 R＋SR＋SSR，見證法國號的完整成長',
-    },
-    {
-      id:'BOND_LEGEND_TEACHER', name:'傳說教師天團', emoji:'🌙',
-      needs:['C01','C08','C09'],  // 旭成SR+國霖SR+康榮SSR（2SR+1SSR，期望≈34抽）
-      reward:'任選手搖飲🧋', rewardType:'drink',
-      desc:'集齊旭成SR、國霖SR、康榮SSR，三位傳說級老師同台',
-    },
-    {
-      id:'BOND_WIND_MASTER', name:'管樂四天王', emoji:'🎹',
-      needs:['C04','C08','C09','C11'],  // 2SSR+2SR（期望≈42抽）
-      reward:'任選手搖飲🧋', rewardType:'drink',
-      desc:'集齊倩宇SSR、國霖SR、康榮SSR、曉萱SR，管樂夢幻四人',
-    },
-    {
-      id:'BOND_SR_ALL', name:'SR 大豐收', emoji:'⭐',
-      needs:['C01','C03','C05','C08','C11'],  // 全5張SR（期望≈65抽）
-      reward:'任選手搖飲🧋', rewardType:'drink',
-      desc:'集齊全部5張 SR 卡，SR 全制霸！',
-    },
-
-    // ★★ 衛生紙（SR+R或3SR以下組合，中等難度）
-    {
-      id:'BOND_WOODWIND_SOUL', name:'木管靈魂', emoji:'🎷',
-      needs:['C08','C10','C11'],  // 國霖SR+曉萱R+曉萱SR（2SR+1R，期望≈30抽）
-      reward:'衛生紙一包🧻', rewardType:'tissue',
-      desc:'集齊國霖SR、曉萱R、曉萱SR，木管家族大集合',
-    },
-    {
-      id:'BOND_XUAN_DUO', name:'曉萱雙姝', emoji:'🌸',
-      needs:['C10','C11'],  // 曉萱R+SR（期望≈17抽）
-      reward:'衛生紙一包🧻', rewardType:'tissue',
-      desc:'集齊曉萱老師的 R 與 SR 兩張卡，低音管雙重奏',
-    },
-    {
-      id:'BOND_SCHOOL_SR', name:'莊敬校園日常', emoji:'🏫',
-      needs:['C01','C05','C08'],  // 旭成SR+校長SR+國霖SR（3SR，期望≈39抽）
-      reward:'衛生紙一包🧻', rewardType:'tissue',
-      desc:'集齊旭成SR、校長SR、國霖SR，莊敬日常三人組',
-    },
-    {
-      id:'BOND_LOW_HIGH', name:'高低音對話', emoji:'🎵',
-      needs:['C07','C10'],  // 校長UR+曉萱R（期望≈54抽）
-      reward:'衛生紙一包🧻', rewardType:'tissue',
-      desc:'集齊校長UR（最高峰）與曉萱R（低音管），高低音的奇妙相遇',
-    },
-    {
-      id:'BOND_TEACHER_PAIR', name:'老師拍檔', emoji:'👬',
-      needs:['C01','C08'],  // 旭成SR+國霖SR（2SR，期望≈26抽）
-      reward:'衛生紙一包🧻', rewardType:'tissue',
-      desc:'集齊旭成SR與國霖SR，兩位帥氣老師的組合',
-    },
-
-    // ★ 金牌3面（2SR或1SSR+1R以下，較易）
-    {
-      id:'BOND_QIANYU_SR_R', name:'倩宇入門組', emoji:'🎀',
-      needs:['C02','C03'],  // 倩宇R+SR（期望≈17抽）
-      reward:'金牌三面🥇🥇🥇', rewardType:'medals3',
-      desc:'集齊倩宇老師的 R 與 SR，法國號的初步相遇',
-    },
-    {
-      id:'BOND_SSR_DUO', name:'SSR 雙星', emoji:'✨',
-      needs:['C04','C09'],  // 倩宇SSR+康榮SSR（期望≈16抽）
-      reward:'金牌三面🥇🥇🥇', rewardType:'medals3',
-      desc:'集齊倩宇SSR與康榮SSR，兩位SSR強者的相遇',
-    },
-    {
-      id:'BOND_SCHOOL_START', name:'校長初登場', emoji:'🏅',
-      needs:['C05','C06'],  // 校長SR+SSR（期望≈21抽）
-      reward:'金牌三面🥇🥇🥇', rewardType:'medals3',
-      desc:'集齊校長SR與校長SSR，校長的雙面風采',
-    },
-
-    // 金牌2面（1SR+1R或純R，容易）
-    {
-      id:'BOND_MUSIC_STARTER', name:'音樂新鮮人', emoji:'🎵',
-      needs:['C02','C10'],  // 倩宇R+曉萱R（期望≈8抽，2張R）
-      reward:'金牌兩面🥇🥇', rewardType:'medals2',
-      desc:'集齊倩宇R與曉萱R，兩張R卡的基礎相遇',
-    },
-    {
-      id:'BOND_ROUSING_PAIR', name:'熱血搭檔', emoji:'🔥',
-      needs:['C01','C10'],  // 旭成SR+曉萱R（期望≈17抽）
-      reward:'金牌兩面🥇🥇', rewardType:'medals2',
-      desc:'集齊旭成SR與曉萱R，動靜之間的熱血組合',
-    },
-
-    // 金牌1面（單張SR+R，最容易）
-    {
-      id:'BOND_FIRST_R', name:'初心者之路', emoji:'🌱',
-      needs:['C02','C05'],  // 倩宇R+校長SR（期望≈17抽）
-      reward:'金牌一面🥇', rewardType:'medals1',
-      desc:'集齊倩宇R與校長SR，踏出收集的第一步',
-    },
-    {
-      id:'BOND_XUAN_START', name:'曉萱初見面', emoji:'🌷',
-      needs:['C10','C01'],  // 曉萱R+旭成SR（期望≈17抽）
-      reward:'金牌一面🥇', rewardType:'medals1',
-      desc:'集齊曉萱R與旭成SR，最親切的組合',
-    },
-  ];
-
-  // 只加入所有所需卡片都存在於 CARD_DB 的羈絆
-  musicBonds.forEach(b => {
-    const allExist = b.needs.every(id => CARD_DB.some(c => c.id === id));
-    if (allExist) bonds.push(b);
-  });
-
-  // 【自訂羈絆】從 Firebase 讀取
   if (typeof _customBonds !== 'undefined') {
     _customBonds.forEach(b => {
       const allExist = (b.needs||[]).every(id => CARD_DB.some(c=>c.id===id));
@@ -3775,8 +3705,8 @@ function generateDynamicBonds() {
     });
   }
 
-  DYNAMIC_BONDS = bonds;
-  return bonds;
+  DYNAMIC_BONDS = bonds.slice(0, 15);
+  return DYNAMIC_BONDS;
 }
 // 在卡庫載入後立即生成
 generateDynamicBonds();
@@ -3785,10 +3715,10 @@ let isOpening = false;
 let _pendingCard = null;
 
 // ══════════════════════════════════════════════════════════════
-// 保底機制（Pity System）：連續未抽中 SSR/UR 達 10 次強制給出
+// 保底機制（Pity System）：連續未抽中 SSR/UR 達 7 次強制給出
 // Firebase 路徑：students/{id}/pityCount
 // ══════════════════════════════════════════════════════════════
-const PITY_THRESHOLD = 10;
+const PITY_THRESHOLD = 7;
 
 // 更新保底進度條 UI
 function _updatePityUI(count) {
@@ -3837,8 +3767,10 @@ function _resetPackState() {
   if (box) { box.classList.remove('shaking'); box.style.pointerEvents = ''; }
 }
 
-function openCardPack() {
+async function openCardPack() {
   if (!_currentStuId) { toast('請先以學生帳號登入', 'err'); return; }
+  await loadCustomCardData();
+  await applyCardTitleOverrides();
   _resetPackState();
   // 讀取保底進度後更新 UI
   dbGet('students/' + _currentStuId + '/pityCount').then(function(cnt) {
@@ -3943,10 +3875,11 @@ function revealCard(card, pityTriggered) {
   document.getElementById('cardRevealRarity').textContent = glowText;
   document.getElementById('cardRevealRarity').style.color = rarityColors[card.rarity] || '#fff';
 
-  var msg = pityTriggered ? '🌈 第10抽保底觸發！' :
+  var msg = pityTriggered ? `🌈 第${PITY_THRESHOLD}抽保底觸發！` :
             card.rarity === 'UR'  ? '🎉 恭喜！超稀有 UR 卡！' :
             card.rarity === 'SSR' ? '✨ 太棒了！SSR 稀有卡！' :
-            card.rarity === 'SR'  ? '👍 SR 卡，不錯喔！' : '';
+            card.rarity === 'SR'  ? `👍 SR 卡，不錯喔！${card.quote ? '「'+card.quote+'」' : ''}` :
+            (card.quote ? `「${card.quote}」` : '');
   document.getElementById('cardRevealMsg').textContent = msg;
   document.getElementById('cardRevealWrap').classList.add('on');
 }
@@ -4017,7 +3950,7 @@ function openCardZoom(card, count, isNew) {
 
   // 資訊列
   document.getElementById('zoomCharName').textContent = card.name;
-  document.getElementById('zoomCharTitle').textContent = card.title;
+  document.getElementById('zoomCharTitle').textContent = card.quote ? `${card.title}｜「${card.quote}」` : card.title;
   document.getElementById('zoomCountBadge').textContent =
     count > 1 ? `擁有 ${count} 張` : '擁有 1 張';
 
@@ -4044,6 +3977,8 @@ function closeCardZoom() {
 // ── 背包 ──
 async function openBag() {
   if (!_currentStuId) { toast('請先登入','err'); return; }
+  await loadCustomCardData();
+  await applyCardTitleOverrides();
   generateDynamicBonds(); // 每次開啟重新計算，確保卡庫更新後同步
   document.getElementById('bagOverlay').classList.add('on');
   await renderBag();
@@ -4072,22 +4007,20 @@ async function renderBag() {
   const totalCards = Object.values(inv).reduce((a,b)=>a+(b||0),0);
   const stuData = await dbGet(`students/${_currentStuId}`);
   const bondMedals = stuData?.bondMedals || 0;
-  const earnedBonds = Object.keys(stuData?.claimedBonds || {});
-  document.getElementById('bagSubtitle').textContent = `收藏 ${totalCards} 張卡片 · 羈絆勳章 ${bondMedals} 枚`;
-  // 更新勳章數量文字
+  const featuredCardId = stuData?.featuredCardId || '';
+  document.getElementById('bagSubtitle').textContent = `收藏 ${totalCards} 張卡片 · 大型羈絆徽章 ${bondMedals} 枚`;
   const medalCountEl = document.getElementById('bagMedalCount');
   const medalBtn = document.getElementById('bagMedalRedeemBtn');
-  // 合併讀取：unredeemedBadges（新）+ claimedBonds（舊格式相容）
   const allBadgesData = stuData?.unredeemedBadges || {};
   const oldClaimed    = stuData?.claimedBonds || {};
 
-  // 把舊格式 claimedBonds 轉成展示用物件（沒有 tier 資訊，用 bond 名稱補）
   const oldEntries = Object.entries(oldClaimed)
-    .filter(([bondId]) => !allBadgesData[bondId]) // 新格式已有的不重複
+    .filter(([bondId]) => !allBadgesData[bondId])
     .map(([bondId, claimedAt]) => {
       const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
       if (!bond) return null;
       const tier = getBondTier(bond);
+      if (!isManualBondTier(tier)) return null;
       return [bondId, {
         bondId, bondName: bond.name, tier,
         tierName: (TIER_INFO[tier]||TIER_INFO.bronze).name,
@@ -4096,21 +4029,23 @@ async function renderBag() {
       }];
     }).filter(Boolean);
 
-  // 合併新舊
-  const allEntries = [...Object.entries(allBadgesData), ...oldEntries];
+  const allEntries = [...Object.entries(allBadgesData), ...oldEntries]
+    .filter(([,b]) => isManualBondTier(b.tier));
   const pendingBadges  = allEntries.filter(([,b])=>!b.redeemed);
   const redeemedBadges = allEntries.filter(([,b])=> b.redeemed);
   const pendingCount = pendingBadges.length;
 
-  if (medalCountEl) medalCountEl.textContent = `（待核銷 ${pendingCount} 枚）`;
-  if (medalBtn) medalBtn.disabled = pendingCount < 1;
+  if (medalCountEl) medalCountEl.textContent = `（待老師核銷 ${pendingCount} 枚）`;
+  if (medalBtn) {
+    medalBtn.disabled = pendingCount < 1;
+    medalBtn.textContent = pendingCount > 0 ? '查看待核銷徽章' : '目前無待核銷';
+  }
 
-  // 渲染徽章收藏格子
   const badgeCol = document.getElementById('bagBadgeCollection');
   const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
   if (badgeCol) {
     if (!allEntries.length) {
-      badgeCol.innerHTML = '<div style="font-size:12px;color:rgba(200,150,255,.5);padding:8px 0">尚未獲得任何羈絆徽章</div>';
+      badgeCol.innerHTML = '<div style="font-size:12px;color:rgba(200,150,255,.5);padding:8px 0">尚未獲得任何需要老師核銷的羈絆徽章</div>';
     } else {
       let bHtml = '';
       if (pendingBadges.length) {
@@ -4141,31 +4076,51 @@ async function renderBag() {
     }
   }
 
-  // 讀取 NEW 標記
   const newCards = stuData?.newCards || {};
 
-  // 卡牌格
   const grid = document.getElementById('bagCardGrid');
   grid.innerHTML = '';
   CARD_DB.forEach(card => {
     const count = inv[card.id] || 0;
     const isNew = !!newCards[card.id];
+    const isFeatured = featuredCardId === card.id && count > 0;
     const div = document.createElement('div');
     div.className = 'card-thumb' + (count===0 ? ' empty-slot' : '');
     div.style.position = 'relative';
+    if (isFeatured) {
+      div.style.boxShadow = '0 0 0 2px var(--gold), 0 0 18px rgba(212,175,55,.35)';
+    }
     if (count > 0) {
       div.innerHTML = `
         <img src="${card.img}" alt="${card.name}" onerror="this.parentNode.classList.add('empty-slot');this.remove()">
         <div class="ct-rarity ct-rarity-${card.rarity}">${card.rarity}</div>
         <div class="ct-name">${card.name}</div>
         ${count>1 ? `<div class="ct-count">×${count}</div>` : ''}
-        ${isNew ? `<div class="card-new-badge" id="new-badge-${card.id}">NEW</div>` : ''}`;
-      // 所有擁有的卡片都可點擊放大，同時清除 NEW 標記
+        ${isNew ? `<div class="card-new-badge" id="new-badge-${card.id}">NEW</div>` : ''}
+        ${isFeatured ? `<div style="position:absolute;left:6px;bottom:28px;font-size:10px;padding:2px 7px;border-radius:12px;background:var(--gold);color:#000;font-weight:bold">看板星卡</div>` : ''}`;
       div.style.cursor = 'pointer';
       div.addEventListener('click', function() {
         if (isNew) clearNewCard(card.id);
         openCardZoom(card, count, isNew);
       });
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.textContent = isFeatured ? '目前看板' : '設為看板';
+      btn.style.position = 'absolute';
+      btn.style.left = '6px';
+      btn.style.right = '6px';
+      btn.style.bottom = '6px';
+      btn.style.padding = '4px 6px';
+      btn.style.fontSize = '10px';
+      btn.style.background = isFeatured ? 'var(--gold)' : 'rgba(0,0,0,.45)';
+      btn.style.color = isFeatured ? '#000' : '#fff';
+      btn.style.borderColor = isFeatured ? 'var(--gold)' : 'rgba(255,255,255,.2)';
+      btn.disabled = isFeatured;
+      btn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        if (!isFeatured) setFeaturedCard(card.id);
+      });
+      div.appendChild(btn);
     } else {
       div.innerHTML = '🂠';
       div.title = '尚未獲得';
@@ -4173,7 +4128,6 @@ async function renderBag() {
     grid.appendChild(div);
   });
 
-  // 羈絆列表（動態生成）
   const bondList = document.getElementById('bagBondList');
   bondList.innerHTML = '';
   const claimedBonds      = (await dbGet(`students/${_currentStuId}/claimedBonds`)) || {};
@@ -4183,8 +4137,8 @@ async function renderBag() {
     const isRarityType = !!bond.rarityPool;
     const canRedeem    = isRarityType ? checkRarityBond(bond, inv)
                                       : bond.needs.every(id => (inv[id]||0) >= 1);
-    // 檢查兩個欄位（舊格式 claimedBonds 或新格式 unredeemedBadges）
     const alreadyClaimed = claimedBonds[bond.id] || (unredeemedBadges[bond.id] ? unredeemedBadges[bond.id].claimedAt : null);
+    const rewardCfg = getBondRewardConfig(bond);
 
     let chipsHtml = '';
     if (isRarityType) {
@@ -4216,18 +4170,30 @@ async function renderBag() {
           <div class="badge-circle ${info.tierClass}" style="width:36px;height:36px;font-size:16px;animation:none;flex-shrink:0">${iconMap[tier]}</div>
           <div>
             <div style="font-size:12px;font-weight:bold" class="${info.tierClass.replace('badge-','badge-')} badge-name">${bond.name} · ${info.name}</div>
-            <div style="font-size:11px;color:var(--tx3)">獲得 ${info.medals} 枚勳章 · 找老師核銷換獎品</div>
+            <div style="font-size:11px;color:var(--tx3)">${getBondModeText(bond)}</div>
           </div>
         </div>`;
       })()}
       ${alreadyClaimed
-        ? `<div style="font-size:12px;color:var(--tx3)">✅ 已兌換（${alreadyClaimed}）</div>`
+        ? `<div style="font-size:12px;color:var(--tx3)">✅ ${rewardCfg.mode==='auto'?'已自動發放':'已建立兌換徽章'}（${alreadyClaimed}）</div>`
         : canRedeem
-          ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px;margin-top:6px">🔓 立即兌換</button>`
+          ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px;margin-top:6px">${rewardCfg.mode==='auto'?'⚡ 立即領取':'🏵️ 建立兌換徽章'}</button>`
           : `<div style="font-size:12px;color:var(--tx3);margin-top:4px">🔒 尚未集齊所需卡片</div>`
       }`;
     bondList.appendChild(div);
   }
+}
+
+async function setFeaturedCard(cardId) {
+  if (!_currentStuId) return;
+  const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
+  if ((inv[cardId]||0) < 1) {
+    toast('尚未持有這張卡片', 'err');
+    return;
+  }
+  await dbSet(`students/${_currentStuId}/featuredCardId`, cardId);
+  toast('已設為看板星卡', 'ok');
+  await renderBag();
 }
 
 async function redeemBond(bondId) {
@@ -4235,11 +4201,10 @@ async function redeemBond(bondId) {
   const bond = DYNAMIC_BONDS.find(b => b.id === bondId);
   if (!bond) return;
 
-  // 計算可得勳章數（依 tier）
-  const medalCount = getBondMedalCount(bond);
-  const bondTier   = getBondTier(bond);
-  const tierInfo   = TIER_INFO[bondTier];
-  const iconMap2   = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+  const rewardCfg = getBondRewardConfig(bond);
+  const bondTier  = getBondTier(bond);
+  const tierInfo  = TIER_INFO[bondTier];
+  const iconMap2  = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
 
   openDlg(`🔗 兌換羈絆「${bond.name}」`,
     `<div class="dlg-msg" style="text-align:center">
@@ -4251,12 +4216,14 @@ async function redeemBond(bondId) {
         <div style="text-align:left">
           <div style="font-size:14px;font-weight:bold;color:#e0c0ff">${bond.name}</div>
           <div style="font-size:12px;color:#a080d0">${tierInfo.name}</div>
-          <div style="font-size:13px;color:#c89eff;margin-top:2px">× ${medalCount} 枚勳章</div>
+          <div style="font-size:13px;color:#c89eff;margin-top:2px">${rewardCfg.label}</div>
         </div>
       </div>
-      <div style="font-size:12px;color:var(--tx3)">消耗所需卡片各一張，換得此羈絆徽章<br>持勳章找任一老師核銷，換取你想要的獎品</div>
+      <div style="font-size:12px;color:var(--tx3)">${rewardCfg.mode==='auto'
+        ? '消耗所需卡片各一張後，系統會立刻把獎勵加到你的帳號。'
+        : '消耗所需卡片各一張後，系統會建立待核銷徽章，請出示畫面給老師。'}</div>
      </div>`,
-    [{label:'確認兌換', cls:'ok', fn: async () => {
+    [{label:rewardCfg.mode==='auto' ? '確認領取' : '確認建立徽章', cls:'ok', fn: async () => {
       const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
       const isRarityType = !!bond.rarityPool;
       const ok = isRarityType ? checkRarityBond(bond, inv)
@@ -4266,8 +4233,9 @@ async function redeemBond(bondId) {
       const upd = {};
       const lk  = Date.now()+'';
       const t   = now();
+      const d   = await dbGet(`students/${_currentStuId}`) || {};
+      const stuName = byId(_currentStuId)?.name || '';
 
-      // 扣除卡片
       if (isRarityType) {
         getRarityBondCards(bond, inv).forEach(c => {
           upd[`${ROOT}/students/${_currentStuId}/inventory/${c.id}`] = Math.max(0,(inv[c.id]||0)-1);
@@ -4278,27 +4246,51 @@ async function redeemBond(bondId) {
         });
       }
 
-      // 發放羈絆勳章（統一獎勵）
-      const d = await dbGet(`students/${_currentStuId}`);
-      const stuName = byId(_currentStuId)?.name || '';
-      // 記錄羈絆已兌換
       upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
-      // 存入「待核銷徽章」，key = bondId，value = 徽章資訊
-      upd[`${ROOT}/students/${_currentStuId}/unredeemedBadges/${bondId}`] = {
-        bondId, bondName: bond.name, tier: bondTier,
-        tierName: tierInfo.name, medalCount, claimedAt: t,
-        redeemed: false
-      };
-      upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
-        time:t, action:'羈絆兌換', reason:`「${bond.name}」獲得 ${tierInfo.name}🏵️，待老師核銷`, teacher:'系統', delta:0
-      };
 
-      await db.ref('/').update(upd);
-      await sendNotifToStudent(_currentStuId, stuName,
-        `${bond.emoji} 羈絆「${bond.name}」兌換成功！獲得 ${medalCount} 枚羈絆勳章🏵️
-拿著勳章去找老師換獎品吧！`, 'notice');
+      if (rewardCfg.mode === 'auto') {
+        const newPoints = (d?.points||0) + (rewardCfg.points||0);
+        const newMedals = (d?.medals||0) + (rewardCfg.medals||0);
+        if (rewardCfg.points) upd[`${ROOT}/students/${_currentStuId}/points`] = newPoints;
+        if (rewardCfg.medals) upd[`${ROOT}/students/${_currentStuId}/medals`] = newMedals;
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
+          time:t,
+          action:'羈絆兌換',
+          reason:`「${bond.name}」自動發放 ${rewardCfg.label}`,
+          teacher:'系統',
+          delta: rewardCfg.points || 0
+        };
 
-      toast(`獲得 ${medalCount} 枚羈絆勳章🏵️`, 'ok');
+        await db.ref('/').update(upd);
+        await sendNotifToStudent(_currentStuId, stuName,
+          `${bond.emoji} 羈絆「${bond.name}」兌換成功！
+系統已自動發放：${rewardCfg.label}`, 'notice');
+
+        toast(rewardCfg.label, 'ok');
+      } else {
+        const medalCount = getBondMedalCount(bond);
+        upd[`${ROOT}/students/${_currentStuId}/unredeemedBadges/${bondId}`] = {
+          bondId, bondName: bond.name, tier: bondTier,
+          tierName: tierInfo.name, medalCount, claimedAt: t,
+          redeemed: false
+        };
+        upd[`${ROOT}/students/${_currentStuId}/bondMedals`] = (d?.bondMedals||0) + medalCount;
+        upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
+          time:t,
+          action:'羈絆兌換',
+          reason:`「${bond.name}」建立 ${tierInfo.name}，需找老師核銷`,
+          teacher:'系統',
+          delta:0
+        };
+
+        await db.ref('/').update(upd);
+        await sendNotifToStudent(_currentStuId, stuName,
+          `${bond.emoji} 羈絆「${bond.name}」兌換成功！
+已建立 ${tierInfo.name}，請出示畫面給老師核銷。`, 'notice');
+
+        toast(`已建立 ${tierInfo.name}`, 'ok');
+      }
+
       await renderBag();
       return true;
     }}, {label:'取消', fn:()=>true}]
@@ -4314,7 +4306,11 @@ async function redeemBond(bondId) {
 
 async function loadCustomCardData() {
   const cc = (await dbGet('customCards')) || {};
-  _customCards = Object.entries(cc).map(([k,v])=>({...v, _fbKey:k}));
+  _customCards = Object.entries(cc).map(([k,v])=>({
+    ...v,
+    quote: v.quote || '請多多指教。',
+    _fbKey:k
+  }));
   const cb = (await dbGet('customBonds')) || {};
   _customBonds = Object.entries(cb).map(([k,v])=>({...v, _fbKey:k}));
   // 合併自訂卡片到 CARD_DB（避免重複）
@@ -4345,6 +4341,7 @@ async function renderCardMgmt() {
   }
 
   await loadCustomCardData();
+  await applyCardTitleOverrides();
 
   // 卡片列表
   const list = document.getElementById('cardMgmtList');
@@ -4366,6 +4363,7 @@ async function renderCardMgmt() {
             ${isCustom?'<span style="font-size:10px;padding:1px 5px;border-radius:6px;background:rgba(46,204,113,.15);color:var(--green);margin-left:3px">自訂</span>':''}
           </div>
           <div class="ti-cls" style="font-size:11px">${card.title} · ${card.id}</div>
+          <div style="font-size:11px;color:var(--tx3);margin-top:2px">「${card.quote||'—'}」</div>
         </div>
       </div>
       <div style="display:flex;gap:5px;flex-shrink:0">
@@ -4409,6 +4407,8 @@ function openAddCardDlg() {
      <input class="dlg-input" type="text" id="ncName" placeholder="例：國霖">
      <div class="dlg-label">稱號</div>
      <input class="dlg-input" type="text" id="ncTitle" placeholder="例：音樂守護者">
+     <div class="dlg-label">角色台詞</div>
+     <input class="dlg-input" type="text" id="ncQuote" placeholder="例：先把聲音站穩">
      <div class="dlg-label">稀有度</div>
      <select class="dlg-input" id="ncRarity" style="width:100%;margin-bottom:10px">
        <option value="R">R</option>
@@ -4422,12 +4422,13 @@ function openAddCardDlg() {
       const id    = document.getElementById('ncId').value.trim().toUpperCase();
       const name  = document.getElementById('ncName').value.trim();
       const title = document.getElementById('ncTitle').value.trim();
+      const quote = document.getElementById('ncQuote').value.trim();
       const rar   = document.getElementById('ncRarity').value;
       const img   = document.getElementById('ncImg').value.trim();
       if (!id||!name||!title||!img) { toast('請填寫所有欄位','err'); return false; }
       if (CARD_DB.some(c=>c.id===id)) { toast('此 ID 已存在','err'); return false; }
       const fbKey = 'card_'+Date.now();
-      await dbSet(`customCards/${fbKey}`, {id, name, title, rarity:rar, img, _fbKey:fbKey});
+      await dbSet(`customCards/${fbKey}`, {id, name, title, quote, rarity:rar, img, _fbKey:fbKey});
       toast(`卡片「${name}」已新增`,'ok');
       await loadCustomCardData();
       renderCardMgmt();
@@ -4447,6 +4448,8 @@ function openEditCardDlg(cardId) {
      <input class="dlg-input" type="text" id="ecName" value="${card.name}" ${isCustom?'':'readonly style="opacity:.5"'}>
      <div class="dlg-label">稱號</div>
      <input class="dlg-input" type="text" id="ecTitle" value="${card.title}">
+     <div class="dlg-label">角色台詞${isCustom?'':' （內建卡，唯讀）'}</div>
+     <input class="dlg-input" type="text" id="ecQuote" value="${card.quote||''}" ${isCustom?'':'readonly style="opacity:.5"'}>
      <div class="dlg-label">稀有度${isCustom?'':' （內建卡，唯讀）'}</div>
      <select class="dlg-input" id="ecRarity" style="width:100%;margin-bottom:10px" ${isCustom?'':'disabled'}>
        <option value="R" ${card.rarity==='R'?'selected':''}>R</option>
@@ -4461,9 +4464,10 @@ function openEditCardDlg(cardId) {
       if (!newTitle) { toast('稱號不能為空','err'); return false; }
       if (isCustom) {
         const newName  = document.getElementById('ecName').value.trim();
+        const newQuote = document.getElementById('ecQuote').value.trim();
         const newRar   = document.getElementById('ecRarity').value;
         const newImg   = document.getElementById('ecImg').value.trim();
-        await dbUpd(`customCards/${card._fbKey}`, {name:newName, title:newTitle, rarity:newRar, img:newImg});
+        await dbUpd(`customCards/${card._fbKey}`, {name:newName, title:newTitle, quote:newQuote, rarity:newRar, img:newImg});
       } else {
         // 內建卡：只能修改稱號，存入 Firebase 覆蓋表
         await dbSet(`cardTitleOverride/${card.id}`, newTitle);
@@ -4565,48 +4569,68 @@ async function applyCardTitleOverrides() {
 
 // 各羈絆的 tier 對照表
 const BOND_TIER_MAP = {
-  // 傳說（legend）
-  BOND_FULL_HOUSE:'legend', BOND_ALL_SSR_UR:'legend', BOND_RARITY_SR5:'legend',
-  // 藍鑽（diamond）
-  BOND_SCHOOL_POWER:'diamond', BOND_LEGEND_TRIO:'diamond', BOND_BRASS_KING:'diamond',
-  BOND_WIND_GOD:'diamond', BOND_WIND_MASTER:'diamond', BOND_RARITY_SSR3:'diamond',
-  // 金牌（gold）
-  BOND_BRASS_TRIO:'gold', BOND_LEGEND_TEACHER:'gold', BOND_SR_ALL:'gold',
-  BOND_RARITY_SR3:'gold', BOND_WOODWIND_SOUL:'gold', BOND_SCHOOL_SR:'gold',
-  // 銀牌（silver）
-  BOND_XUAN_DUO:'silver', BOND_LOW_HIGH:'silver', BOND_TEACHER_PAIR:'silver',
-  BOND_QIANYU_SR_R:'silver', BOND_SSR_DUO:'silver', BOND_SCHOOL_START:'silver',
-  BOND_RARITY_SR2:'silver',
-  // 銅牌（bronze）
-  BOND_MUSIC_STARTER:'bronze', BOND_ROUSING_PAIR:'bronze',
-  BOND_FIRST_R:'bronze', BOND_XUAN_START:'bronze', BOND_RARITY_R2:'bronze',
+  BOND_XUCHENG_TRACK:'gold',
+  BOND_QIANYU_TRACK:'gold',
+  BOND_PRINCIPAL_TRACK:'diamond',
+  BOND_GUOLIN_TRACK:'gold',
+  BOND_KANGRONG_TRACK:'diamond',
+  BOND_XIAOXUAN_TRACK:'gold',
+  BOND_ADMIN_DUO:'silver',
+  BOND_BRASS_CHAIN:'silver',
+  BOND_LOW_REGISTER_GUARDIANS:'gold',
+  BOND_WOODWIND_AXIS:'silver',
+  BOND_STAGE_COMMAND:'diamond',
+  BOND_CAMPUS_ROUTINE:'bronze',
+  BOND_ENSEMBLE_CORE:'gold',
+  BOND_GRAND_REUNION:'legend',
 };
 
-// 同名大滿貫 tier 依角色決定
-function getNameBondTier(bondId, hasUR, hasSSR) {
-  if (hasUR)  return 'legend';
-  if (hasSSR) return 'diamond';
-  return 'gold';
-}
-
 function getBondTier(bond) {
-  if (bond.id.startsWith('BOND_NAME_')) {
-    // 同名大滿貫：看該角色的卡片
-    const cards = CARD_DB.filter(c => c.name === bond.id.replace('BOND_NAME_',''));
-    const hasUR  = cards.some(c=>c.rarity==='UR');
-    const hasSSR = cards.some(c=>c.rarity==='SSR');
-    return getNameBondTier(bond.id, hasUR, hasSSR);
-  }
+  if (!bond) return 'bronze';
+  if (bond.tier && TIER_INFO[bond.tier]) return bond.tier;
+  const rewardTypeTierMap = {
+    medals1:'bronze',
+    medals2:'silver',
+    medals3:'gold',
+    tissue:'silver',
+    drink:'diamond',
+    noodle:'legend',
+    starbucks:'legend',
+  };
+  if (bond.rewardType && rewardTypeTierMap[bond.rewardType]) return rewardTypeTierMap[bond.rewardType];
   return BOND_TIER_MAP[bond.id] || 'bronze';
 }
 
 const TIER_INFO = {
-  bronze:  { name:'銅牌徽章', emoji:'🥉', medals:1, tierClass:'badge-bronze' },
-  silver:  { name:'銀牌徽章', emoji:'🥈', medals:1, tierClass:'badge-silver' },
-  gold:    { name:'金牌徽章', emoji:'🥇', medals:2, tierClass:'badge-gold'   },
+  bronze:  { name:'銅牌羈絆', emoji:'🥉', medals:1, tierClass:'badge-bronze' },
+  silver:  { name:'銀牌羈絆', emoji:'🥈', medals:1, tierClass:'badge-silver' },
+  gold:    { name:'金牌羈絆', emoji:'🥇', medals:2, tierClass:'badge-gold'   },
   diamond: { name:'藍鑽徽章', emoji:'💠', medals:2, tierClass:'badge-diamond' },
   legend:  { name:'傳說徽章', emoji:'🏆', medals:3, tierClass:'badge-legend'  },
 };
+
+function isManualBondTier(tier) {
+  return tier === 'diamond' || tier === 'legend';
+}
+
+function getBondRewardConfig(bond) {
+  const tier = getBondTier(bond);
+  const autoRewardMap = {
+    bronze: { mode:'auto', points:2, medals:0, label:'點數 +2' },
+    silver: { mode:'auto', points:3, medals:0, label:'點數 +3' },
+    gold: { mode:'auto', points:0, medals:1, label:'金牌 +1' },
+    diamond: { mode:'manual', points:0, medals:0, label:'藍鑽徽章，需找老師兌換' },
+    legend: { mode:'manual', points:0, medals:0, label:'傳說徽章，需找老師兌換' },
+  };
+  return { tier, ...(autoRewardMap[tier] || autoRewardMap.bronze) };
+}
+
+function getBondModeText(bond) {
+  const rewardCfg = getBondRewardConfig(bond);
+  return rewardCfg.mode === 'auto'
+    ? `此獎項將自動發放：${rewardCfg.label}`
+    : `此獎項需找老師兌換：${rewardCfg.label}`;
+}
 
 // 產生徽章 HTML（顯示羈絆名稱 + 等級名稱，外觀依 tier）
 function renderBadgeHTML(bond, count) {
@@ -4639,6 +4663,7 @@ function renderBadgeHTML(bond, count) {
 // 取得羈絆的勳章數量（依 tier）
 function getBondMedalCount(bond) {
   const tier = getBondTier(bond);
+  if (!isManualBondTier(tier)) return 0;
   return TIER_INFO[tier]?.medals || 1;
 }
 
@@ -4650,7 +4675,6 @@ function getBondMedalCount(bond) {
 async function openMedalRedeemDlg() {
   if (!_currentStuId) return;
   const d = await dbGet(`students/${_currentStuId}`);
-  // 合併新舊格式
   const newBadges2 = d?.unredeemedBadges || {};
   const oldClaimed2 = d?.claimedBonds || {};
   const allBadges2 = {...newBadges2};
@@ -4659,10 +4683,11 @@ async function openMedalRedeemDlg() {
     const bond2 = DYNAMIC_BONDS.find(b=>b.id===bondId);
     if (!bond2) return;
     const tier2 = getBondTier(bond2);
+    if (!isManualBondTier(tier2)) return;
     allBadges2[bondId] = {bondId, bondName:bond2.name, tier:tier2, tierName:(TIER_INFO[tier2]||TIER_INFO.bronze).name, redeemed:false};
   });
   const badges = allBadges2;
-  const pending = Object.entries(badges).filter(([,b])=>!b.redeemed);
+  const pending = Object.entries(badges).filter(([,b])=>!b.redeemed && isManualBondTier(b.tier));
   const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
 
   const badgesHtml = pending.length ? pending.map(([,b]) => {
@@ -4674,14 +4699,14 @@ async function openMedalRedeemDlg() {
         <div style="font-size:11px;color:#a080d0">${info.name}</div>
       </div>
     </div>`;
-  }).join('') : '<div style="color:var(--tx3);font-size:13px;text-align:center;padding:12px 0">目前沒有待核銷徽章</div>';
+  }).join('') : '<div style="color:var(--tx3);font-size:13px;text-align:center;padding:12px 0">目前沒有待老師核銷的藍鑽或傳說徽章</div>';
 
   openDlg('🏵️ 出示給老師核銷',
     `<div style="text-align:center;margin-bottom:12px">
-       <div style="font-size:13px;color:var(--tx2);line-height:1.6">請出示此畫面給老師<br>老師將核銷對應徽章並給予獎品</div>
+       <div style="font-size:13px;color:var(--tx2);line-height:1.6">此處只顯示需要老師處理的大獎羈絆<br>藍鑽與傳說徽章請直接出示給老師核銷</div>
      </div>
      <div>${badgesHtml}</div>
-     <div style="font-size:11px;color:var(--tx3);text-align:center;margin-top:8px">不同徽章對應不同獎品，請詢問老師</div>`,
+     <div style="font-size:11px;color:var(--tx3);text-align:center;margin-top:8px">銅牌、銀牌、金牌羈絆會由系統自動發放，不會出現在這裡</div>`,
     [{label:'關閉',fn:()=>true}]
   );
 }
@@ -4919,6 +4944,7 @@ async function loadBondMedalPanel() {
         const bond = DYNAMIC_BONDS.find(b=>b.id===bondId);
         if (!bond) return;
         const tier = getBondTier(bond);
+        if (!isManualBondTier(tier)) return;
         merged[bondId] = {bondId, bondName:bond.name, tier, tierName:(TIER_INFO[tier]||TIER_INFO.bronze).name, claimedAt:'', redeemed:false, _legacy:true};
       });
       return {...s, badges: merged};
