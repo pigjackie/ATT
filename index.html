@@ -2809,7 +2809,7 @@ async function renderStudentCardExtras(stu, d) {
   if (featuredEl) {
     featuredEl.innerHTML = featuredCard ? `
       <div style="display:flex;gap:12px;align-items:center;background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(0,0,0,.2));border:1px solid rgba(212,175,55,.3);border-radius:14px;padding:12px">
-        <img src="${featuredCard.img}" alt="${featuredCard.name}" style="width:82px;height:112px;object-fit:cover;border-radius:10px;border:1px solid rgba(212,175,55,.35);background:var(--bg2)" onerror="this.style.display='none'">
+        <img src="${getCardImageSrc(featuredCard)}" alt="${featuredCard.name}" style="width:82px;height:112px;object-fit:cover;border-radius:10px;border:1px solid rgba(212,175,55,.35);background:var(--bg2)" onerror="this.style.display='none'">
         <div style="min-width:0;flex:1">
           <div style="font-size:11px;color:var(--gold);letter-spacing:1px;margin-bottom:4px">看板星卡</div>
           <div style="font-size:20px;font-weight:bold">${featuredCard.name}</div>
@@ -3598,21 +3598,23 @@ async function delStudent(fbKey, name) {
 // ════════════════════════════════════════════════════════════════
 
 const CARD_DB = [
-  {id:'C01',name:'旭成',rarity:'SR',  img:'CARDS/旭成SR_結果_結果.jpg', title:'班級經營講師', quote:'先把今天該做的事做好。'},
+  {id:'C01',name:'旭成',rarity:'R',   img:'CARD/旭成R.jpg',              title:'班級巡堂員', quote:'先把基本動作做好。'},
   {id:'C02',name:'倩宇',rarity:'R',   img:'CARDS/倩宇R_結果.jpg',       title:'法國號導師', quote:'先把嘴型站穩，再談音量。'},
   {id:'C03',name:'倩宇',rarity:'SR',  img:'CARDS/倩宇SR_結果.jpg',      title:'銅管首席', quote:'每一個進拍點都要更乾淨。'},
   {id:'C04',name:'倩宇',rarity:'SSR', img:'CARDS/倩宇SSR_結果.jpg',     title:'法國號聲部統籌', quote:'音色一致，合奏才會亮。'},
-  {id:'C05',name:'校長',rarity:'SR',  img:'CARDS/校長SR_結果.jpg',      title:'校務總籌', quote:'把秩序做好，學習才會穩。'},
-  {id:'C06',name:'校長',rarity:'SSR', img:'CARDS/校長SSR_結果.jpg',     title:'弦樂行政指揮', quote:'團隊一穩，聲音就會站起來。'},
-  {id:'C07',name:'校長',rarity:'UR',  img:'CARDS/校長UR_結果.jpg',      title:'莊敬大家長', quote:'今天的標準，要比昨天更整齊。'},
+  {id:'C05',name:'賴惠文',rarity:'SR',  img:'CARDS/校長SR_結果.jpg',      title:'親民校長', quote:'把秩序做好，學習才會穩。'},
+  {id:'C06',name:'賴惠文',rarity:'SSR', img:'CARDS/校長SSR_結果.jpg',     title:'校務總籌', quote:'團隊一穩，聲音就會站起來。'},
+  {id:'C07',name:'賴惠文',rarity:'UR',  img:'CARDS/校長UR_結果.jpg',      title:'莊敬大家長', quote:'今天的標準，要比昨天更整齊。'},
   {id:'C08',name:'國霖',rarity:'SR',  img:'CARDS/國霖SR_結果.jpg',      title:'單簧管大師', quote:'音準站穩，整段就會發光。'},
   {id:'C09',name:'康榮',rarity:'SSR', img:'CARDS/康榮SSR_結果.jpg',     title:'音樂總監', quote:'你們的聲音，要有同一個方向。'},
   {id:'C10',name:'曉萱',rarity:'R',   img:'CARDS/曉萱R_結果.jpg',       title:'低音管導師', quote:'低音穩住，全團才有地板。'},
   {id:'C11',name:'曉萱',rarity:'SR',  img:'CARDS/曉萱SR_結果.jpg',      title:'低音管精靈', quote:'低音不是背景，是支撐。'},
-  {id:'C12',name:'旭成',rarity:'SSR', img:'CARDS/旭成SR_結果_結果.jpg', title:'學務協調長', quote:'上課不要看手機。'},
+  {id:'C12',name:'旭成',rarity:'SR',  img:'CARDS/旭成SR_結果_結果.jpg', title:'班級經營講師', quote:'上課不要看手機。'},
   {id:'C13',name:'國霖',rarity:'SSR', img:'CARDS/國霖SR_結果.jpg',      title:'木管聲部統籌', quote:'音色先站穩，技巧自然跟上。'},
-  {id:'C14',name:'康榮',rarity:'UR',  img:'CARDS/康榮SSR_結果.jpg',     title:'合奏總指揮', quote:'進來就要一起把聲音做滿。'},
+  {id:'C14',name:'康榮',rarity:'SR',  img:'CARDS/康榮SSR_結果.jpg',     title:'合奏協調', quote:'每個聲部都要知道自己的位置。'},
   {id:'C15',name:'曉萱',rarity:'SSR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音域守護者', quote:'低音站穩，樂團才會穩。'},
+  {id:'C16',name:'旭成',rarity:'SSR', img:'CARD/旭成ssr2.jpg',          title:'學務協調長', quote:'規矩站穩，班級就會穩。'},
+  {id:'C17',name:'師丈',rarity:'SR',  img:'CARD/師丈SR.jpg',             title:'校務後援', quote:'有需要幫忙就先把流程理清楚。'},
 ];
 // ════════════════════════════════════════════════════════════════
 // 班級專屬獎品設定
@@ -3645,6 +3647,37 @@ function getClassReward(clsName, tier) {
 let _customCards = [];
 let _customBonds = [];
 
+const CARD_IMAGE_ROOTS = [
+  'C:/Users/pigjo/Desktop/CARDS',
+  'C:/Users/pigjo/Desktop/CARD',
+  'C:/Users/pigjo/Downloads/CARDS',
+];
+
+function resolveCardImagePath(img) {
+  if (!img) return '';
+  if (/^(https?:|data:|file:\/\/\/)/i.test(img)) return img;
+  const normalized = img.replace(/\\/g, '/');
+  const isLocalFile = location.protocol === 'file:';
+  if (normalized.startsWith('CARDS/')) {
+    return isLocalFile
+      ? 'file:///' + CARD_IMAGE_ROOTS[0] + '/' + normalized.replace(/^CARDS\//, '')
+      : normalized;
+  }
+  if (normalized.startsWith('CARD/')) {
+    return isLocalFile
+      ? 'file:///' + CARD_IMAGE_ROOTS[1] + '/' + normalized.replace(/^CARD\//, '')
+      : normalized.replace(/^CARD\//, 'CARDS/');
+  }
+  if (/^[A-Za-z]:\//.test(normalized)) {
+    return 'file:///' + normalized;
+  }
+  return normalized;
+}
+
+function getCardImageSrc(card) {
+  return resolveCardImagePath(card?.img || '');
+}
+
 // ── 稀有度機率（總和 100） ──
 const RARITY_WEIGHT = {UR:2, SSR:13, SR:40, R:45};
 
@@ -3672,9 +3705,9 @@ function generateDynamicBonds() {
   const specialistBondMeta = {
     '旭成': { id:'BOND_XUCHENG_TRACK', name:'行政節奏統籌', emoji:'🗂️', tier:'gold', desc:'集齊旭成老師的全部卡片，完成班級經營與行政節奏配置。' },
     '倩宇': { id:'BOND_QIANYU_TRACK', name:'法國號聲部全修', emoji:'🎺', tier:'gold', desc:'集齊倩宇老師的全部卡片，完成法國號教學線。' },
-    '校長': { id:'BOND_PRINCIPAL_TRACK', name:'校務弦樂全修', emoji:'🎻', tier:'diamond', desc:'集齊校長的全部卡片，完成校務與弦樂主線配置。' },
+    '賴惠文': { id:'BOND_PRINCIPAL_TRACK', name:'校務核心全修', emoji:'🎻', tier:'legend', desc:'集齊賴惠文校長的全部卡片，完成校務主線配置。' },
     '國霖': { id:'BOND_GUOLIN_TRACK', name:'單簧管聲線全修', emoji:'🎶', tier:'gold', desc:'集齊王國霖老師的全部卡片，完成單簧管聲線鍛鍊。' },
-    '康榮': { id:'BOND_KANGRONG_TRACK', name:'合奏指揮全修', emoji:'🎼', tier:'diamond', desc:'集齊康榮老師的全部卡片，完成合奏指揮主線。' },
+    '康榮': { id:'BOND_KANGRONG_TRACK', name:'合奏指揮全修', emoji:'🎼', tier:'gold', desc:'集齊康榮老師的全部卡片，完成合奏指揮主線。' },
     '曉萱': { id:'BOND_XIAOXUAN_TRACK', name:'低音管聲域全修', emoji:'🪵', tier:'gold', desc:'集齊曉萱老師的全部卡片，完成低音管聲域培養。' },
   };
 
@@ -3688,14 +3721,18 @@ function generateDynamicBonds() {
   });
 
   [
-    { id:'BOND_ADMIN_DUO', name:'行政雙雄', emoji:'🏛️', tier:'silver', needs:['C12','C09'], desc:'旭成與康榮組成行政與音樂執行雙核心。' },
+    { id:'BOND_ADMIN_DUO', name:'行政雙雄', emoji:'🏛️', tier:'gold', needs:['C16','C09'], desc:'旭成與康榮組成行政與音樂執行雙核心。' },
+    { id:'BOND_POWER_COUPLE', name:'夫妻檔', emoji:'💍', tier:'diamond', needs:['C07','C17'], desc:'賴惠文校長與師丈同時到位，形成校務後援與行政協調的夫妻組合。' },
     { id:'BOND_BRASS_CHAIN', name:'銅管教學鏈', emoji:'🎺', tier:'silver', needs:['C02','C03','C04'], desc:'由倩宇老師串起法國號入門到聲部統籌的完整教學線。' },
     { id:'BOND_LOW_REGISTER_GUARDIANS', name:'低音域守護者', emoji:'🧱', tier:'gold', needs:['C10','C11','C15'], desc:'曉萱老師從基礎到高階，完整守住樂團低音域。' },
     { id:'BOND_WOODWIND_AXIS', name:'木管低音軸線', emoji:'🎷', tier:'silver', needs:['C13','C15'], desc:'國霖與曉萱共同構成木管聲部的中低音支撐。' },
-    { id:'BOND_STAGE_COMMAND', name:'合奏指揮中樞', emoji:'🎼', tier:'diamond', needs:['C07','C14'], desc:'校長與康榮的最高階卡片同場，形成合奏指揮中樞。' },
-    { id:'BOND_CAMPUS_ROUTINE', name:'校園教學主軸', emoji:'🏫', tier:'bronze', needs:['C01','C05','C10'], desc:'由旭成、校長、曉萱構成日常教學與行政支撐。' },
+    { id:'BOND_STAGE_COMMAND', name:'合奏指揮中樞', emoji:'🎼', tier:'diamond', needs:['C06','C09','C13'], desc:'賴惠文、康榮與國霖形成校務、指揮與木管統籌的核心中樞。' },
+    { id:'BOND_CAMPUS_ROUTINE', name:'校園教學主軸', emoji:'🏫', tier:'silver', needs:['C12','C05','C10'], desc:'由旭成、賴惠文與曉萱構成日常教學與行政支撐。' },
+    { id:'BOND_CONDUCTING_TEAM', name:'合奏運作小組', emoji:'🎙️', tier:'silver', needs:['C09','C14'], desc:'康榮的兩張卡片組成合奏運作與協調小組。' },
+    { id:'BOND_HOMEROOM_CORE', name:'班級經營核心', emoji:'📘', tier:'gold', needs:['C01','C12','C16'], desc:'集齊旭成的 R、SR、SSR 三張卡，完成班級經營完整線。' },
+    { id:'BOND_ADMIN_SUPPORT', name:'行政後援組', emoji:'🧾', tier:'silver', needs:['C17','C16'], desc:'師丈與旭成共同維持行政後援與班級秩序。' },
     { id:'BOND_ENSEMBLE_CORE', name:'管樂教學核心', emoji:'🎵', tier:'gold', needs:['C04','C13','C15'], desc:'倩宇、國霖、曉萱組成完整的管樂教學核心。' },
-    { id:'BOND_GRAND_REUNION', name:'莊敬大團圓', emoji:'🌟', tier:'legend', needs:['C12','C04','C07','C13','C14','C15'], desc:'集齊所有老師最高階卡片各一張，完成莊敬音樂科終極陣容。' },
+    { id:'BOND_GRAND_REUNION', name:'莊敬大團圓', emoji:'🌟', tier:'legend', needs:['C16','C04','C07','C13','C09','C15','C17'], desc:'集齊所有老師最高階卡片各一張，完成莊敬音樂科終極陣容。' },
   ].forEach(pushBond);
 
   if (typeof _customBonds !== 'undefined') {
@@ -3865,7 +3902,7 @@ function revealCard(card, pityTriggered) {
   void card3d.offsetWidth; // reflow
   card3d.className = 'card-3d rarity-' + card.rarity;
 
-  document.getElementById('cardRevealImg').src = card.img;
+  document.getElementById('cardRevealImg').src = getCardImageSrc(card);
   document.getElementById('cardRevealBadge').textContent = card.rarity;
   document.getElementById('cardRevealName').textContent = card.name;
   document.getElementById('cardRevealTitle').textContent = card.title;
@@ -3937,7 +3974,7 @@ function openCardZoom(card, count, isNew) {
   const rarityBadgeColor = { R:'#fff', SR:'#fff', SSR:'#000', UR:'#000' };
 
   // 卡片圖片
-  document.getElementById('zoomCardImg').src = card.img;
+  document.getElementById('zoomCardImg').src = getCardImageSrc(card);
 
   // 稀有度徽章
   const badge = document.getElementById('zoomCardBadge');
@@ -4092,7 +4129,7 @@ async function renderBag() {
     }
     if (count > 0) {
       div.innerHTML = `
-        <img src="${card.img}" alt="${card.name}" onerror="this.parentNode.classList.add('empty-slot');this.remove()">
+        <img src="${getCardImageSrc(card)}" alt="${card.name}" onerror="this.parentNode.classList.add('empty-slot');this.remove()">
         <div class="ct-rarity ct-rarity-${card.rarity}">${card.rarity}</div>
         <div class="ct-name">${card.name}</div>
         ${count>1 ? `<div class="ct-count">×${count}</div>` : ''}
@@ -4355,7 +4392,7 @@ async function renderCardMgmt() {
     div.innerHTML = `
       <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0">
         <div style="width:36px;height:50px;border-radius:6px;overflow:hidden;border:1px solid var(--bdr);flex-shrink:0;background:var(--bg2)">
-          <img src="${card.img}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
+          <img src="${getCardImageSrc(card)}" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none'">
         </div>
         <div style="min-width:0">
           <div class="ti-name" style="font-size:13px">${card.name}
@@ -4571,16 +4608,20 @@ async function applyCardTitleOverrides() {
 const BOND_TIER_MAP = {
   BOND_XUCHENG_TRACK:'gold',
   BOND_QIANYU_TRACK:'gold',
-  BOND_PRINCIPAL_TRACK:'diamond',
+  BOND_PRINCIPAL_TRACK:'legend',
   BOND_GUOLIN_TRACK:'gold',
-  BOND_KANGRONG_TRACK:'diamond',
+  BOND_KANGRONG_TRACK:'gold',
   BOND_XIAOXUAN_TRACK:'gold',
-  BOND_ADMIN_DUO:'silver',
+  BOND_ADMIN_DUO:'gold',
+  BOND_POWER_COUPLE:'diamond',
   BOND_BRASS_CHAIN:'silver',
   BOND_LOW_REGISTER_GUARDIANS:'gold',
   BOND_WOODWIND_AXIS:'silver',
   BOND_STAGE_COMMAND:'diamond',
-  BOND_CAMPUS_ROUTINE:'bronze',
+  BOND_CAMPUS_ROUTINE:'silver',
+  BOND_CONDUCTING_TEAM:'silver',
+  BOND_HOMEROOM_CORE:'gold',
+  BOND_ADMIN_SUPPORT:'silver',
   BOND_ENSEMBLE_CORE:'gold',
   BOND_GRAND_REUNION:'legend',
 };
