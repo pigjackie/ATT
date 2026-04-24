@@ -3218,7 +3218,6 @@ window.addEventListener('load', () => {
 const BASE_CLASSES  = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
 
 // 從 Firebase 讀取自訂班級與學生，合併到全域變數
-// 從 Firebase 讀取自訂班級與學生，合併到全域變數
 async function loadDynamicData() {
   try {
     // 自訂班級
@@ -3233,12 +3232,6 @@ async function loadDynamicData() {
     const baseIds = STUDENTS.filter(s=>!s._fbKey).map(s=>s.id);
     const basePart = STUDENTS.filter(s=>!s._fbKey);
     STUDENTS = [...basePart, ...extraStuArr.filter(s=>!baseIds.includes(s.id))];
-
-    // 【重大修復】確保學生登入時，強制同步載入「自訂卡片與自訂羈絆」
-    if (typeof loadCustomCardData === 'function') {
-      await loadCustomCardData();
-      await applyCardTitleOverrides();
-    }
   } catch(e) {
     console.warn('loadDynamicData error:', e);
   }
@@ -3844,10 +3837,8 @@ function _resetPackState() {
   if (box) { box.classList.remove('shaking'); box.style.pointerEvents = ''; }
 }
 
-async function openCardPack() {
+function openCardPack() {
   if (!_currentStuId) { toast('請先以學生帳號登入', 'err'); return; }
-  // 【重大修復】確保抽卡前，卡池已載入老師最新加入的自訂卡片
-  await loadCustomCardData();
   _resetPackState();
   // 讀取保底進度後更新 UI
   dbGet('students/' + _currentStuId + '/pityCount').then(function(cnt) {
@@ -3857,6 +3848,21 @@ async function openCardPack() {
   document.getElementById('cardRevealWrap').classList.remove('on');
   document.getElementById('cardOverlay').classList.add('on');
 }
+
+function closeCardOverlay() {
+  if (isOpening) return;
+  _resetPackState();
+  document.getElementById('cardOverlay').classList.remove('on');
+}
+
+async function triggerPackOpen() {
+  if (isOpening) return;
+  if (!_currentStuId) return;
+
+  const box = document.getElementById('packBox');
+  box.style.pointerEvents = 'none';
+
+  try {
     // 抽卡開關
     const sysEnabled = await Promise.race([
       dbGet('cardSystemEnabled'),
@@ -4038,11 +4044,13 @@ function closeCardZoom() {
 // ── 背包 ──
 async function openBag() {
   if (!_currentStuId) { toast('請先登入','err'); return; }
-  // 【重大修復】確保打開背包前，卡片資料是最新的，讓自訂卡片能顯示出來
-  await loadCustomCardData(); 
   generateDynamicBonds(); // 每次開啟重新計算，確保卡庫更新後同步
   document.getElementById('bagOverlay').classList.add('on');
   await renderBag();
+}
+
+function closeBag() {
+  document.getElementById('bagOverlay').classList.remove('on');
 }
 
 // 判斷稀有度連線羈絆是否達成（任意N張不同）
