@@ -983,8 +983,8 @@ select:focus{border-color:var(--gold)}
     <h3 style="color:var(--gold)">🎁 班級專屬獎品設定</h3>
   </div>
   <div style="font-size:12px;color:var(--tx3);margin-bottom:14px;padding:8px 12px;background:var(--bg1);border-radius:var(--r2);border:1px solid var(--bdr);line-height:1.8">
-    ℹ️ 各班導師可自訂五種徽章等級對應的獎品。核銷時系統將自動帶入，不需要老師手動輸入。<br>
-    若未設定，系統將使用預設獎品。
+    ℹ️ 五種勳章都保留。老師可為各班設定五階獎勵內容。<br>
+    五階獎勵皆可由系統直接發放；可設定卡包券、金牌與兌換券等數位獎勵。
   </div>
 
   <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:14px">
@@ -995,42 +995,42 @@ select:focus{border-color:var(--gold)}
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div class="badge-circle badge-bronze" style="width:28px;height:28px;font-size:13px;flex-shrink:0">🏅</div>
-          <div class="dlg-label" style="margin:0">銅牌徽章獎品</div>
-          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.bronze}）</div>
+          <div class="dlg-label" style="margin:0">銅牌徽章獎品（系統直發）</div>
+          <div style="font-size:10px;color:var(--tx3)">（例：點數3點）</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_bronze" placeholder="例：實體點數 2 點⭐" style="margin:0">
+        <input class="dlg-input" type="text" id="reward_bronze" placeholder="例：點數3點" style="margin:0">
       </div>
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div class="badge-circle badge-silver" style="width:28px;height:28px;font-size:13px;flex-shrink:0">🪙</div>
-          <div class="dlg-label" style="margin:0">銀牌徽章獎品</div>
-          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.silver}）</div>
+          <div class="dlg-label" style="margin:0">銀牌徽章獎品（系統直發）</div>
+          <div style="font-size:10px;color:var(--tx3)">（建議：3連抽卡包）</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_silver" placeholder="例：實體點數 3 點⭐" style="margin:0">
+        <input class="dlg-input" type="text" id="reward_silver" placeholder="例：3連抽卡包" style="margin:0">
       </div>
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div class="badge-circle badge-gold" style="width:28px;height:28px;font-size:13px;flex-shrink:0">⭐</div>
-          <div class="dlg-label" style="margin:0">金牌徽章獎品</div>
-          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.gold}）</div>
+          <div class="dlg-label" style="margin:0">金牌徽章獎品（系統直發）</div>
+          <div style="font-size:10px;color:var(--tx3)">（建議：5連抽卡包）</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_gold" placeholder="例：金牌一面🥇" style="margin:0">
+        <input class="dlg-input" type="text" id="reward_gold" placeholder="例：5連抽卡包" style="margin:0">
       </div>
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div class="badge-circle badge-diamond" style="width:28px;height:28px;font-size:13px;flex-shrink:0">💠</div>
-          <div class="dlg-label" style="margin:0">藍鑽徽章獎品</div>
-          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.diamond}）</div>
+          <div class="dlg-label" style="margin:0">藍鑽徽章獎品（班級自訂）</div>
+          <div style="font-size:10px;color:var(--tx3)">（建議：泡麵一碗）</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_diamond" placeholder="例：任選手搖飲🧋" style="margin:0">
+        <input class="dlg-input" type="text" id="reward_diamond" placeholder="例：泡麵一碗" style="margin:0">
       </div>
       <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
           <div class="badge-circle badge-legend" style="width:28px;height:28px;font-size:13px;flex-shrink:0">👑</div>
-          <div class="dlg-label" style="margin:0">傳說徽章獎品</div>
-          <div style="font-size:10px;color:var(--tx3)">（預設：${DEFAULT_CLASS_REWARDS.legend}）</div>
+          <div class="dlg-label" style="margin:0">傳說徽章獎品（班級自訂）</div>
+          <div style="font-size:10px;color:var(--tx3)">（建議：星巴克一杯）</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_legend" placeholder="例：星巴克一杯☕" style="margin:0">
+        <input class="dlg-input" type="text" id="reward_legend" placeholder="例：星巴克一杯" style="margin:0">
       </div>
     </div>
 
@@ -1124,7 +1124,7 @@ select:focus{border-color:var(--gold)}
 <!-- ══ 抽卡動畫 Overlay ══ -->
 <div id="cardOverlay">
   <div class="pack-wrap" id="packWrap">
-    <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px">消耗 1 顆 ⭐ 開啟卡包</div>
+    <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:4px" id="packCostLabel">消耗 1 顆 ⭐ 開啟卡包</div>
     <div class="pack-box" id="packBox" onclick="triggerPackOpen()">🎴</div>
     <div class="pack-instruction">點擊卡包開啟</div>
     <!-- 保底進度條 -->
@@ -2803,6 +2803,7 @@ async function getCardCollectionLeaderboard(classes, limit) {
 async function renderStudentCardExtras(stu, d) {
   const featuredEl = document.getElementById('stuFeaturedCardSection');
   const rankingEl = document.getElementById('stuCollectionRanking');
+  const rewardEl = document.getElementById('stuRewardGuide');
   const inv = d?.inventory || {};
   const featuredCard = CARD_DB.find(card => card.id === d?.featuredCardId && (inv[card.id]||0) > 0);
 
@@ -2837,6 +2838,27 @@ async function renderStudentCardExtras(stu, d) {
     rankingEl.innerHTML = `
       <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">班級排名：<b style="color:var(--gold)">第 ${myRank||'-'} 名</b></div>
       <div>${topRows}</div>`;
+  }
+
+  if (rewardEl) {
+    await loadAllClassRewards();
+    const owner = getRewardOwnerLabel(stu.cls);
+    const rows = ['legend','diamond','gold','silver','bronze'].map(tier => {
+      const reward = getClassReward(stu.cls, tier);
+      const info = TIER_INFO[tier];
+      const mode = '系統直接發放數位兌換';
+      return `<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(212,175,55,.08)">
+        <div class="badge-circle ${info.tierClass}" style="width:30px;height:30px;font-size:14px;flex-shrink:0">${info.emoji}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:bold">${info.name}</div>
+          <div style="font-size:11px;color:var(--tx2)">${reward}</div>
+          <div style="font-size:10px;color:var(--tx3)">${mode}</div>
+        </div>
+      </div>`;
+    }).join('');
+    rewardEl.innerHTML = `
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">${stu.cls} 兌換說明：五階獎勵皆可直接兌換；第3階為 3 連抽卡包、第4階為 5 連抽卡包、第5階為金牌一面。</div>
+      <div>${rows}</div>`;
   }
 }
 
@@ -2900,7 +2922,7 @@ function _renderStuView(stu, d) {
   if (!el) return;
   const td = today();
   const att = d.attendance?.[td]||'未點名';
-  const pts = d.points||0, medals = d.medals||0;
+  const pts = d.points||0, medals = d.medals||0, packTickets = Number(d.packTickets||0);
   const tasks = d.tasks||{};
   const log = d.log||{};
   const attColor = {出:'var(--green)',遲:'var(--yellow)',缺:'var(--red)',假:'var(--blue)'}[att]||'var(--tx2)';
@@ -2950,6 +2972,9 @@ function _renderStuView(stu, d) {
       <div class="dp-sec-t">🏆 卡片收藏排行榜</div>
       <div id="stuCollectionRanking" style="margin-bottom:14px"></div>
 
+      <div class="dp-sec-t">🎁 勳章兌換說明</div>
+      <div id="stuRewardGuide" style="margin-bottom:14px"></div>
+
       <hr class="sep">
 
       <div class="dp-sec-t">⭐ 點數集點卡</div>
@@ -2957,6 +2982,7 @@ function _renderStuView(stu, d) {
         <div class="pts-grid">${Array(10).fill(0).map((_,i)=>`<div class="pc ${i<pts?'on':'off'}">${i<pts?'⭐':''}</div>`).join('')}</div>
         <div class="pts-info">目前：<b>${pts}</b> 點</div>
       </div>
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:10px">🎴 卡包券：<b style="color:var(--gold)">${packTickets}</b> 包</div>
       <button class="btn g" onclick="stuRedeemMedal('${stu.id}',${pts})" ${pts<5?'disabled style="opacity:.5;cursor:not-allowed"':''} style="width:100%;padding:10px;font-size:14px;margin-bottom:4px">
         🎖️ ${pts>=5?'兌換金牌（扣5點）':'點數不足（需滿5點）'}
       </button>
@@ -3598,7 +3624,7 @@ async function delStudent(fbKey, name) {
 // ════════════════════════════════════════════════════════════════
 
 const CARD_DB = [
-  {id:'C01',name:'旭成',rarity:'R',   img:'CARD/旭成R.jpg',              title:'班級巡堂員', quote:'先把基本動作做好。'},
+  {id:'C01',name:'旭成',rarity:'R',   img:'CARDS/旭成R.jpg',             title:'班級巡堂員', quote:'先把基本動作做好。'},
   {id:'C02',name:'倩宇',rarity:'R',   img:'CARDS/倩宇R_結果.jpg',       title:'法國號導師', quote:'先把嘴型站穩，再談音量。'},
   {id:'C03',name:'倩宇',rarity:'SR',  img:'CARDS/倩宇SR_結果.jpg',      title:'銅管首席', quote:'每一個進拍點都要更乾淨。'},
   {id:'C04',name:'倩宇',rarity:'SSR', img:'CARDS/倩宇SSR_結果.jpg',     title:'法國號聲部統籌', quote:'音色一致，合奏才會亮。'},
@@ -3613,8 +3639,8 @@ const CARD_DB = [
   {id:'C13',name:'國霖',rarity:'SSR', img:'CARDS/國霖SR_結果.jpg',      title:'木管聲部統籌', quote:'音色先站穩，技巧自然跟上。'},
   {id:'C14',name:'康榮',rarity:'SR',  img:'CARDS/康榮SSR_結果.jpg',     title:'合奏協調', quote:'每個聲部都要知道自己的位置。'},
   {id:'C15',name:'曉萱',rarity:'SSR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音域守護者', quote:'低音站穩，樂團才會穩。'},
-  {id:'C16',name:'旭成',rarity:'SSR', img:'CARD/旭成ssr2.jpg',          title:'學務協調長', quote:'規矩站穩，班級就會穩。'},
-  {id:'C17',name:'師丈',rarity:'SR',  img:'CARD/師丈SR.jpg',             title:'校務後援', quote:'有需要幫忙就先把流程理清楚。'},
+  {id:'C16',name:'旭成',rarity:'SSR', img:'CARDS/旭成ssr2.jpg',         title:'學務協調長', quote:'規矩站穩，班級就會穩。'},
+  {id:'C17',name:'師丈',rarity:'SR',  img:'CARDS/師丈SR.jpg',            title:'校務後援', quote:'有需要幫忙就先把流程理清楚。'},
 ];
 // ════════════════════════════════════════════════════════════════
 // 班級專屬獎品設定
@@ -3622,12 +3648,28 @@ const CARD_DB = [
 let classRewardsCache = {};
 
 const DEFAULT_CLASS_REWARDS = {
-  bronze:  '實體點數 2 點⭐',
-  silver:  '實體點數 3 點⭐',
-  gold:    '金牌一面🥇',
-  diamond: '任選手搖飲🧋',
-  legend:  '星巴克一杯☕',
+  bronze:  '點數3點',
+  silver:  '3連抽卡包',
+  gold:    '5連抽卡包',
+  diamond: '泡麵一碗',
+  legend:  '星巴克一杯',
 };
+
+const CLASS_REWARD_TEACHERS = {
+  '音一莊':'國霖',
+  '音三莊':'旭成',
+  '演三莊':'曉萱',
+  '音二莊':'華翊',
+  '演二樸':'班導師',
+};
+
+function getRewardOwnerLabel(clsName) {
+  return CLASS_REWARD_TEACHERS[clsName] || '班導師';
+}
+
+function isTopTierReward(tier) {
+  return false;
+}
 
 async function loadAllClassRewards() {
   try {
@@ -3641,13 +3683,14 @@ async function loadAllClassRewards() {
 
 function getClassReward(clsName, tier) {
   const clsData = classRewardsCache[clsName.replace(/\//g,'_')] || {};
-  return clsData[tier] || DEFAULT_CLASS_REWARDS[tier] || '獎品待設定';
+  return clsData[tier] || DEFAULT_CLASS_REWARDS[tier] || (isTopTierReward(tier) ? '獎品待設定' : '請老師設定數位獎勵');
 }
 // ── 自訂卡片/羈絆（必須在 generateDynamicBonds 之前宣告）──
 let _customCards = [];
 let _customBonds = [];
 
 const CARD_IMAGE_ROOTS = [
+  'C:/Users/pigjo/Documents/New project/CARDS',
   'C:/Users/pigjo/Desktop/CARDS',
   'C:/Users/pigjo/Desktop/CARD',
   'C:/Users/pigjo/Downloads/CARDS',
@@ -3660,16 +3703,16 @@ function resolveCardImagePath(img) {
   const isLocalFile = location.protocol === 'file:';
   if (normalized.startsWith('CARDS/')) {
     return isLocalFile
-      ? 'file:///' + CARD_IMAGE_ROOTS[0] + '/' + normalized.replace(/^CARDS\//, '')
+      ? encodeURI('file:///' + CARD_IMAGE_ROOTS[0] + '/' + normalized.replace(/^CARDS\//, ''))
       : normalized;
   }
   if (normalized.startsWith('CARD/')) {
     return isLocalFile
-      ? 'file:///' + CARD_IMAGE_ROOTS[1] + '/' + normalized.replace(/^CARD\//, '')
+      ? encodeURI('file:///' + CARD_IMAGE_ROOTS[1] + '/' + normalized.replace(/^CARD\//, ''))
       : normalized.replace(/^CARD\//, 'CARDS/');
   }
   if (/^[A-Za-z]:\//.test(normalized)) {
-    return 'file:///' + normalized;
+    return encodeURI('file:///' + normalized);
   }
   return normalized;
 }
@@ -3687,9 +3730,9 @@ let DYNAMIC_BONDS = [];
 function generateDynamicBonds() {
   const bonds = [];
   const rewardText = {
-    bronze: '自動發放：點數 +2',
-    silver: '自動發放：點數 +3',
-    gold: '自動發放：金牌 +1',
+    bronze: `系統數位兌換：${DEFAULT_CLASS_REWARDS.bronze}`,
+    silver: `系統數位兌換：${DEFAULT_CLASS_REWARDS.silver}`,
+    gold: `系統數位兌換：${DEFAULT_CLASS_REWARDS.gold}`,
     diamond: '需找老師兌換：藍鑽徽章',
     legend: '需找老師兌換：傳說徽章',
   };
@@ -3752,10 +3795,10 @@ let isOpening = false;
 let _pendingCard = null;
 
 // ══════════════════════════════════════════════════════════════
-// 保底機制（Pity System）：連續未抽中 SSR/UR 達 7 次強制給出
+// 保底機制（Pity System）：連續未抽中 SSR/UR 達 10 次強制給出
 // Firebase 路徑：students/{id}/pityCount
 // ══════════════════════════════════════════════════════════════
-const PITY_THRESHOLD = 7;
+const PITY_THRESHOLD = 10;
 
 // 更新保底進度條 UI
 function _updatePityUI(count) {
@@ -3809,9 +3852,15 @@ async function openCardPack() {
   await loadCustomCardData();
   await applyCardTitleOverrides();
   _resetPackState();
-  // 讀取保底進度後更新 UI
-  dbGet('students/' + _currentStuId + '/pityCount').then(function(cnt) {
-    _updatePityUI(Number(cnt) || 0);
+  dbGet('students/' + _currentStuId).then(function(d) {
+    _updatePityUI(Number(d?.pityCount) || 0);
+    const label = document.getElementById('packCostLabel');
+    if (label) {
+      const tickets = Number(d?.packTickets || 0);
+      label.textContent = tickets > 0
+        ? `今日可用卡包 ${tickets} 包，將優先消耗卡包`
+        : '消耗 1 顆 ⭐ 開啟卡包';
+    }
   });
   document.getElementById('packWrap').style.display = 'flex';
   document.getElementById('cardRevealWrap').classList.remove('on');
@@ -3843,10 +3892,12 @@ async function triggerPackOpen() {
       return;
     }
 
-    // 讀取點數 + 保底計數
+    // 讀取點數 + 卡包券 + 保底計數
     const d = await dbGet('students/' + _currentStuId);
     const pts = Number(d && d.points != null ? d.points : 0);
-    if (pts < 1) {
+    const packTickets = Number(d && d.packTickets != null ? d.packTickets : 0);
+    const usePackTicket = packTickets > 0;
+    if (!usePackTicket && pts < 1) {
       toast('⭐ 點數不足（目前 ' + pts + ' 點），無法開卡包', 'err');
       box.style.pointerEvents = '';
       return;
@@ -3871,9 +3922,16 @@ async function triggerPackOpen() {
       : '抽到 ' + card.rarity + ' ' + card.name;
 
     await dbUpd('students/' + _currentStuId, {
-      points: pts - 1,
+      points: usePackTicket ? pts : (pts - 1),
+      packTickets: usePackTicket ? (packTickets - 1) : packTickets,
       pityCount: newPity,
-      ['log/' + lk]: { time: now(), action: '開啟卡包', reason: logReason, teacher: '系統', delta: -1 }
+      ['log/' + lk]: {
+        time: now(),
+        action: '開啟卡包',
+        reason: `${usePackTicket ? '使用卡包券' : '消耗 1 點數'} · ${logReason}`,
+        teacher: '系統',
+        delta: usePackTicket ? 0 : -1
+      }
     });
 
     // 更新進度條 UI（顯示抽後的保底值）
@@ -4050,6 +4108,7 @@ async function renderBag() {
   const medalBtn = document.getElementById('bagMedalRedeemBtn');
   const allBadgesData = stuData?.unredeemedBadges || {};
   const oldClaimed    = stuData?.claimedBonds || {};
+  const digitalRewards = Object.values(stuData?.digitalRewards || {});
 
   const oldEntries = Object.entries(oldClaimed)
     .filter(([bondId]) => !allBadgesData[bondId])
@@ -4111,6 +4170,43 @@ async function renderBag() {
       }
       badgeCol.innerHTML = bHtml;
     }
+  }
+
+  let digitalBox = document.getElementById('bagDigitalRewardBox');
+  if (!digitalBox) {
+    digitalBox = document.createElement('div');
+    digitalBox.id = 'bagDigitalRewardBox';
+    digitalBox.style.marginBottom = '12px';
+    const medalShowcase = document.getElementById('bagMedalShowcase');
+    if (medalShowcase && medalShowcase.parentNode) {
+      medalShowcase.parentNode.insertBefore(digitalBox, medalShowcase.nextSibling);
+    }
+  }
+  if (digitalBox) {
+    const couponBook = Object.values(stuData?.couponBook || {});
+    const couponCards = couponBook
+      .sort((a,b)=>(b.issuedAt||'').localeCompare(a.issuedAt||''))
+      .slice(0,8)
+      .map(item => `<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:10px;padding:8px">
+          <img src="${item.couponImage || ''}" alt="${item.couponLabel || '優惠券'}" style="width:100%;height:110px;object-fit:cover;border-radius:8px;border:1px solid rgba(255,255,255,.08);margin-bottom:8px;background:rgba(255,255,255,.03)" onerror="this.style.display='none'">
+          <div style="font-size:12px;font-weight:bold">${item.couponLabel || '優惠券'}</div>
+          <div style="font-size:10px;color:var(--tx3)">${item.issuedAt || ''} · ${item.used ? '已使用' : '可兌換'}</div>
+        </div>`).join('');
+    digitalBox.innerHTML = `
+      <div style="font-size:13px;font-weight:bold;color:var(--gold);margin:10px 0 6px">🎟️ 學生優惠券收藏本</div>
+      ${couponCards
+        ? `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-bottom:10px">${couponCards}</div>`
+        : '<div style="font-size:12px;color:var(--tx3);padding:8px 0">目前尚無優惠券</div>'}
+      <div style="font-size:13px;font-weight:bold;color:var(--gold);margin:10px 0 6px">🌐 系統數位兌換紀錄</div>
+      ${digitalRewards.length ? digitalRewards
+        .sort((a,b)=>(b.claimedAt||'').localeCompare(a.claimedAt||''))
+        .slice(0,8)
+        .map(item => `<div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:8px;padding:8px 10px;margin-bottom:6px">
+            <div style="font-size:12px;font-weight:bold">${item.rewardLabel||'數位獎勵'}</div>
+            <div style="font-size:11px;color:var(--tx2)">${item.bondName||''}</div>
+            <div style="font-size:10px;color:var(--tx3)">${item.claimedAt||''} · 系統直接兌換</div>
+          </div>`).join('')
+        : '<div style="font-size:12px;color:var(--tx3);padding:8px 0">目前尚無系統數位兌換紀錄</div>'}`;
   }
 
   const newCards = stuData?.newCards || {};
@@ -4212,9 +4308,9 @@ async function renderBag() {
         </div>`;
       })()}
       ${alreadyClaimed
-        ? `<div style="font-size:12px;color:var(--tx3)">✅ ${rewardCfg.mode==='auto'?'已自動發放':'已建立兌換徽章'}（${alreadyClaimed}）</div>`
+        ? `<div style="font-size:12px;color:var(--tx3)">✅ ${rewardCfg.mode==='digital'?'已發放數位兌換資格':'已建立兌換徽章'}（${alreadyClaimed}）</div>`
         : canRedeem
-          ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px;margin-top:6px">${rewardCfg.mode==='auto'?'⚡ 立即領取':'🏵️ 建立兌換徽章'}</button>`
+          ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px;margin-top:6px">${rewardCfg.mode==='digital'?'⚡ 立即兌換':'🏵️ 建立兌換徽章'}</button>`
           : `<div style="font-size:12px;color:var(--tx3);margin-top:4px">🔒 尚未集齊所需卡片</div>`
       }`;
     bondList.appendChild(div);
@@ -4256,11 +4352,11 @@ async function redeemBond(bondId) {
           <div style="font-size:13px;color:#c89eff;margin-top:2px">${rewardCfg.label}</div>
         </div>
       </div>
-      <div style="font-size:12px;color:var(--tx3)">${rewardCfg.mode==='auto'
-        ? '消耗所需卡片各一張後，系統會立刻把獎勵加到你的帳號。'
+      <div style="font-size:12px;color:var(--tx3)">${rewardCfg.mode==='digital'
+        ? '消耗所需卡片各一張後，系統會立刻登記數位兌換獎勵，不需要找老師。'
         : '消耗所需卡片各一張後，系統會建立待核銷徽章，請出示畫面給老師。'}</div>
      </div>`,
-    [{label:rewardCfg.mode==='auto' ? '確認領取' : '確認建立徽章', cls:'ok', fn: async () => {
+    [{label:rewardCfg.mode==='digital' ? '確認兌換' : '確認建立徽章', cls:'ok', fn: async () => {
       const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
       const isRarityType = !!bond.rarityPool;
       const ok = isRarityType ? checkRarityBond(bond, inv)
@@ -4285,25 +4381,56 @@ async function redeemBond(bondId) {
 
       upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
 
-      if (rewardCfg.mode === 'auto') {
-        const newPoints = (d?.points||0) + (rewardCfg.points||0);
-        const newMedals = (d?.medals||0) + (rewardCfg.medals||0);
-        if (rewardCfg.points) upd[`${ROOT}/students/${_currentStuId}/points`] = newPoints;
-        if (rewardCfg.medals) upd[`${ROOT}/students/${_currentStuId}/medals`] = newMedals;
+      if (rewardCfg.mode === 'digital') {
+        const classRewardLabel = getClassReward(byId(_currentStuId)?.cls || '', bondTier);
+        const parsedReward = parseDigitalReward(classRewardLabel);
+        const nextPoints = (d?.points||0) + (parsedReward.points || 0);
+        const nextPacks = Number(d?.packTickets||0) + (parsedReward.packs || 0);
+        const nextMedals = Number(d?.medals||0) + (parsedReward.medals || 0);
+        const couponType = parsedReward.couponType;
+        const couponLabel = couponType === 'starbucks' ? '星巴克一杯兌換券'
+          : couponType === 'noodle' ? '泡麵一碗兌換券'
+          : '';
+        const couponImage = couponType ? COUPON_IMAGE_MAP[couponType] : '';
+        upd[`${ROOT}/students/${_currentStuId}/digitalRewards/${bondId}`] = {
+          bondId,
+          bondName: bond.name,
+          tier: bondTier,
+          rewardLabel: classRewardLabel,
+          claimedAt: t,
+          redeemState: 'issued',
+          couponType,
+          couponLabel,
+          couponImage
+        };
+        if (parsedReward.points) upd[`${ROOT}/students/${_currentStuId}/points`] = nextPoints;
+        if (parsedReward.packs) upd[`${ROOT}/students/${_currentStuId}/packTickets`] = nextPacks;
+        if (parsedReward.medals) upd[`${ROOT}/students/${_currentStuId}/medals`] = nextMedals;
+        if (couponType) {
+          upd[`${ROOT}/students/${_currentStuId}/couponBook/${bondId}_${couponType}`] = {
+            couponType,
+            couponLabel,
+            couponImage,
+            sourceBondId: bondId,
+            sourceBondName: bond.name,
+            issuedAt: t,
+            used: false
+          };
+        }
         upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
           time:t,
           action:'羈絆兌換',
-          reason:`「${bond.name}」自動發放 ${rewardCfg.label}`,
+          reason:`「${bond.name}」發放數位兌換獎勵：${classRewardLabel}`,
           teacher:'系統',
-          delta: rewardCfg.points || 0
+          delta: 0
         };
 
         await db.ref('/').update(upd);
         await sendNotifToStudent(_currentStuId, stuName,
           `${bond.emoji} 羈絆「${bond.name}」兌換成功！
-系統已自動發放：${rewardCfg.label}`, 'notice');
+系統已發放數位兌換獎勵：${classRewardLabel}`, 'notice');
 
-        toast(rewardCfg.label, 'ok');
+        toast(classRewardLabel, 'ok');
       } else {
         const medalCount = getBondMedalCount(bond);
         upd[`${ROOT}/students/${_currentStuId}/unredeemedBadges/${bondId}`] = {
@@ -4628,7 +4755,20 @@ const BOND_TIER_MAP = {
 
 function getBondTier(bond) {
   if (!bond) return 'bronze';
-  if (bond.tier && TIER_INFO[bond.tier]) return bond.tier;
+  if (bond.fixedTier && TIER_INFO[bond.fixedTier]) return bond.fixedTier;
+  if (Array.isArray(bond.needs) && bond.needs.length) {
+    const rarityWeights = { R:1, SR:2.5, SSR:4.5, UR:8 };
+    const cards = bond.needs.map(id => CARD_DB.find(c => c.id === id)).filter(Boolean);
+    const score = cards.reduce((sum, card) => sum + (rarityWeights[card.rarity] || 1), 0)
+      + Math.max(0, cards.length - 1) * 0.8
+      + (cards.some(card => card.rarity === 'UR') ? 2.5 : 0)
+      + (cards.filter(card => card.rarity === 'SSR').length >= 2 ? 1.5 : 0);
+    if (score >= 16) return 'legend';
+    if (score >= 11) return 'diamond';
+    if (score >= 7.5) return 'gold';
+    if (score >= 4.5) return 'silver';
+    return 'bronze';
+  }
   const rewardTypeTierMap = {
     medals1:'bronze',
     medals2:'silver',
@@ -4651,27 +4791,46 @@ const TIER_INFO = {
 };
 
 function isManualBondTier(tier) {
-  return tier === 'diamond' || tier === 'legend';
+  return false;
 }
 
 function getBondRewardConfig(bond) {
   const tier = getBondTier(bond);
   const autoRewardMap = {
-    bronze: { mode:'auto', points:2, medals:0, label:'點數 +2' },
-    silver: { mode:'auto', points:3, medals:0, label:'點數 +3' },
-    gold: { mode:'auto', points:0, medals:1, label:'金牌 +1' },
-    diamond: { mode:'manual', points:0, medals:0, label:'藍鑽徽章，需找老師兌換' },
-    legend: { mode:'manual', points:0, medals:0, label:'傳說徽章，需找老師兌換' },
+    bronze: { mode:'digital', points:0, medals:0, label:DEFAULT_CLASS_REWARDS.bronze },
+    silver: { mode:'digital', points:0, medals:0, label:DEFAULT_CLASS_REWARDS.silver },
+    gold: { mode:'digital', points:0, medals:0, label:DEFAULT_CLASS_REWARDS.gold },
+    diamond: { mode:'digital', points:0, medals:0, label:DEFAULT_CLASS_REWARDS.diamond },
+    legend: { mode:'digital', points:0, medals:0, label:DEFAULT_CLASS_REWARDS.legend },
   };
   return { tier, ...(autoRewardMap[tier] || autoRewardMap.bronze) };
 }
 
 function getBondModeText(bond) {
   const rewardCfg = getBondRewardConfig(bond);
-  return rewardCfg.mode === 'auto'
-    ? `此獎項將自動發放：${rewardCfg.label}`
+  return rewardCfg.mode === 'digital'
+    ? `此獎項為系統數位兌換：依班級設定發放`
     : `此獎項需找老師兌換：${rewardCfg.label}`;
 }
+
+function parseDigitalReward(label) {
+  const text = String(label || '').trim();
+  const pointMatch = text.match(/(\d+)\s*點/);
+  const packMatch = text.match(/(\d+)\s*連抽卡包|(\d+)\s*包卡包|(\d+)\s*抽卡包/);
+  const medalMatch = text.match(/(\d+)\s*面?\s*金牌|金牌\s*(\d+)\s*面?/);
+  const points = pointMatch ? Number(pointMatch[1]) : 0;
+  const packs = packMatch ? Number(packMatch[1] || packMatch[2] || packMatch[3] || 0) : 0;
+  const medals = medalMatch ? Number(medalMatch[1] || medalMatch[2] || 0) : (/金牌/.test(text) ? 1 : 0);
+  const couponType = /星巴克/.test(text) ? 'starbucks'
+    : /(泡麵|一度讚|一度贊|noodle)/i.test(text) ? 'noodle'
+    : '';
+  return { text, points, packs, medals, couponType };
+}
+
+const COUPON_IMAGE_MAP = {
+  starbucks: 'file:///C:/Users/pigjo/Desktop/CARDS/%E6%98%9F%E5%B7%B4%E5%85%8B%E4%B8%80%E6%9D%AF.webp',
+  noodle: 'file:///C:/Users/pigjo/Desktop/CARDS/%E6%B3%A1%E9%BA%B5.jpg',
+};
 
 // 產生徽章 HTML（顯示羈絆名稱 + 等級名稱，外觀依 tier）
 function renderBadgeHTML(bond, count) {
@@ -5120,7 +5279,12 @@ async function loadClassRewards() {
   const tiers = ['bronze','silver','gold','diamond','legend'];
   tiers.forEach(tier => {
     const el = document.getElementById(`reward_${tier}`);
-    if (el) el.value = data[tier] || '';
+    if (!el) return;
+    el.value = data[tier] || '';
+    el.readOnly = false;
+    el.style.opacity = '1';
+    el.style.cursor = '';
+    el.style.background = 'var(--bg1)';
   });
 }
 
@@ -5156,18 +5320,21 @@ async function renderRewardPreview() {
   CLASSES.forEach(cls => {
     const key = cls.replace(/\//g,'_');
     const data = classRewardsCache[key] || {};
-    const hasCustom = Object.keys(data).length > 0;
+    const owner = getRewardOwnerLabel(cls);
+    const hasCustom = ['bronze','silver','gold','diamond','legend'].some(tier => !!data[tier] && data[tier] !== DEFAULT_CLASS_REWARDS[tier]);
     html += `<div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 14px;margin-bottom:8px">
       <div style="font-size:13px;font-weight:bold;color:var(--gold);margin-bottom:8px">
         ${cls} ${hasCustom ? '<span style="font-size:10px;padding:1px 7px;border-radius:8px;background:rgba(46,204,113,.15);color:var(--green);margin-left:6px">已自訂</span>' : '<span style="font-size:10px;color:var(--tx3);margin-left:6px">（使用預設）</span>'}
       </div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">系統直接發放（班級設定可覆蓋）</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${['bronze','silver','gold','diamond','legend'].map(tier => {
           const reward = data[tier] || DEFAULT_CLASS_REWARDS[tier];
-          const custom = !!data[tier];
+          const custom = !!data[tier] && data[tier] !== DEFAULT_CLASS_REWARDS[tier];
           return `<div style="flex:1;min-width:120px;background:var(--bg1);border:1px solid ${custom?'rgba(46,204,113,.3)':'var(--bdr)'};border-radius:6px;padding:7px 10px">
             <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">${iconMap[tier]} ${tierLabel[tier]}</div>
             <div style="font-size:12px;color:${custom?'var(--green)':'var(--tx2)'}">${reward}</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:2px">系統直發</div>
           </div>`;
         }).join('')}
       </div>
