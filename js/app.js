@@ -2460,6 +2460,9 @@ function generateDynamicBonds() {
   [
     { id:'BOND_CLASSROOM_STARTER', name:'教室暖身組', emoji:'🧩', tier:'bronze', needs:['C01','C02'], desc:'旭成與倩宇的基礎搭配，完成日常課堂暖身。' },
     { id:'BOND_FOUNDATION_STEP', name:'基礎起手式', emoji:'🪜', tier:'bronze', needs:['C10','C11'], desc:'曉萱 R 與 SR 的基礎連線，建立低音域起手節奏。' },
+    { id:'BOND_ROOKIE_WOODWIND', name:'木管新手連線', emoji:'🎐', tier:'bronze', needs:['C08','C10'], desc:'國霖與曉萱的入門卡組，建立木管基礎穩定度。' },
+    { id:'BOND_DAILY_DISCIPLINE', name:'日常秩序組', emoji:'📝', tier:'bronze', needs:['C01','C05'], desc:'旭成與賴惠文共同維持班級日常秩序。' },
+    { id:'BOND_CAMPUS_HELPERS', name:'校園支援小隊', emoji:'🧰', tier:'bronze', needs:['C12','C17'], desc:'旭成 SR 與師丈協作，補齊校園日常支援。' },
     { id:'BOND_SUPPORT_PAIR', name:'教學支援雙人組', emoji:'🤝', tier:'silver', needs:['C10','C14'], desc:'曉萱與康榮形成日常教學支援組合。' },
     { id:'BOND_CLASS_OPERATIONS', name:'班務協作線', emoji:'🗂️', tier:'silver', needs:['C01','C14'], desc:'旭成與康榮串接班務管理與合奏協調。' },
     { id:'BOND_ADMIN_DUO', name:'行政雙雄', emoji:'🏛️', tier:'gold', needs:['C16','C09'], desc:'旭成與康榮組成行政與音樂執行雙核心。' },
@@ -2483,7 +2486,13 @@ function generateDynamicBonds() {
     });
   }
 
-  DYNAMIC_BONDS = bonds;
+  const tierOrder = { bronze:1, silver:2, gold:3, diamond:4, legend:5 };
+  DYNAMIC_BONDS = bonds.sort((a, b) => {
+    const ta = tierOrder[getBondTier(a)] || 99;
+    const tb = tierOrder[getBondTier(b)] || 99;
+    if (ta !== tb) return ta - tb;
+    return (a.name || '').localeCompare((b.name || ''), 'zh-Hant');
+  });
   return DYNAMIC_BONDS;
 }
 // 在卡庫載入後立即生成
