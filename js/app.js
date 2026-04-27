@@ -2487,9 +2487,13 @@ function generateDynamicBonds() {
   }
 
   const tierOrder = { bronze:1, silver:2, gold:3, diamond:4, legend:5 };
+  const getTierForSort = (bond) => {
+    const t = (bond && typeof bond.tier === 'string') ? bond.tier : '';
+    return tierOrder[t] ? t : 'gold';
+  };
   DYNAMIC_BONDS = bonds.sort((a, b) => {
-    const ta = tierOrder[getBondTier(a)] || 99;
-    const tb = tierOrder[getBondTier(b)] || 99;
+    const ta = tierOrder[getTierForSort(a)] || 99;
+    const tb = tierOrder[getTierForSort(b)] || 99;
     if (ta !== tb) return ta - tb;
     return (a.name || '').localeCompare((b.name || ''), 'zh-Hant');
   });
