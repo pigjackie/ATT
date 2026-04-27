@@ -2333,7 +2333,7 @@ const CARD_DB = [
 let classRewardsCache = {};
 
 const DEFAULT_CLASS_REWARDS = {
-  bronze:  '點數3點',
+  bronze:  '點數4點',
   silver:  '3連抽卡包',
   gold:    '5連抽卡包',
   diamond: '泡麵一碗',
@@ -2458,6 +2458,10 @@ function generateDynamicBonds() {
   });
 
   [
+    { id:'BOND_CLASSROOM_STARTER', name:'教室暖身組', emoji:'🧩', tier:'bronze', needs:['C01','C02'], desc:'旭成與倩宇的基礎搭配，完成日常課堂暖身。' },
+    { id:'BOND_FOUNDATION_STEP', name:'基礎起手式', emoji:'🪜', tier:'bronze', needs:['C10','C11'], desc:'曉萱 R 與 SR 的基礎連線，建立低音域起手節奏。' },
+    { id:'BOND_SUPPORT_PAIR', name:'教學支援雙人組', emoji:'🤝', tier:'silver', needs:['C10','C14'], desc:'曉萱與康榮形成日常教學支援組合。' },
+    { id:'BOND_CLASS_OPERATIONS', name:'班務協作線', emoji:'🗂️', tier:'silver', needs:['C01','C14'], desc:'旭成與康榮串接班務管理與合奏協調。' },
     { id:'BOND_ADMIN_DUO', name:'行政雙雄', emoji:'🏛️', tier:'gold', needs:['C16','C09'], desc:'旭成與康榮組成行政與音樂執行雙核心。' },
     { id:'BOND_POWER_COUPLE', name:'夫妻檔', emoji:'💍', tier:'diamond', needs:['C07','C17'], desc:'賴惠文校長與師丈同時到位，形成校務後援與行政協調的夫妻組合。' },
     { id:'BOND_BRASS_CHAIN', name:'銅管教學鏈', emoji:'🎺', tier:'silver', needs:['C02','C03','C04'], desc:'由倩宇老師串起法國號入門到聲部統籌的完整教學線。' },
@@ -2479,7 +2483,7 @@ function generateDynamicBonds() {
     });
   }
 
-  DYNAMIC_BONDS = bonds.slice(0, 15);
+  DYNAMIC_BONDS = bonds;
   return DYNAMIC_BONDS;
 }
 // 在卡庫載入後立即生成
@@ -2830,9 +2834,7 @@ async function renderBag() {
     const isRarityType = !!bond.rarityPool;
     const canRedeem = isRarityType ? checkRarityBond(bond, inv)
                                    : bond.needs.every(id => (inv[id]||0) >= 1);
-    const alreadyClaimed = oldClaimed[bond.id]
-      || (allBadgesData[bond.id] ? allBadgesData[bond.id].claimedAt : null);
-    return canRedeem && !alreadyClaimed;
+    return canRedeem;
   });
   const readyDigitalCount = readyDigitalBonds.length;
 
@@ -2971,15 +2973,27 @@ async function renderBag() {
   });
 
   const bondList = document.getElementById('bagBondList');
+  const tierLegendHtml = `
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin:0 0 8px;padding:8px;border:1px solid var(--bdr);border-radius:10px;background:rgba(0,0,0,.16)">
+      <span style="font-size:11px;color:var(--tx2);margin-right:4px;align-self:center">勳章圖示：</span>
+      <span class="badge-circle badge-bronze" style="width:22px;height:22px;font-size:12px;animation:none">🥉</span><span style="font-size:11px;color:var(--tx2);align-self:center">銅牌</span>
+      <span class="badge-circle badge-silver" style="width:22px;height:22px;font-size:12px;animation:none">🥈</span><span style="font-size:11px;color:var(--tx2);align-self:center">銀牌</span>
+      <span class="badge-circle badge-gold" style="width:22px;height:22px;font-size:12px;animation:none">🥇</span><span style="font-size:11px;color:var(--tx2);align-self:center">金牌</span>
+      <span class="badge-circle badge-diamond" style="width:22px;height:22px;font-size:12px;animation:none">💠</span><span style="font-size:11px;color:var(--tx2);align-self:center">藍鑽</span>
+      <span class="badge-circle badge-legend" style="width:22px;height:22px;font-size:12px;animation:none">🏆</span><span style="font-size:11px;color:var(--tx2);align-self:center">傳說</span>
+    </div>`;
   bondList.innerHTML = '';
   const claimedBonds      = (await dbGet(`students/${_currentStuId}/claimedBonds`)) || {};
+  const claimedBondCounts = (await dbGet(`students/${_currentStuId}/claimedBondCounts`)) || {};
   const unredeemedBadges  = (await dbGet(`students/${_currentStuId}/unredeemedBadges`)) || {};
+  bondList.insertAdjacentHTML('beforeend', tierLegendHtml);
 
   for (const bond of DYNAMIC_BONDS) {
     const isRarityType = !!bond.rarityPool;
     const canRedeem    = isRarityType ? checkRarityBond(bond, inv)
                                       : bond.needs.every(id => (inv[id]||0) >= 1);
-    const alreadyClaimed = claimedBonds[bond.id] || (unredeemedBadges[bond.id] ? unredeemedBadges[bond.id].claimedAt : null);
+    const claimCount = Number(claimedBondCounts[bond.id] || 0) || (claimedBonds[bond.id] ? 1 : 0);
+    const lastClaimed = claimedBonds[bond.id] || (unredeemedBadges[bond.id] ? unredeemedBadges[bond.id].claimedAt : null);
     const rewardCfg = getBondRewardConfig(bond);
 
     let chipsHtml = '';
@@ -2999,7 +3013,7 @@ async function renderBag() {
     }
 
     const div = document.createElement('div');
-    div.className = 'bond-item' + (canRedeem && !alreadyClaimed ? ' bond-ready' : '');
+    div.className = 'bond-item' + (canRedeem ? ' bond-ready' : '');
     div.innerHTML = `
       <div class="bond-title">${bond.emoji} ${bond.name}</div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:6px">${bond.desc||''}</div>
@@ -3016,11 +3030,13 @@ async function renderBag() {
           </div>
         </div>`;
       })()}
-      ${alreadyClaimed
-        ? `<div style="font-size:12px;color:var(--tx3)">✅ ${rewardCfg.mode==='digital'?'已發放數位兌換資格':'已建立兌換徽章'}（${alreadyClaimed}）</div>`
-        : canRedeem
-          ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px;margin-top:6px">${rewardCfg.mode==='digital'?'⚡ 立即兌換':'🏵️ 建立兌換徽章'}</button>`
-          : `<div style="font-size:12px;color:var(--tx3);margin-top:4px">🔒 尚未集齊所需卡片</div>`
+      ${claimCount>0
+        ? `<div style="font-size:12px;color:var(--tx3);margin-top:4px">📊 已兌換 <b style="color:var(--gold)">${claimCount}</b> 次${lastClaimed?` · 最近：${lastClaimed}`:''}</div>`
+        : ''
+      }
+      ${canRedeem
+        ? `<button class="btn g" onclick="redeemBond('${bond.id}')" style="width:100%;padding:9px;margin-top:6px">${rewardCfg.mode==='digital'?'⚡ 立即兌換（可重複）':'🏵️ 建立兌換徽章'}</button>`
+        : `<div style="font-size:12px;color:var(--tx3);margin-top:4px">🔒 尚未集齊所需卡片</div>`
       }`;
     bondList.appendChild(div);
   }
@@ -3088,7 +3104,10 @@ async function redeemBond(bondId) {
         });
       }
 
+      const prevClaimCount = Number(d?.claimedBondCounts?.[bondId] || 0) || (d?.claimedBonds?.[bondId] ? 1 : 0);
+      const claimCount = prevClaimCount + 1;
       upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
+      upd[`${ROOT}/students/${_currentStuId}/claimedBondCounts/${bondId}`] = claimCount;
 
       if (rewardCfg.mode === 'digital') {
         const classRewardLabel = getClassReward(byId(_currentStuId)?.cls || '', bondTier);
@@ -3101,10 +3120,12 @@ async function redeemBond(bondId) {
           : couponType === 'noodle' ? '泡麵一碗兌換券'
           : '';
         const couponImage = couponType ? COUPON_IMAGE_MAP[couponType] : '';
-        upd[`${ROOT}/students/${_currentStuId}/digitalRewards/${bondId}`] = {
+        const rewardKey = `${bondId}_${Date.now()}`;
+        upd[`${ROOT}/students/${_currentStuId}/digitalRewards/${rewardKey}`] = {
           bondId,
           bondName: bond.name,
           tier: bondTier,
+          claimCount,
           rewardLabel: classRewardLabel,
           claimedAt: t,
           redeemState: 'issued',
@@ -3116,7 +3137,7 @@ async function redeemBond(bondId) {
         if (parsedReward.packs) upd[`${ROOT}/students/${_currentStuId}/packTickets`] = nextPacks;
         if (parsedReward.medals) upd[`${ROOT}/students/${_currentStuId}/medals`] = nextMedals;
         if (couponType) {
-          upd[`${ROOT}/students/${_currentStuId}/couponBook/${bondId}_${couponType}`] = {
+          upd[`${ROOT}/students/${_currentStuId}/couponBook/${bondId}_${couponType}_${Date.now()}`] = {
             couponType,
             couponLabel,
             couponImage,
@@ -3464,6 +3485,7 @@ const BOND_TIER_MAP = {
 
 function getBondTier(bond) {
   if (!bond) return 'bronze';
+  if (bond.tier && TIER_INFO[bond.tier]) return bond.tier;
   if (bond.fixedTier && TIER_INFO[bond.fixedTier]) return bond.fixedTier;
   if (Array.isArray(bond.needs) && bond.needs.length) {
     const rarityWeights = { R:1, SR:2.5, SSR:4.5, UR:8 };
@@ -3605,9 +3627,7 @@ async function openMedalRedeemDlg() {
     const isRarityType = !!bond.rarityPool;
     const canRedeem = isRarityType ? checkRarityBond(bond, inv)
                                    : bond.needs.every(id => (inv[id]||0) >= 1);
-    const alreadyClaimed = oldClaimed2[bond.id]
-      || (newBadges2[bond.id] ? newBadges2[bond.id].claimedAt : null);
-    return canRedeem && !alreadyClaimed;
+    return canRedeem;
   });
   const iconMap = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
 
