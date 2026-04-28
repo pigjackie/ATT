@@ -256,7 +256,7 @@
   </div>
   <div style="font-size:12px;color:var(--tx3);margin-bottom:14px;padding:8px 12px;background:var(--bg1);border-radius:var(--r2);border:1px solid var(--bdr);line-height:1.8">
     ℹ️ 五種勳章都保留。老師可為各班設定五階獎勵內容。<br>
-    五階獎勵皆可由系統直接發放；可設定點數、連抽卡包與飲食兌換券。
+    可設定項目：實體獎品（泡麵/飲料）、免死金牌、點數；數量可選 1～5。免死金牌與點數會由系統直接發放。
   </div>
 
   <div style="background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);padding:16px;margin-bottom:14px">
@@ -264,45 +264,105 @@
     <select id="rewardClsSelect" class="dlg-input" style="width:100%;margin-bottom:16px" onchange="loadClassRewards()"></select>
 
     <div style="display:grid;gap:12px">
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <div style="padding:10px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <div class="badge-circle badge-bronze" style="width:28px;height:28px;font-size:13px;flex-shrink:0">🏅</div>
-          <div class="dlg-label" style="margin:0">銅牌徽章獎品（系統直發）</div>
-          <div style="font-size:10px;color:var(--tx3)">（例：點數3點）</div>
+          <div class="dlg-label" style="margin:0">銅牌徽章</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_bronze" placeholder="例：點數3點" style="margin:0">
+        <div style="display:grid;grid-template-columns:1.3fr .9fr 1fr;gap:8px">
+          <select class="dlg-input" id="reward_type_bronze" onchange="onRewardTypeChange('bronze')" style="margin:0">
+            <option value="points">點數</option>
+            <option value="medal">免死金牌</option>
+            <option value="physical">實體獎品</option>
+          </select>
+          <select class="dlg-input" id="reward_qty_bronze" style="margin:0">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          </select>
+          <select class="dlg-input" id="reward_item_bronze" style="margin:0;display:none">
+            <option value="noodle">泡麵</option>
+            <option value="drink">飲料</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <div style="padding:10px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <div class="badge-circle badge-silver" style="width:28px;height:28px;font-size:13px;flex-shrink:0">🪙</div>
-          <div class="dlg-label" style="margin:0">銀牌徽章獎品（系統直發）</div>
-          <div style="font-size:10px;color:var(--tx3)">（建議：3連抽卡包）</div>
+          <div class="dlg-label" style="margin:0">銀牌徽章</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_silver" placeholder="例：3連抽卡包" style="margin:0">
+        <div style="display:grid;grid-template-columns:1.3fr .9fr 1fr;gap:8px">
+          <select class="dlg-input" id="reward_type_silver" onchange="onRewardTypeChange('silver')" style="margin:0">
+            <option value="points">點數</option>
+            <option value="medal">免死金牌</option>
+            <option value="physical">實體獎品</option>
+          </select>
+          <select class="dlg-input" id="reward_qty_silver" style="margin:0">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          </select>
+          <select class="dlg-input" id="reward_item_silver" style="margin:0;display:none">
+            <option value="noodle">泡麵</option>
+            <option value="drink">飲料</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <div style="padding:10px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <div class="badge-circle badge-gold" style="width:28px;height:28px;font-size:13px;flex-shrink:0">⭐</div>
-          <div class="dlg-label" style="margin:0">金牌徽章獎品（系統直發）</div>
-          <div style="font-size:10px;color:var(--tx3)">（建議：5連抽卡包）</div>
+          <div class="dlg-label" style="margin:0">金牌徽章</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_gold" placeholder="例：5連抽卡包" style="margin:0">
+        <div style="display:grid;grid-template-columns:1.3fr .9fr 1fr;gap:8px">
+          <select class="dlg-input" id="reward_type_gold" onchange="onRewardTypeChange('gold')" style="margin:0">
+            <option value="points">點數</option>
+            <option value="medal">免死金牌</option>
+            <option value="physical">實體獎品</option>
+          </select>
+          <select class="dlg-input" id="reward_qty_gold" style="margin:0">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          </select>
+          <select class="dlg-input" id="reward_item_gold" style="margin:0;display:none">
+            <option value="noodle">泡麵</option>
+            <option value="drink">飲料</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <div style="padding:10px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <div class="badge-circle badge-diamond" style="width:28px;height:28px;font-size:13px;flex-shrink:0">💠</div>
-          <div class="dlg-label" style="margin:0">藍鑽徽章獎品（班級自訂）</div>
-          <div style="font-size:10px;color:var(--tx3)">（建議：泡麵一碗）</div>
+          <div class="dlg-label" style="margin:0">藍鑽徽章</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_diamond" placeholder="例：泡麵一碗" style="margin:0">
+        <div style="display:grid;grid-template-columns:1.3fr .9fr 1fr;gap:8px">
+          <select class="dlg-input" id="reward_type_diamond" onchange="onRewardTypeChange('diamond')" style="margin:0">
+            <option value="points">點數</option>
+            <option value="medal">免死金牌</option>
+            <option value="physical">實體獎品</option>
+          </select>
+          <select class="dlg-input" id="reward_qty_diamond" style="margin:0">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          </select>
+          <select class="dlg-input" id="reward_item_diamond" style="margin:0;display:none">
+            <option value="noodle">泡麵</option>
+            <option value="drink">飲料</option>
+          </select>
+        </div>
       </div>
-      <div>
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px">
+      <div style="padding:10px;border:1px solid var(--bdr);border-radius:8px;background:var(--bg2)">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
           <div class="badge-circle badge-legend" style="width:28px;height:28px;font-size:13px;flex-shrink:0">👑</div>
-          <div class="dlg-label" style="margin:0">傳說徽章獎品（班級自訂）</div>
-          <div style="font-size:10px;color:var(--tx3)">（建議：星巴克一杯）</div>
+          <div class="dlg-label" style="margin:0">傳說徽章</div>
         </div>
-        <input class="dlg-input" type="text" id="reward_legend" placeholder="例：星巴克一杯" style="margin:0">
+        <div style="display:grid;grid-template-columns:1.3fr .9fr 1fr;gap:8px">
+          <select class="dlg-input" id="reward_type_legend" onchange="onRewardTypeChange('legend')" style="margin:0">
+            <option value="points">點數</option>
+            <option value="medal">免死金牌</option>
+            <option value="physical">實體獎品</option>
+          </select>
+          <select class="dlg-input" id="reward_qty_legend" style="margin:0">
+            <option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
+          </select>
+          <select class="dlg-input" id="reward_item_legend" style="margin:0;display:none">
+            <option value="noodle">泡麵</option>
+            <option value="drink">飲料</option>
+          </select>
+        </div>
       </div>
     </div>
 

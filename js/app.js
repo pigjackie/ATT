@@ -1542,7 +1542,7 @@ async function renderStudentCardExtras(stu, d) {
       </div>`;
     }).join('');
     rewardEl.innerHTML = `
-      <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">${stu.cls} 兌換說明：銅牌=點數3點、銀牌=3連抽卡包、金牌=5連抽卡包、藍鑽=泡麵券、傳說=星巴克券。</div>
+      <div style="font-size:12px;color:var(--tx2);margin-bottom:8px">${stu.cls} 兌換說明：由老師設定項目（實體獎品／免死金牌／點數）與數量，點數與免死金牌系統自動發放。</div>
       <div>${rows}</div>`;
   }
 }
@@ -2333,11 +2333,11 @@ const CARD_DB = [
 let classRewardsCache = {};
 
 const DEFAULT_CLASS_REWARDS = {
-  bronze:  '點數4點',
-  silver:  '3連抽卡包',
-  gold:    '5連抽卡包',
-  diamond: '泡麵一碗',
-  legend:  '星巴克一杯',
+  bronze:  '點數3點',
+  silver:  '免死金牌1面',
+  gold:    '免死金牌2面',
+  diamond: '泡麵1份',
+  legend:  '飲料1杯',
 };
 
 const CLASS_REWARD_TEACHERS = {
@@ -2368,7 +2368,60 @@ async function loadAllClassRewards() {
 
 function getClassReward(clsName, tier) {
   const clsData = classRewardsCache[clsName.replace(/\//g,'_')] || {};
-  return clsData[tier] || DEFAULT_CLASS_REWARDS[tier] || (isTopTierReward(tier) ? '獎品待設定' : '請老師設定數位獎勵');
+  return formatRewardConfig(toRewardConfig(clsData[tier] || DEFAULT_CLASS_REWARDS[tier], tier));
+}
+
+function parseQtyToken(text) {
+  const s = String(text || '');
+  const num = s.match(/([1-5])/);
+  if (num) return Number(num[1]);
+  const zh = s.match(/[一二兩三四五]/);
+  if (!zh) return 1;
+  const map = { '一':1, '二':2, '兩':2, '三':3, '四':4, '五':5 };
+  return map[zh[0]] || 1;
+}
+
+function normalizeRewardConfig(cfg, tier) {
+  const type = (cfg?.type === 'medal' || cfg?.type === 'physical' || cfg?.type === 'points') ? cfg.type : 'points';
+  const qty = Math.max(1, Math.min(5, Number(cfg?.qty || 1) || 1));
+  const item = cfg?.item === 'drink' ? 'drink' : 'noodle';
+  if (type !== 'physical') return { type, qty };
+  return { type, qty, item };
+}
+
+function formatRewardConfig(cfg) {
+  const c = normalizeRewardConfig(cfg || {});
+  if (c.type === 'points') return `點數${c.qty}點`;
+  if (c.type === 'medal') return `免死金牌${c.qty}面`;
+  return c.item === 'drink' ? `飲料${c.qty}杯` : `泡麵${c.qty}份`;
+}
+
+function toRewardConfig(raw, tier) {
+  if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+    return normalizeRewardConfig(raw, tier);
+  }
+  const text = String(raw || '').trim();
+  if (!text) return toRewardConfig(DEFAULT_CLASS_REWARDS[tier] || '', tier);
+  if (/(免死金牌|金牌)/.test(text)) {
+    return normalizeRewardConfig({ type:'medal', qty:parseQtyToken(text) }, tier);
+  }
+  if (/點數|點/.test(text)) {
+    return normalizeRewardConfig({ type:'points', qty:parseQtyToken(text) }, tier);
+  }
+  if (/泡麵|麵/.test(text)) {
+    return normalizeRewardConfig({ type:'physical', item:'noodle', qty:parseQtyToken(text) }, tier);
+  }
+  if (/飲料|手搖|奶茶/.test(text)) {
+    return normalizeRewardConfig({ type:'physical', item:'drink', qty:parseQtyToken(text) }, tier);
+  }
+  return normalizeRewardConfig({ type:'points', qty:1 }, tier);
+}
+
+function onRewardTypeChange(tier) {
+  const typeEl = document.getElementById(`reward_type_${tier}`);
+  const itemEl = document.getElementById(`reward_item_${tier}`);
+  if (!typeEl || !itemEl) return;
+  itemEl.style.display = typeEl.value === 'physical' ? '' : 'none';
 }
 // ── 自訂卡片/羈絆（必須在 generateDynamicBonds 之前宣告）──
 let _customCards = [];
@@ -3129,8 +3182,10 @@ async function redeemBond(bondId) {
         const nextPacks = Number(d?.packTickets||0) + (parsedReward.packs || 0);
         const nextMedals = Number(d?.medals||0) + (parsedReward.medals || 0);
         const couponType = parsedReward.couponType;
-        const couponLabel = couponType === 'starbucks' ? '星巴克一杯兌換券'
-          : couponType === 'noodle' ? '泡麵一碗兌換券'
+        const couponQty = Math.max(1, Number(parsedReward.couponQty || 1));
+        const couponLabel = couponType === 'starbucks' ? `星巴克${couponQty}杯兌換券`
+          : couponType === 'noodle' ? `泡麵${couponQty}份兌換券`
+          : couponType === 'drink' ? `飲料${couponQty}杯兌換券`
           : '';
         const couponImage = couponType ? COUPON_IMAGE_MAP[couponType] : '';
         const rewardKey = `${bondId}_${Date.now()}`;
@@ -3143,6 +3198,7 @@ async function redeemBond(bondId) {
           claimedAt: t,
           redeemState: 'issued',
           couponType,
+          couponQty,
           couponLabel,
           couponImage
         };
@@ -3152,6 +3208,7 @@ async function redeemBond(bondId) {
         if (couponType) {
           upd[`${ROOT}/students/${_currentStuId}/couponBook/${bondId}_${couponType}_${Date.now()}`] = {
             couponType,
+            couponQty,
             couponLabel,
             couponImage,
             sourceBondId: bondId,
@@ -3559,21 +3616,25 @@ function getBondModeText(bond) {
 
 function parseDigitalReward(label) {
   const text = String(label || '').trim();
+  const qty = parseQtyToken(text);
   const pointMatch = text.match(/(\d+)\s*點/);
   const packMatch = text.match(/(\d+)\s*連抽卡包|(\d+)\s*包卡包|(\d+)\s*抽卡包/);
-  const medalMatch = text.match(/(\d+)\s*面?\s*金牌|金牌\s*(\d+)\s*面?/);
+  const medalMatch = text.match(/(\d+)\s*面?\s*(?:免死)?金牌|(?:免死)?金牌\s*(\d+)\s*面?/);
   const points = pointMatch ? Number(pointMatch[1]) : 0;
   const packs = packMatch ? Number(packMatch[1] || packMatch[2] || packMatch[3] || 0) : 0;
-  const medals = medalMatch ? Number(medalMatch[1] || medalMatch[2] || 0) : (/金牌/.test(text) ? 1 : 0);
+  const medals = medalMatch ? Number(medalMatch[1] || medalMatch[2] || 0) : (/(免死金牌|金牌)/.test(text) ? qty : 0);
   const couponType = /星巴克/.test(text) ? 'starbucks'
     : /(泡麵|一度讚|一度贊|noodle)/i.test(text) ? 'noodle'
+    : /(飲料|手搖|drink)/i.test(text) ? 'drink'
     : '';
-  return { text, points, packs, medals, couponType };
+  const couponQty = couponType ? qty : 0;
+  return { text, points, packs, medals, couponType, couponQty };
 }
 
 const COUPON_IMAGE_MAP = {
   starbucks: 'CARDS/星巴克一杯.webp',
   noodle: 'CARDS/泡麵.jpg',
+  drink: '',
 };
 
 // 產生徽章 HTML（顯示羈絆名稱 + 等級名稱，外觀依 tier）
@@ -4049,13 +4110,15 @@ async function loadClassRewards() {
   }
   const tiers = ['bronze','silver','gold','diamond','legend'];
   tiers.forEach(tier => {
-    const el = document.getElementById(`reward_${tier}`);
-    if (!el) return;
-    el.value = data[tier] || '';
-    el.readOnly = false;
-    el.style.opacity = '1';
-    el.style.cursor = '';
-    el.style.background = 'var(--bg1)';
+    const cfg = toRewardConfig(data[tier] || DEFAULT_CLASS_REWARDS[tier], tier);
+    const typeEl = document.getElementById(`reward_type_${tier}`);
+    const qtyEl = document.getElementById(`reward_qty_${tier}`);
+    const itemEl = document.getElementById(`reward_item_${tier}`);
+    if (!typeEl || !qtyEl || !itemEl) return;
+    typeEl.value = cfg.type;
+    qtyEl.value = String(cfg.qty);
+    itemEl.value = cfg.item || 'noodle';
+    onRewardTypeChange(tier);
   });
 }
 
@@ -4067,8 +4130,15 @@ async function saveClassRewards() {
   const tiers = ['bronze','silver','gold','diamond','legend'];
   const payload = {};
   tiers.forEach(tier => {
-    const val = (document.getElementById(`reward_${tier}`)?.value || '').trim();
-    payload[tier] = val || DEFAULT_CLASS_REWARDS[tier];
+    const typeEl = document.getElementById(`reward_type_${tier}`);
+    const qtyEl = document.getElementById(`reward_qty_${tier}`);
+    const itemEl = document.getElementById(`reward_item_${tier}`);
+    const cfg = normalizeRewardConfig({
+      type: typeEl?.value || 'points',
+      qty: Number(qtyEl?.value || 1),
+      item: itemEl?.value || 'noodle',
+    }, tier);
+    payload[tier] = cfg;
   });
   try {
     await dbSet(`classRewards/${key}`, payload);
@@ -4091,8 +4161,11 @@ async function renderRewardPreview() {
   CLASSES.forEach(cls => {
     const key = cls.replace(/\//g,'_');
     const data = classRewardsCache[key] || {};
-    const owner = getRewardOwnerLabel(cls);
-    const hasCustom = ['diamond','legend'].some(tier => !!data[tier] && data[tier] !== DEFAULT_CLASS_REWARDS[tier]);
+    const hasCustom = ['bronze','silver','gold','diamond','legend'].some(tier => {
+      const current = formatRewardConfig(toRewardConfig(data[tier] || DEFAULT_CLASS_REWARDS[tier], tier));
+      const defaults = formatRewardConfig(toRewardConfig(DEFAULT_CLASS_REWARDS[tier], tier));
+      return current !== defaults;
+    });
     html += `<div style="background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r2);padding:12px 14px;margin-bottom:8px">
       <div style="font-size:13px;font-weight:bold;color:var(--gold);margin-bottom:8px">
         ${cls} ${hasCustom ? '<span style="font-size:10px;padding:1px 7px;border-radius:8px;background:rgba(46,204,113,.15);color:var(--green);margin-left:6px">已自訂</span>' : '<span style="font-size:10px;color:var(--tx3);margin-left:6px">（使用預設）</span>'}
@@ -4100,8 +4173,8 @@ async function renderRewardPreview() {
       <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">系統直接發放（班級設定可覆蓋）</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${['bronze','silver','gold','diamond','legend'].map(tier => {
-          const reward = data[tier] || DEFAULT_CLASS_REWARDS[tier];
-          const custom = isTopTierReward(tier) && !!data[tier] && data[tier] !== DEFAULT_CLASS_REWARDS[tier];
+          const reward = formatRewardConfig(toRewardConfig(data[tier] || DEFAULT_CLASS_REWARDS[tier], tier));
+          const custom = reward !== formatRewardConfig(toRewardConfig(DEFAULT_CLASS_REWARDS[tier], tier));
           return `<div style="flex:1;min-width:120px;background:var(--bg1);border:1px solid ${custom?'rgba(46,204,113,.3)':'var(--bdr)'};border-radius:6px;padding:7px 10px">
             <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">${iconMap[tier]} ${tierLabel[tier]}</div>
             <div style="font-size:12px;color:${custom?'var(--green)':'var(--tx2)'}">${reward}</div>
