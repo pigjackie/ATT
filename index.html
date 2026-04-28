@@ -515,6 +515,7 @@
     <button class="stu-quick-btn cal" onclick="openStuCal()">📅 行事曆</button>
     <button class="stu-quick-btn card" onclick="openCardPack()">🌟 抽卡包</button>
     <button class="stu-quick-btn" onclick="openBag()" style="border-color:var(--tx2);color:var(--tx2);font-size:12px">🎒 卡簿</button>
+    <button class="stu-quick-btn" onclick="openCouponWallet()" id="couponWalletBtn" style="border-color:var(--gold);color:var(--gold);font-size:12px;position:relative">🎟️ 兌換券<span id="couponBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:bold"></span></button>
   </div>
 
   <div id="stuBanner">
@@ -697,6 +698,12 @@
     </div>
   </div>
   <div class="dp-sec">
+    <div class="dp-sec-t">🎟️ 兌換券核銷</div>
+    <div id="dpCouponArea" style="min-height:28px">
+      <div style="font-size:12px;color:var(--tx3);font-style:italic">載入中…</div>
+    </div>
+  </div>
+  <div class="dp-sec">
     <div class="dp-sec-t">📝 處罰任務</div>
     <div id="dpTasks"></div>
     <div class="row" style="margin-top:7px">
@@ -735,6 +742,73 @@
   <div class="ep-info" id="epTeacher" style="font-size:17px">核可老師：—</div>
   <div class="ep-info" id="epOutTime" style="font-size:15px;opacity:.75;margin-top:4px">憑證展示時間：—</div>
   <button class="ep-close" onclick="document.getElementById('exitPass').classList.remove('on')">關閉</button>
+</div>
+
+<!-- ══════════════════════════════════════════
+     兌換券錢包 Overlay（學生端）
+═══════════════════════════════════════════ -->
+<div id="couponWalletOverlay" onclick="if(event.target===this)closeCouponWallet()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.75);z-index:3000;align-items:flex-end;justify-content:center">
+  <div style="width:100%;max-width:500px;max-height:90vh;background:var(--bg);border-radius:20px 20px 0 0;overflow:hidden;display:flex;flex-direction:column">
+    <!-- 標頭 -->
+    <div style="padding:16px 18px 10px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border-bottom:1px solid rgba(123,47,247,.4)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <div style="font-size:17px;font-weight:bold;color:#e0c0ff">🎟️ 我的兌換券</div>
+        <button onclick="closeCouponWallet()" style="background:none;border:none;color:rgba(200,150,255,.7);font-size:20px;cursor:pointer;padding:0 4px">✕</button>
+      </div>
+      <div style="font-size:11px;color:rgba(200,150,255,.6)">點擊券卡查看詳情 · 數位券自動兌換 · 實體券出示給老師</div>
+      <!-- 篩選 tabs -->
+      <div style="display:flex;gap:6px;margin-top:10px">
+        <button onclick="filterCouponWallet('all')" id="cwTabAll" style="flex:1;padding:6px;border-radius:8px;border:1px solid rgba(123,47,247,.5);background:rgba(123,47,247,.3);color:#e0c0ff;font-size:11px;cursor:pointer;font-family:inherit">全部</button>
+        <button onclick="filterCouponWallet('unused')" id="cwTabUnused" style="flex:1;padding:6px;border-radius:8px;border:1px solid rgba(123,47,247,.2);background:transparent;color:rgba(200,150,255,.6);font-size:11px;cursor:pointer;font-family:inherit">未使用</button>
+        <button onclick="filterCouponWallet('physical')" id="cwTabPhysical" style="flex:1;padding:6px;border-radius:8px;border:1px solid rgba(123,47,247,.2);background:transparent;color:rgba(200,150,255,.6);font-size:11px;cursor:pointer;font-family:inherit">⚠️ 待核銷</button>
+        <button onclick="filterCouponWallet('used')" id="cwTabUsed" style="flex:1;padding:6px;border-radius:8px;border:1px solid rgba(123,47,247,.2);background:transparent;color:rgba(200,150,255,.6);font-size:11px;cursor:pointer;font-family:inherit">已使用</button>
+      </div>
+    </div>
+    <!-- 券列表 -->
+    <div id="couponWalletList" style="flex:1;overflow-y:auto;padding:14px 16px;display:flex;flex-direction:column;gap:10px">
+      <div style="text-align:center;color:var(--tx3);padding:40px 0">載入中…</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     兌換券詳情/出示 Overlay（學生展示給老師用）
+═══════════════════════════════════════════ -->
+<div id="couponShowOverlay" onclick="if(event.target===this)closeCouponShow()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);z-index:4000;align-items:center;justify-content:center">
+  <div style="width:92%;max-width:380px;background:var(--bg);border-radius:20px;overflow:hidden;text-align:center;padding:0">
+    <!-- 頂部色帶 -->
+    <div id="couponShowHeader" style="padding:20px 16px 14px;background:linear-gradient(135deg,#1a0a2e,#2d1357)">
+      <div style="font-size:11px;color:rgba(200,150,255,.7);letter-spacing:2px;margin-bottom:6px">REWARD COUPON</div>
+      <div id="couponShowIcon" style="font-size:52px;margin-bottom:6px">🎟️</div>
+      <div id="couponShowLabel" style="font-size:20px;font-weight:bold;color:#e0c0ff"></div>
+      <div id="couponShowSub" style="font-size:12px;color:rgba(200,150,255,.6);margin-top:4px"></div>
+    </div>
+    <!-- 主要內容 -->
+    <div style="padding:18px 20px">
+      <div id="couponShowImg" style="margin-bottom:14px"></div>
+      <div id="couponShowStatus" style="font-size:14px;font-weight:bold;margin-bottom:12px"></div>
+      <div id="couponShowInfo" style="font-size:12px;color:var(--tx2);margin-bottom:16px;line-height:1.7"></div>
+      <div id="couponShowActions" style="display:flex;flex-direction:column;gap:8px"></div>
+    </div>
+    <button onclick="closeCouponShow()" style="width:100%;padding:14px;background:var(--bg1);border:none;border-top:1px solid var(--bdr);color:var(--tx2);font-size:13px;cursor:pointer;font-family:inherit">關閉</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     老師核銷 Overlay（老師掃描/確認用）
+═══════════════════════════════════════════ -->
+<div id="teacherVerifyOverlay" onclick="if(event.target===this)closeTeacherVerify()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.88);z-index:5000;align-items:center;justify-content:center">
+  <div style="width:92%;max-width:380px;background:var(--bg);border-radius:20px;overflow:hidden">
+    <div style="padding:16px 18px;background:linear-gradient(135deg,#0a2e1a,#135728);border-bottom:1px solid rgba(46,204,113,.3)">
+      <div style="font-size:14px;font-weight:bold;color:#b9f3cf">✅ 老師核銷確認</div>
+      <div style="font-size:11px;color:rgba(185,243,207,.6);margin-top:2px">請確認學生資料與獎品後核銷</div>
+    </div>
+    <div style="padding:18px 20px">
+      <div id="teacherVerifyContent"></div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:16px" id="teacherVerifyActions"></div>
+    </div>
+    <button onclick="closeTeacherVerify()" style="width:100%;padding:14px;background:var(--bg1);border:none;border-top:1px solid var(--bdr);color:var(--tx2);font-size:13px;cursor:pointer;font-family:inherit">取消</button>
+  </div>
 </div>
 
 <div id="dlgOverlay" onclick="if(event.target===this)closeDlg()">
