@@ -374,6 +374,7 @@ function enterStudentView(stu) {
   showScreen('studentScreen');
   loadStuView(stu);
   loadStuMsgs(stu.id);
+  setTimeout(_refreshCouponBadge, 800);
 }
 
 function switchTab(t) {
@@ -751,6 +752,7 @@ async function openDetail(stu) {
   renderTasks(d.tasks||{});
   renderLog(d.log||{});
   _updateDetailBondMedal(d);
+  _renderDetailCoupons(stu.id, d);
   document.getElementById('detailPanel').classList.add('open');
 }
 
@@ -2495,7 +2497,7 @@ function getCardImageSrc(card) {
 }
 
 // ── 稀有度機率（總和 100） ──
-const RARITY_WEIGHT = {UR:1, SSR:7, SR:20, R:72};
+const RARITY_WEIGHT = {UR:2, SSR:13, SR:40, R:45};
 
 // ── 動態生成羈絆清單 ──
 let DYNAMIC_BONDS = [];
@@ -2588,7 +2590,7 @@ let _pendingCard = null;
 // 保底機制（Pity System）：連續未抽中 SSR/UR 達 7 次強制給出
 // Firebase 路徑：students/{id}/pityCount
 // ══════════════════════════════════════════════════════════════
-const PITY_THRESHOLD = 10;
+const PITY_THRESHOLD = 7;
 
 // 更新保底進度條 UI
 function _updatePityUI(count) {
@@ -3957,6 +3959,60 @@ function _updateDetailBondMedal(d) {
   badgeArea.innerHTML = html;
 }
 
+// 老師端詳情面板：顯示該生所有兌換券
+function _renderDetailCoupons(stuId, d) {
+  const area = document.getElementById('dpCouponArea');
+  if (!area) return;
+
+  const allCoupons = Object.entries(d.couponBook || {})
+    .map(([k, v]) => ({...v, _key: k}))
+    .sort((a, b) => (b.issuedAt || '').localeCompare(a.issuedAt || ''));
+
+  const pending = allCoupons.filter(c => c.physical && !c.used && c.redeemState !== 'redeemed');
+  const others  = allCoupons.filter(c => !(c.physical && !c.used && c.redeemState !== 'redeemed'));
+
+  if (!allCoupons.length) {
+    area.innerHTML = '<div style="font-size:12px;color:var(--tx3);font-style:italic">尚無兌換券</div>';
+    return;
+  }
+
+  let html = '';
+
+  if (pending.length) {
+    html += `<div style="font-size:10px;color:var(--yellow);margin-bottom:6px;font-weight:bold">⏳ 待核銷實體券（${pending.length} 張）</div>`;
+    pending.forEach(c => {
+      const info = getCouponTypeInfo(c.couponType || 'custom');
+      html += `<div style="display:flex;align-items:center;gap:10px;padding:8px 10px;background:rgba(241,196,15,.07);border:1px solid rgba(241,196,15,.35);border-radius:10px;margin-bottom:6px">
+        <div style="font-size:22px">${info.icon}</div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:bold">${c.couponLabel}</div>
+          <div style="font-size:10px;color:var(--tx3)">${c.issuedAt?.slice(0,10)||'—'}</div>
+        </div>
+        <button onclick="teacherRedeemCoupon('${stuId}','${c._key}')" 
+          style="background:var(--green);color:#fff;border:none;padding:5px 12px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;font-weight:bold;white-space:nowrap">
+          核銷 ✓
+        </button>
+      </div>`;
+    });
+  }
+
+  if (others.length) {
+    html += `<div style="font-size:10px;color:var(--tx3);margin-top:${pending.length?8:0}px;margin-bottom:4px">其他券（${others.length} 張）</div>`;
+    others.slice(0,5).forEach(c => {
+      const info = getCouponTypeInfo(c.couponType || 'custom');
+      const isUsed = c.used || c.redeemState === 'redeemed';
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;background:var(--bg1);border:1px solid var(--bdr);margin-bottom:4px;opacity:${isUsed?.6:1}">
+        <div style="font-size:16px">${info.icon}</div>
+        <div style="flex:1;font-size:11px;color:var(--tx2)">${c.couponLabel}</div>
+        <div style="font-size:10px;color:${isUsed?'var(--green)':'var(--tx3)'};">${isUsed?'✅已使用':'⚡數位'}</div>
+      </div>`;
+    });
+    if (others.length > 5) html += `<div style="font-size:10px;color:var(--tx3);text-align:center;padding:4px">…還有 ${others.length-5} 張</div>`;
+  }
+
+  area.innerHTML = html || '<div style="font-size:12px;color:var(--tx3);font-style:italic">尚無兌換券</div>';
+}
+
 // 老師端：從「報表」頁查看全班勳章（加在 renderRpt 末尾呼叫）
 async function renderBondMedalRanking(cls) {
   const stus = byCls(cls || curCls);
@@ -4232,10 +4288,508 @@ async function renderRewardPreview() {
   el.innerHTML = html || '<div class="empty" style="padding:20px">尚無資料</div>';
 }
   
+// ════════════════════════════════════════════════════════════════
+// 統一兌換券系統 (Coupon Wallet)
+// 所有獎品統一走兌換券流程：
+//   數位券（點數/金牌/卡包）→ 學生點「立即兌換」自動發放
+//   實體券（泡麵/飲料/星巴克/自訂）→ 學生出示 → 老師點「核銷」
+// ════════════════════════════════════════════════════════════════
+
+// 兌換券類型定義
+const COUPON_TYPE_INFO = {
+  points:    { icon:'⭐', color:'#D4AF37', label:'點數獎勵', physical:false },
+  medal:     { icon:'🎖️', color:'#D4AF37', label:'免死金牌', physical:false },
+  pack:      { icon:'🎴', color:'#9B59B6', label:'抽卡包券', physical:false },
+  noodle:    { icon:'🍜', color:'#E67E22', label:'泡麵兌換券', physical:true },
+  drink:     { icon:'🧋', color:'#16A085', label:'飲料兌換券', physical:true },
+  starbucks: { icon:'☕', color:'#00704A', label:'星巴克兌換券', physical:true },
+  custom:    { icon:'🎁', color:'#8E44AD', label:'實體獎品券', physical:true },
+};
+
+function getCouponTypeInfo(couponType) {
+  return COUPON_TYPE_INFO[couponType] || { icon:'🎟️', color:'#D4AF37', label:'兌換券', physical:false };
+}
+
+// ── 從獎品設定產生券資料 ──
+function buildCouponFromRewardConfig(cfg, bondName, bondId) {
+  const t = now();
+  const key = `${bondId}_${Date.now()}`;
+  const qty = cfg.qty || 1;
+
+  // 決定 couponType
+  let couponType, label;
+  if (cfg.type === 'points') {
+    couponType = 'points'; label = `點數 +${qty} 點`;
+  } else if (cfg.type === 'medal') {
+    couponType = 'medal'; label = `免死金牌 ×${qty}`;
+  } else if (cfg.type === 'pack') {
+    couponType = 'pack'; label = `抽卡包券 ×${qty}`;
+  } else {
+    // physical
+    couponType = cfg.item || 'noodle';
+    if (couponType === 'custom') {
+      label = (cfg.customLabel || '自訂獎品') + ` ×${qty}`;
+    } else {
+      const info = getCouponTypeInfo(couponType);
+      label = `${info.label} ×${qty}`;
+    }
+  }
+
+  const info = getCouponTypeInfo(couponType);
+  return {
+    key,
+    couponType,
+    couponQty: qty,
+    couponLabel: label,
+    couponCustomLabel: cfg.customLabel || '',
+    couponImage: COUPON_IMAGE_MAP[couponType] || '',
+    sourceBondId: bondId,
+    sourceBondName: bondName,
+    issuedAt: t,
+    used: false,
+    physical: info.physical,
+    redeemState: info.physical ? 'pending' : 'ready', // ready = 可自動兌換
+  };
+}
+
+// ── 重寫 redeemBond：全部走兌換券 ──
+async function redeemBond(bondId) {
+  if (!_currentStuId) return;
+  const bond = DYNAMIC_BONDS.find(b => b.id === bondId);
+  if (!bond) return;
+
+  const bondTier  = getBondTier(bond);
+  const tierInfo  = TIER_INFO[bondTier];
+  const iconMap2  = {bronze:'🏅',silver:'🪙',gold:'⭐',diamond:'💠',legend:'👑'};
+
+  // 讀取班級專屬獎品設定
+  const stuCls = byId(_currentStuId)?.cls || '';
+  const clsKey = stuCls.replace(/\//g,'_');
+  let clsRewardCfg = classRewardsCache[clsKey]?.[bondTier];
+  if (!clsRewardCfg) {
+    const data = await dbGet(`classRewards/${clsKey}`) || {};
+    clsRewardCfg = data[bondTier];
+    if (data) classRewardsCache[clsKey] = data;
+  }
+  const cfg = clsRewardCfg
+    ? normalizeRewardConfig(clsRewardCfg, bondTier)
+    : toRewardConfig(DEFAULT_CLASS_REWARDS[bondTier], bondTier);
+
+  const previewLabel = formatRewardConfig(cfg);
+  const isPhysical = (cfg.type === 'physical');
+  const couponInfo = getCouponTypeInfo(isPhysical ? (cfg.item || 'noodle') : cfg.type);
+
+  openDlg(`🔗 兌換羈絆「${bond.name}」`,
+    `<div class="dlg-msg" style="text-align:center">
+      <div style="font-size:13px;color:var(--tx2);margin-bottom:12px">${bond.desc||''}</div>
+      <!-- 徽章展示 -->
+      <div style="display:flex;align-items:center;justify-content:center;gap:12px;background:linear-gradient(135deg,#1a0a2e,#2d1357);border:1px solid #7b2ff7;border-radius:12px;padding:14px;margin-bottom:10px">
+        <div class="badge-circle ${tierInfo.tierClass}" style="width:52px;height:52px;font-size:22px;flex-shrink:0">
+          ${iconMap2[bondTier]}
+        </div>
+        <div style="text-align:left">
+          <div style="font-size:14px;font-weight:bold;color:#e0c0ff">${bond.name}</div>
+          <div style="font-size:12px;color:#a080d0">${tierInfo.name}</div>
+        </div>
+      </div>
+      <!-- 券預覽 -->
+      <div style="background:linear-gradient(135deg,rgba(212,175,55,.12),rgba(0,0,0,.2));border:2px dashed rgba(212,175,55,.5);border-radius:12px;padding:14px;margin-bottom:12px">
+        <div style="font-size:28px;margin-bottom:6px">${couponInfo.icon}</div>
+        <div style="font-size:16px;font-weight:bold;color:var(--gold)">${previewLabel}</div>
+        <div style="font-size:11px;color:var(--tx3);margin-top:6px">
+          ${isPhysical ? '⚠️ 實體獎品券 — 兌換後需出示給老師核銷領取' : '✅ 數位券 — 兌換後系統自動發放，免找老師'}
+        </div>
+      </div>
+      <div style="font-size:12px;color:var(--tx3);padding:8px;background:rgba(0,0,0,.2);border-radius:8px">
+        消耗所需卡片各一張後，系統在你的「🎟️ 兌換券」錢包發一張券。
+      </div>
+    </div>`,
+    [{label:'確認，產生兌換券', cls:'ok', fn: async () => {
+      const inv = (await dbGet(`students/${_currentStuId}/inventory`)) || {};
+      const isRarityType = !!bond.rarityPool;
+      const ok = isRarityType ? checkRarityBond(bond, inv)
+                              : bond.needs.every(id => (inv[id]||0) >= 1);
+      if (!ok) { toast('卡片不足，無法兌換','err'); return false; }
+
+      const upd = {};
+      const lk  = Date.now()+'';
+      const t   = now();
+      const d   = await dbGet(`students/${_currentStuId}`) || {};
+      const stuName = byId(_currentStuId)?.name || '';
+
+      // 扣卡
+      if (isRarityType) {
+        getRarityBondCards(bond, inv).forEach(c => {
+          upd[`${ROOT}/students/${_currentStuId}/inventory/${c.id}`] = Math.max(0,(inv[c.id]||0)-1);
+        });
+      } else {
+        bond.needs.forEach(id => {
+          upd[`${ROOT}/students/${_currentStuId}/inventory/${id}`] = Math.max(0,(inv[id]||0)-1);
+        });
+      }
+
+      // 紀錄兌換次數
+      const prevClaimCount = Number(d?.claimedBondCounts?.[bondId] || 0) || (d?.claimedBonds?.[bondId] ? 1 : 0);
+      const claimCount = prevClaimCount + 1;
+      upd[`${ROOT}/students/${_currentStuId}/claimedBonds/${bondId}`] = t;
+      upd[`${ROOT}/students/${_currentStuId}/claimedBondCounts/${bondId}`] = claimCount;
+
+      // 建立兌換券
+      const coupon = buildCouponFromRewardConfig(cfg, bond.name, bondId);
+      upd[`${ROOT}/students/${_currentStuId}/couponBook/${coupon.key}`] = coupon;
+
+      upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
+        time:t, action:'羈絆兌換券發放',
+        reason:`「${bond.name}」→ ${coupon.couponLabel}`,
+        teacher:'系統', delta:0
+      };
+
+      await db.ref('/').update(upd);
+
+      const notifMsg = isPhysical
+        ? `${bond.emoji} 羈絆「${bond.name}」兌換成功！\n已在你的兌換券錢包發出「${coupon.couponLabel}」，出示給老師領取。`
+        : `${bond.emoji} 羈絆「${bond.name}」兌換成功！\n已在你的兌換券錢包發出「${coupon.couponLabel}」，點擊立即兌換。`;
+      await sendNotifToStudent(_currentStuId, stuName, notifMsg, 'notice');
+
+      toast(`🎟️ 兌換券已發到你的錢包！`, 'ok');
+      await renderBag();
+      _refreshCouponBadge();
+      return true;
+    }}, {label:'取消', fn:()=>true}]
+  );
+}
+
+// ── 兌換券錢包 ──
+let _cwFilter = 'all';
+
+async function openCouponWallet() {
+  if (!_currentStuId) { toast('請先登入','err'); return; }
+  const overlay = document.getElementById('couponWalletOverlay');
+  overlay.style.display = 'flex';
+  _cwFilter = 'all';
+  _updateCwTabs();
+  await _renderCouponWallet();
+}
+
+function closeCouponWallet() {
+  document.getElementById('couponWalletOverlay').style.display = 'none';
+}
+
+function filterCouponWallet(mode) {
+  _cwFilter = mode;
+  _updateCwTabs();
+  _renderCouponWallet();
+}
+
+function _updateCwTabs() {
+  ['all','unused','physical','used'].forEach(t => {
+    const el = document.getElementById('cwTab'+t.charAt(0).toUpperCase()+t.slice(1));
+    if (!el) return;
+    const active = _cwFilter === t;
+    el.style.background = active ? 'rgba(123,47,247,.3)' : 'transparent';
+    el.style.borderColor = active ? 'rgba(123,47,247,.5)' : 'rgba(123,47,247,.2)';
+    el.style.color = active ? '#e0c0ff' : 'rgba(200,150,255,.6)';
+  });
+}
+
+async function _renderCouponWallet() {
+  const list = document.getElementById('couponWalletList');
+  if (!list) return;
+  list.innerHTML = '<div style="text-align:center;color:var(--tx3);padding:30px 0">載入中…</div>';
+
+  const d = await dbGet(`students/${_currentStuId}`) || {};
+  const allCoupons = Object.entries(d.couponBook || {})
+    .map(([k, v]) => ({...v, _key: k}))
+    .sort((a, b) => (b.issuedAt || '').localeCompare(a.issuedAt || ''));
+
+  let filtered = allCoupons;
+  if (_cwFilter === 'unused') filtered = allCoupons.filter(c => !c.used && c.redeemState !== 'redeemed');
+  if (_cwFilter === 'physical') filtered = allCoupons.filter(c => c.physical && !c.used);
+  if (_cwFilter === 'used') filtered = allCoupons.filter(c => c.used || c.redeemState === 'redeemed');
+
+  if (!filtered.length) {
+    list.innerHTML = `<div style="text-align:center;color:var(--tx3);padding:40px 0">
+      <div style="font-size:32px;margin-bottom:10px">🎟️</div>
+      <div style="font-size:13px">${_cwFilter === 'all' ? '尚無兌換券，完成羈絆來取得！' : '沒有符合條件的券'}</div>
+    </div>`;
+    return;
+  }
+
+  list.innerHTML = filtered.map(c => _renderCouponCard(c)).join('');
+}
+
+function _renderCouponCard(coupon) {
+  const info = getCouponTypeInfo(coupon.couponType || 'custom');
+  const isUsed = coupon.used || coupon.redeemState === 'redeemed';
+  const isPending = coupon.physical && !isUsed; // 待老師核銷
+  const isReady = !coupon.physical && !isUsed;  // 可自動兌換
+
+  const statusColor = isUsed ? 'var(--tx3)' : isPending ? 'var(--yellow)' : 'var(--green)';
+  const statusText = isUsed
+    ? `✅ 已使用 ${coupon.redeemedAt ? '· '+coupon.redeemedAt.slice(0,10) : ''}`
+    : isPending ? '⏳ 待出示老師核銷'
+    : '⚡ 點擊立即兌換';
+
+  const borderColor = isUsed ? 'var(--bdr)' : isPending ? 'rgba(241,196,15,.4)' : 'rgba(46,204,113,.4)';
+
+  return `<div onclick="showCouponDetail('${coupon._key}')"
+    style="background:var(--bg1);border:1px solid ${borderColor};border-radius:14px;padding:14px 16px;cursor:pointer;
+           opacity:${isUsed?'.55':'1'};display:flex;align-items:center;gap:14px;
+           ${isUsed?'':'box-shadow:0 2px 12px rgba(0,0,0,.3)'};position:relative;overflow:hidden">
+    <!-- 左側圖示 -->
+    <div style="width:52px;height:52px;border-radius:12px;background:linear-gradient(135deg,${info.color}22,${info.color}44);
+                border:1px solid ${info.color}55;display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0">
+      ${info.icon}
+    </div>
+    <!-- 右側資訊 -->
+    <div style="flex:1;min-width:0">
+      <div style="font-size:14px;font-weight:bold;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${coupon.couponLabel}</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:2px">來源：${coupon.sourceBondName || '—'}</div>
+      <div style="font-size:11px;color:${statusColor};margin-top:4px;font-weight:bold">${statusText}</div>
+    </div>
+    <!-- 右箭頭 -->
+    <div style="color:var(--tx3);font-size:16px;flex-shrink:0">›</div>
+    ${isPending ? `<div style="position:absolute;top:0;right:0;width:4px;height:100%;background:var(--yellow);border-radius:0 14px 14px 0"></div>` : ''}
+    ${isReady ? `<div style="position:absolute;top:0;right:0;width:4px;height:100%;background:var(--green);border-radius:0 14px 14px 0"></div>` : ''}
+  </div>`;
+}
+
+async function showCouponDetail(couponKey) {
+  if (!_currentStuId) return;
+  const d = await dbGet(`students/${_currentStuId}`) || {};
+  const coupon = d.couponBook?.[couponKey];
+  if (!coupon) { toast('找不到此兌換券','err'); return; }
+
+  const info = getCouponTypeInfo(coupon.couponType || 'custom');
+  const isUsed = coupon.used || coupon.redeemState === 'redeemed';
+  const isPending = coupon.physical && !isUsed;
+  const isReady = !coupon.physical && !isUsed;
+
+  const overlay = document.getElementById('couponShowOverlay');
+  document.getElementById('couponShowIcon').textContent = info.icon;
+  document.getElementById('couponShowLabel').textContent = coupon.couponLabel;
+  document.getElementById('couponShowSub').textContent = coupon.sourceBondName ? `來源：${coupon.sourceBondName}` : '';
+
+  // 圖片
+  const imgEl = document.getElementById('couponShowImg');
+  imgEl.innerHTML = coupon.couponImage
+    ? `<img src="${coupon.couponImage}" style="width:100%;height:130px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,.08)" onerror="this.style.display='none'">`
+    : '';
+
+  // 狀態
+  const statusEl = document.getElementById('couponShowStatus');
+  statusEl.innerHTML = isUsed
+    ? `<span style="color:var(--tx3)">✅ 已使用</span>`
+    : isPending
+    ? `<span style="color:var(--yellow)">⏳ 待出示給老師核銷</span>`
+    : `<span style="color:var(--green)">⚡ 可立即兌換</span>`;
+
+  // 資訊
+  document.getElementById('couponShowInfo').innerHTML = `
+    發放時間：${coupon.issuedAt || '—'}<br>
+    ${coupon.redeemedAt ? `使用時間：${coupon.redeemedAt}<br>` : ''}
+    ${coupon.redeemedBy ? `核銷老師：${coupon.redeemedBy}` : ''}
+    ${isPending ? '<br><span style="color:var(--yellow)">⚠️ 請將此畫面出示給老師，由老師點擊核銷按鈕完成流程</span>' : ''}
+    ${isReady ? '<br><span style="color:var(--green)">✅ 點下方「立即兌換」，系統自動發放，不需找老師</span>' : ''}
+  `;
+
+  // 按鈕
+  const actEl = document.getElementById('couponShowActions');
+  if (isReady) {
+    actEl.innerHTML = `<button onclick="redeemDigitalCoupon('${couponKey}')"
+      style="width:100%;padding:13px;background:var(--green);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;font-family:inherit">
+      ⚡ 立即兌換（系統自動發放）
+    </button>`;
+  } else if (isPending) {
+    actEl.innerHTML = `<button onclick="showCouponForTeacher('${couponKey}')"
+      style="width:100%;padding:13px;background:linear-gradient(135deg,#7b2ff7,#b06fff);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;font-family:inherit">
+      📋 出示老師核銷畫面
+    </button>`;
+  } else {
+    actEl.innerHTML = '';
+  }
+
+  overlay.style.display = 'flex';
+}
+
+function closeCouponShow() {
+  document.getElementById('couponShowOverlay').style.display = 'none';
+}
+
+// ── 數位券：學生點按後系統自動兌換 ──
+async function redeemDigitalCoupon(couponKey) {
+  if (!_currentStuId) return;
+  const d = await dbGet(`students/${_currentStuId}`) || {};
+  const coupon = d.couponBook?.[couponKey];
+  if (!coupon) { toast('找不到此兌換券','err'); return; }
+  if (coupon.used || coupon.redeemState === 'redeemed') { toast('此券已使用','err'); return; }
+  if (coupon.physical) { toast('此為實體券，需老師核銷','err'); return; }
+
+  const qty = coupon.couponQty || 1;
+  const upd = {};
+  const t = now();
+  const lk = Date.now()+'';
+
+  if (coupon.couponType === 'points') {
+    upd[`${ROOT}/students/${_currentStuId}/points`] = (d.points||0) + qty;
+  } else if (coupon.couponType === 'medal') {
+    upd[`${ROOT}/students/${_currentStuId}/medals`] = (d.medals||0) + qty;
+  } else if (coupon.couponType === 'pack') {
+    upd[`${ROOT}/students/${_currentStuId}/packTickets`] = (Number(d.packTickets)||0) + qty;
+  }
+
+  upd[`${ROOT}/students/${_currentStuId}/couponBook/${couponKey}/used`] = true;
+  upd[`${ROOT}/students/${_currentStuId}/couponBook/${couponKey}/redeemState`] = 'redeemed';
+  upd[`${ROOT}/students/${_currentStuId}/couponBook/${couponKey}/redeemedAt`] = t;
+  upd[`${ROOT}/students/${_currentStuId}/log/${lk}`] = {
+    time:t, action:'兌換券兌換',
+    reason:coupon.couponLabel, teacher:'學生', delta: coupon.couponType==='points'?qty:0
+  };
+
+  await db.ref('/').update(upd);
+  toast(`✅ ${coupon.couponLabel} 已兌換成功！`, 'ok');
+  closeCouponShow();
+  openCouponWallet();
+  _refreshCouponBadge();
+  const stu = byId(_currentStuId);
+  if (stu) {
+    const freshD = await dbGet(`students/${_currentStuId}`) || {};
+    _renderStuView(stu, freshD);
+  }
+}
+
+// ── 實體券：學生展示給老師的核銷畫面 ──
+async function showCouponForTeacher(couponKey) {
+  const d = await dbGet(`students/${_currentStuId}`) || {};
+  const coupon = d.couponBook?.[couponKey];
+  if (!coupon) return;
+  const stuName = byId(_currentStuId)?.name || '';
+  const info = getCouponTypeInfo(coupon.couponType || 'custom');
+
+  const content = document.getElementById('teacherVerifyContent');
+  content.innerHTML = `
+    <div style="text-align:center;padding:6px 0 14px">
+      <div style="font-size:40px;margin-bottom:8px">${info.icon}</div>
+      <div style="font-size:18px;font-weight:bold;color:var(--tx)">${coupon.couponLabel}</div>
+      <div style="font-size:13px;color:var(--tx2);margin-top:6px">學生：<b>${stuName}</b></div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:4px">發放時間：${coupon.issuedAt || '—'}</div>
+      ${coupon.couponImage ? `<img src="${coupon.couponImage}" style="width:100%;max-height:100px;object-fit:cover;border-radius:8px;margin-top:10px;border:1px solid var(--bdr)" onerror="this.style.display='none'">` : ''}
+    </div>
+    <div style="background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.3);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--tx2);line-height:1.7">
+      老師確認學生的兌換券後，點擊「確認核銷」。<br>
+      系統會自動記錄並通知學生。
+    </div>`;
+
+  const acts = document.getElementById('teacherVerifyActions');
+  // 老師端才顯示核銷按鈕（只有 teacher/master 登入才可執行）
+  if (me && me.role !== 'student') {
+    acts.innerHTML = `<button onclick="teacherRedeemCoupon('${_currentStuId}','${couponKey}')"
+      style="width:100%;padding:13px;background:linear-gradient(135deg,#27ae60,#2ecc71);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:bold;cursor:pointer;font-family:inherit">
+      ✅ 確認核銷
+    </button>`;
+  } else {
+    acts.innerHTML = `<div style="text-align:center;font-size:12px;color:var(--tx3);padding:8px">
+      請將此畫面展示給老師，由老師操作核銷
+    </div>`;
+  }
+
+  document.getElementById('teacherVerifyOverlay').style.display = 'flex';
+}
+
+function closeTeacherVerify() {
+  document.getElementById('teacherVerifyOverlay').style.display = 'none';
+}
+
+// ── 老師核銷實體券 ──
+async function teacherRedeemCoupon(stuId, couponKey) {
+  if (!me || me.role === 'student') { toast('需要老師身分才能核銷','err'); return; }
+  const d = await dbGet(`students/${stuId}`) || {};
+  const coupon = d.couponBook?.[couponKey];
+  if (!coupon) { toast('找不到此兌換券','err'); return; }
+  if (coupon.used || coupon.redeemState === 'redeemed') { toast('此券已使用','err'); return; }
+
+  const t = now();
+  const lk = Date.now()+'';
+  const stuName = byId(stuId)?.name || '';
+
+  const upd = {};
+  upd[`${ROOT}/students/${stuId}/couponBook/${couponKey}/used`] = true;
+  upd[`${ROOT}/students/${stuId}/couponBook/${couponKey}/redeemState`] = 'redeemed';
+  upd[`${ROOT}/students/${stuId}/couponBook/${couponKey}/redeemedAt`] = t;
+  upd[`${ROOT}/students/${stuId}/couponBook/${couponKey}/redeemedBy`] = me.name;
+  upd[`${ROOT}/students/${stuId}/log/${lk}`] = {
+    time:t, action:'實體券核銷',
+    reason:`${coupon.couponLabel}（${me.name} 老師核銷）`,
+    teacher:me.name, delta:0
+  };
+
+  await db.ref('/').update(upd);
+  await db.ref(`${ROOT}/stuMsgs/${stuId}/${lk}_msg`).set({
+    from: me.name,
+    content: `✅ ${me.name} 老師已核銷你的「${coupon.couponLabel}」！可以去領取實體獎品了。`,
+    type:'notice', time:t, read:false
+  });
+
+  toast('✅ 核銷成功！', 'ok');
+  closeTeacherVerify();
+  closeCouponShow();
+
+  // 若在錢包頁則刷新
+  const walletOverlay = document.getElementById('couponWalletOverlay');
+  if (walletOverlay && walletOverlay.style.display !== 'none') {
+    _renderCouponWallet();
+  }
+  _refreshCouponBadge();
+}
+
+// ── 老師端：從學生詳情頁的券核銷（不需學生開 overlay）──
+async function openTeacherCouponPanel(stuId) {
+  const d = await dbGet(`students/${stuId}`) || {};
+  const allCoupons = Object.entries(d.couponBook || {})
+    .map(([k, v]) => ({...v, _key: k}))
+    .filter(c => c.physical && !c.used && c.redeemState !== 'redeemed');
+
+  if (!allCoupons.length) { toast('此學生沒有待核銷的實體券','err'); return; }
+
+  const stuName = byId(stuId)?.name || '';
+  const items = allCoupons.map(c => {
+    const info = getCouponTypeInfo(c.couponType || 'custom');
+    return `<div onclick="teacherRedeemCoupon('${stuId}','${c._key}')"
+      style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(241,196,15,.06);border:1px solid rgba(241,196,15,.3);border-radius:10px;cursor:pointer;margin-bottom:6px">
+      <div style="font-size:24px">${info.icon}</div>
+      <div style="flex:1">
+        <div style="font-size:13px;font-weight:bold">${c.couponLabel}</div>
+        <div style="font-size:11px;color:var(--tx3)">${c.issuedAt?.slice(0,10)||'—'}</div>
+      </div>
+      <button style="background:var(--green);color:#fff;border:none;padding:5px 10px;border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit">核銷</button>
+    </div>`;
+  }).join('');
+
+  openDlg(`🎟️ ${stuName} 的實體券`,
+    `<div style="font-size:12px;color:var(--tx2);margin-bottom:10px">點擊各券直接核銷</div>${items}`,
+    [{label:'關閉', fn:()=>true}]);
+}
+
+// ── 更新兌換券小紅點 ──
+async function _refreshCouponBadge() {
+  if (!_currentStuId) return;
+  const d = await dbGet(`students/${_currentStuId}`) || {};
+  const allCoupons = Object.values(d.couponBook || {});
+  const pending = allCoupons.filter(c => !c.used && c.redeemState !== 'redeemed');
+  const badge = document.getElementById('couponBadge');
+  if (badge) {
+    badge.textContent = pending.length;
+    badge.style.display = pending.length ? '' : 'none';
+  }
+}
+
 window.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     closeCardZoom();
     closeBag();
+    closeCouponWallet();
+    closeCouponShow();
+    closeTeacherVerify();
     if (!isOpening) closeCardOverlay();
   }
 });
