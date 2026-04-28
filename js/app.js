@@ -1,4 +1,4 @@
-﻿function setTheme(t) {
+function setTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   try { localStorage.setItem('jjvs_theme', t); } catch(e){}
   document.querySelectorAll('.t-tab').forEach(b => {
@@ -2336,7 +2336,7 @@ const DEFAULT_CLASS_REWARDS = {
   bronze:  '點數3點',
   silver:  '免死金牌1面',
   gold:    '免死金牌2面',
-  diamond: '泡麵1份',
+  diamond: '星巴克1杯',
   legend:  '飲料1杯',
 };
 
@@ -2382,18 +2382,27 @@ function parseQtyToken(text) {
 }
 
 function normalizeRewardConfig(cfg, tier) {
-  const type = (cfg?.type === 'medal' || cfg?.type === 'physical' || cfg?.type === 'points') ? cfg.type : 'points';
+  const validTypes = ['medal', 'physical', 'points', 'pack'];
+  const type = validTypes.includes(cfg?.type) ? cfg.type : 'points';
   const qty = Math.max(1, Math.min(5, Number(cfg?.qty || 1) || 1));
-  const item = cfg?.item === 'drink' ? 'drink' : 'noodle';
+  if (type === 'pack') return { type, qty };
   if (type !== 'physical') return { type, qty };
-  return { type, qty, item };
+  const validItems = ['drink', 'noodle', 'starbucks', 'pack', 'custom'];
+  const item = validItems.includes(cfg?.item) ? cfg.item : 'noodle';
+  const customLabel = (item === 'custom' && cfg?.customLabel) ? cfg.customLabel : '';
+  return { type, qty, item, ...(customLabel ? {customLabel} : {}) };
 }
 
 function formatRewardConfig(cfg) {
   const c = normalizeRewardConfig(cfg || {});
   if (c.type === 'points') return `點數${c.qty}點`;
   if (c.type === 'medal') return `免死金牌${c.qty}面`;
-  return c.item === 'drink' ? `飲料${c.qty}杯` : `泡麵${c.qty}份`;
+  if (c.type === 'pack') return `卡包券${c.qty}包`;
+  // physical
+  if (c.item === 'starbucks') return `星巴克${c.qty}杯`;
+  if (c.item === 'drink') return `飲料${c.qty}杯`;
+  if (c.item === 'custom') return c.customLabel ? `${c.customLabel}×${c.qty}` : `自訂獎品×${c.qty}`;
+  return `泡麵${c.qty}份`;
 }
 
 function toRewardConfig(raw, tier) {
@@ -2408,8 +2417,14 @@ function toRewardConfig(raw, tier) {
   if (/點數|點/.test(text)) {
     return normalizeRewardConfig({ type:'points', qty:parseQtyToken(text) }, tier);
   }
+  if (/卡包券|卡包|抽卡/.test(text)) {
+    return normalizeRewardConfig({ type:'pack', qty:parseQtyToken(text) }, tier);
+  }
   if (/泡麵|麵/.test(text)) {
     return normalizeRewardConfig({ type:'physical', item:'noodle', qty:parseQtyToken(text) }, tier);
+  }
+  if (/星巴克/.test(text)) {
+    return normalizeRewardConfig({ type:'physical', item:'starbucks', qty:parseQtyToken(text) }, tier);
   }
   if (/飲料|手搖|奶茶/.test(text)) {
     return normalizeRewardConfig({ type:'physical', item:'drink', qty:parseQtyToken(text) }, tier);
@@ -2420,8 +2435,19 @@ function toRewardConfig(raw, tier) {
 function onRewardTypeChange(tier) {
   const typeEl = document.getElementById(`reward_type_${tier}`);
   const itemEl = document.getElementById(`reward_item_${tier}`);
+  const customEl = document.getElementById(`reward_custom_${tier}`);
   if (!typeEl || !itemEl) return;
-  itemEl.style.display = typeEl.value === 'physical' ? '' : 'none';
+  const isPhysical = typeEl.value === 'physical';
+  itemEl.style.display = isPhysical ? '' : 'none';
+  if (customEl) customEl.style.display = 'none';
+  if (isPhysical) onRewardItemChange(tier);
+}
+
+function onRewardItemChange(tier) {
+  const itemEl = document.getElementById(`reward_item_${tier}`);
+  const customEl = document.getElementById(`reward_custom_${tier}`);
+  if (!itemEl || !customEl) return;
+  customEl.style.display = itemEl.value === 'custom' ? '' : 'none';
 }
 // ── 自訂卡片/羈絆（必須在 generateDynamicBonds 之前宣告）──
 let _customCards = [];
@@ -3609,26 +3635,30 @@ function getBondRewardConfig(bond) {
 
 function getBondModeText(bond) {
   const rewardCfg = getBondRewardConfig(bond);
-  return rewardCfg.mode === 'digital'
-    ? `此獎項為系統數位兌換：依班級設定發放`
-    : `此獎項需找老師兌換：${rewardCfg.label}`;
+  if (rewardCfg.mode !== 'digital') return `此獎項需找老師兌換：${rewardCfg.label}`;
+  const label = getClassReward(byId(_currentStuId)?.cls || '', rewardCfg.tier || getBondTier(bond));
+  const parsed = parseDigitalReward(label);
+  if (parsed.isCustom) return `此獎項為實體獎品，需找老師領取：${label}`;
+  return `此獎項為系統數位兌換：依班級設定發放`;
 }
 
 function parseDigitalReward(label) {
   const text = String(label || '').trim();
   const qty = parseQtyToken(text);
   const pointMatch = text.match(/(\d+)\s*點/);
-  const packMatch = text.match(/(\d+)\s*連抽卡包|(\d+)\s*包卡包|(\d+)\s*抽卡包/);
+  const packMatch = text.match(/卡包券\s*(\d+)\s*包|(\d+)\s*包卡包|(\d+)\s*包?\s*卡包/);
   const medalMatch = text.match(/(\d+)\s*面?\s*(?:免死)?金牌|(?:免死)?金牌\s*(\d+)\s*面?/);
   const points = pointMatch ? Number(pointMatch[1]) : 0;
-  const packs = packMatch ? Number(packMatch[1] || packMatch[2] || packMatch[3] || 0) : 0;
+  const packs = packMatch ? Number(packMatch[1] || packMatch[2] || packMatch[3] || qty) : (/卡包/.test(text) ? qty : 0);
   const medals = medalMatch ? Number(medalMatch[1] || medalMatch[2] || 0) : (/(免死金牌|金牌)/.test(text) ? qty : 0);
   const couponType = /星巴克/.test(text) ? 'starbucks'
     : /(泡麵|一度讚|一度贊|noodle)/i.test(text) ? 'noodle'
     : /(飲料|手搖|drink)/i.test(text) ? 'drink'
     : '';
   const couponQty = couponType ? qty : 0;
-  return { text, points, packs, medals, couponType, couponQty };
+  // custom item (no coupon image but still physical)
+  const isCustom = !couponType && !points && !packs && !medals && text.length > 0;
+  return { text, points, packs, medals, couponType, couponQty, isCustom };
 }
 
 const COUPON_IMAGE_MAP = {
@@ -4114,11 +4144,19 @@ async function loadClassRewards() {
     const typeEl = document.getElementById(`reward_type_${tier}`);
     const qtyEl = document.getElementById(`reward_qty_${tier}`);
     const itemEl = document.getElementById(`reward_item_${tier}`);
+    const customEl = document.getElementById(`reward_custom_${tier}`);
     if (!typeEl || !qtyEl || !itemEl) return;
     typeEl.value = cfg.type;
     qtyEl.value = String(cfg.qty);
-    itemEl.value = cfg.item || 'noodle';
-    onRewardTypeChange(tier);
+    if (itemEl) {
+      itemEl.value = cfg.item || 'noodle';
+      itemEl.style.display = cfg.type === 'physical' ? '' : 'none';
+    }
+    if (customEl) {
+      const isCustom = cfg.type === 'physical' && cfg.item === 'custom';
+      customEl.style.display = isCustom ? '' : 'none';
+      if (isCustom) customEl.value = cfg.customLabel || '';
+    }
   });
 }
 
@@ -4133,10 +4171,15 @@ async function saveClassRewards() {
     const typeEl = document.getElementById(`reward_type_${tier}`);
     const qtyEl = document.getElementById(`reward_qty_${tier}`);
     const itemEl = document.getElementById(`reward_item_${tier}`);
+    const customEl = document.getElementById(`reward_custom_${tier}`);
+    const typeVal = typeEl?.value || 'points';
+    const itemVal = itemEl?.value || 'noodle';
+    const customLabelVal = (itemVal === 'custom' && customEl) ? customEl.value.trim() : '';
     const cfg = normalizeRewardConfig({
-      type: typeEl?.value || 'points',
+      type: typeVal,
       qty: Number(qtyEl?.value || 1),
-      item: itemEl?.value || 'noodle',
+      item: itemVal,
+      ...(customLabelVal ? {customLabel: customLabelVal} : {}),
     }, tier);
     payload[tier] = cfg;
   });
@@ -4173,12 +4216,14 @@ async function renderRewardPreview() {
       <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">系統直接發放（班級設定可覆蓋）</div>
       <div style="display:flex;flex-wrap:wrap;gap:6px">
         ${['bronze','silver','gold','diamond','legend'].map(tier => {
-          const reward = formatRewardConfig(toRewardConfig(data[tier] || DEFAULT_CLASS_REWARDS[tier], tier));
+          const cfg = toRewardConfig(data[tier] || DEFAULT_CLASS_REWARDS[tier], tier);
+          const reward = formatRewardConfig(cfg);
           const custom = reward !== formatRewardConfig(toRewardConfig(DEFAULT_CLASS_REWARDS[tier], tier));
+          const modeLabel = cfg.type === 'physical' ? '⚠️ 需老師親交' : cfg.type === 'pack' ? '🎴 系統自動發' : '✅ 系統自動發';
           return `<div style="flex:1;min-width:120px;background:var(--bg1);border:1px solid ${custom?'rgba(46,204,113,.3)':'var(--bdr)'};border-radius:6px;padding:7px 10px">
             <div style="font-size:10px;color:var(--tx3);margin-bottom:2px">${iconMap[tier]} ${tierLabel[tier]}</div>
             <div style="font-size:12px;color:${custom?'var(--green)':'var(--tx2)'}">${reward}</div>
-            <div style="font-size:10px;color:var(--tx3);margin-top:2px">系統直發</div>
+            <div style="font-size:10px;color:var(--tx3);margin-top:2px">${modeLabel}</div>
           </div>`;
         }).join('')}
       </div>
