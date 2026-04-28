@@ -2495,7 +2495,7 @@ function getCardImageSrc(card) {
 }
 
 // ── 稀有度機率（總和 100） ──
-const RARITY_WEIGHT = {UR:2, SSR:13, SR:40, R:45};
+const RARITY_WEIGHT = {UR:1, SSR:7, SR:20, R:72};
 
 // ── 動態生成羈絆清單 ──
 let DYNAMIC_BONDS = [];
@@ -2588,7 +2588,7 @@ let _pendingCard = null;
 // 保底機制（Pity System）：連續未抽中 SSR/UR 達 7 次強制給出
 // Firebase 路徑：students/{id}/pityCount
 // ══════════════════════════════════════════════════════════════
-const PITY_THRESHOLD = 7;
+const PITY_THRESHOLD = 10;
 
 // 更新保底進度條 UI
 function _updatePityUI(count) {
