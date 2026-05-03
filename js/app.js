@@ -3583,10 +3583,10 @@ async function applyCardTitleOverrides() {
 
 // 以抽中機率估算羈絆難度（避免「1張R=高階」的失衡）
 const BOND_TIER_THRESHOLDS = [
-  { tier:'bronze',  max:2.20 }, // 約單張R、或R+R
-  { tier:'silver',  max:3.60 }, // 約R+SR、或單張SSR
-  { tier:'gold',    max:5.20 }, // 約SR+SSR、或R+SR+SSR
-  { tier:'diamond', max:6.80 }, // 約雙SSR / UR+SR / 三張高稀有
+  { tier:'bronze',  max:2.35 }, // 單張R、R+R
+  { tier:'silver',  max:3.05 }, // R+SR、雙SR
+  { tier:'gold',    max:3.75 }, // SSR+SR、R+SR+SSR
+  { tier:'diamond', max:4.85 }, // 雙SSR、UR+SR、UR+SSR
   { tier:'legend',  max:Infinity },
 ];
 
@@ -3610,9 +3610,17 @@ function estimateBondDifficultyScore(bond) {
   }, 0);
 
   const raritySet = new Set(cards.map(c => c.rarity));
+  const rarityPremium = cards.reduce((sum, card) => {
+    if (card.rarity === 'UR') return sum + 0.45;   // 額外放大 UR 價值
+    if (card.rarity === 'SSR') return sum + 0.20;  // SSR 也要明顯高於 SR
+    return sum;
+  }, 0);
+  const urCount = cards.filter(c => c.rarity === 'UR').length;
+  const urComboBonus = urCount >= 1 && cards.length >= 2 ? 0.20 : 0;
+
   const comboBonus = Math.max(0, cards.length - 1) * 0.18;     // 需求張數越多越難
   const diversityBonus = Math.max(0, raritySet.size - 1) * 0.08; // 稀有度跨層加權
-  return baseScore + comboBonus + diversityBonus;
+  return baseScore + rarityPremium + comboBonus + diversityBonus + urComboBonus;
 }
 
 function getBondTier(bond) {
