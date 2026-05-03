@@ -2737,17 +2737,22 @@ async function triggerPackOpen() {
 
     // 抽卡（含保底判斷）
     const stuClass = byId(_currentStuId)?.cls || '';
-    const { card, pityTriggered } = drawCard(currentPity, stuClass);
+    const drawResult = drawCard(currentPity, stuClass);
+    const card = drawResult.card;
+    const pityTriggered = drawResult.pityTriggered;
     _pendingCard = card;
+    const isMissCard = card.id === 'C18';
 
     // 計算新保底計數
     const isHighRarity = (card.rarity === 'SSR' || card.rarity === 'UR');
     const newPity = isHighRarity ? 0 : currentPity + 1;
 
     const lk = Date.now() + '';
-    const logReason = pityTriggered
-      ? '【保底觸發】抽到 ' + card.rarity + ' ' + card.name
-      : '抽到 ' + card.rarity + ' ' + card.name;
+    const logReason = isMissCard
+      ? '抽到槓龜（未獲得卡片）'
+      : (pityTriggered
+        ? '【保底觸發】抽到 ' + card.rarity + ' ' + card.name
+        : '抽到 ' + card.rarity + ' ' + card.name);
 
     await dbUpd('students/' + _currentStuId, {
       points: usePackTicket ? pts : (pts - 1),
@@ -2767,6 +2772,19 @@ async function triggerPackOpen() {
 
     setTimeout(function() {
       document.getElementById('packWrap').style.display = 'none';
+      if (isMissCard) {
+        _pendingCard = null;
+        _resetPackState();
+        document.getElementById('cardOverlay').classList.remove('on');
+        toast('槓龜！這包沒有拿到卡片', 'err');
+        const stu = byId(_currentStuId);
+        if (stu) {
+          dbGet('students/' + _currentStuId).then(function(d2) {
+            _renderStuView(stu, d2 || {});
+          });
+        }
+        return;
+      }
       revealCard(card, pityTriggered);
     }, 1400);
 
@@ -3345,7 +3363,8 @@ async function loadCustomCardData() {
     ...v,
     quote: v.quote || '請多多指教。',
     _fbKey:k
-  }));
+  }))
+  .filter(c => String(c.name || '').trim() !== '康榮');
   const cb = (await dbGet('customBonds')) || {};
   _customBonds = Object.entries(cb).map(([k,v])=>({...v, _fbKey:k}));
   // 合併自訂卡片到 CARD_DB（避免重複）
