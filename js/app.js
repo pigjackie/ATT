@@ -3581,45 +3581,55 @@ async function applyCardTitleOverrides() {
 // 羈絆徽章工具函數
 // ════════════════════════════════════════════════════════════════
 
-// 各羈絆的 tier 對照表
-const BOND_TIER_MAP = {
-  BOND_XUCHENG_TRACK:'gold',
-  BOND_QIANYU_TRACK:'gold',
-  BOND_PRINCIPAL_TRACK:'legend',
-  BOND_GUOLIN_TRACK:'gold',
-  BOND_KANGRONG_TRACK:'gold',
-  BOND_XIAOXUAN_TRACK:'gold',
-  BOND_ADMIN_DUO:'gold',
-  BOND_POWER_COUPLE:'diamond',
-  BOND_BRASS_CHAIN:'silver',
-  BOND_LOW_REGISTER_GUARDIANS:'gold',
-  BOND_WOODWIND_AXIS:'silver',
-  BOND_STAGE_COMMAND:'diamond',
-  BOND_CAMPUS_ROUTINE:'silver',
-  BOND_CONDUCTING_TEAM:'silver',
-  BOND_HOMEROOM_CORE:'gold',
-  BOND_ADMIN_SUPPORT:'silver',
-  BOND_ENSEMBLE_CORE:'gold',
-  BOND_GRAND_REUNION:'legend',
-};
+// 以抽中機率估算羈絆難度（避免「1張R=高階」的失衡）
+const BOND_TIER_THRESHOLDS = [
+  { tier:'bronze',  max:2.20 }, // 約單張R、或R+R
+  { tier:'silver',  max:3.60 }, // 約R+SR、或單張SSR
+  { tier:'gold',    max:5.20 }, // 約SR+SSR、或R+SR+SSR
+  { tier:'diamond', max:6.80 }, // 約雙SSR / UR+SR / 三張高稀有
+  { tier:'legend',  max:Infinity },
+];
+
+function getCardDropProbability(card) {
+  if (!card) return 0;
+  const rarityWeight = (RARITY_WEIGHT[card.rarity] || 0) / 100;
+  if (rarityWeight <= 0) return 0;
+  const sameRarityCount = CARD_DB.filter(c => c.rarity === card.rarity).length || 1;
+  return rarityWeight / sameRarityCount;
+}
+
+function estimateBondDifficultyScore(bond) {
+  if (!bond || !Array.isArray(bond.needs) || bond.needs.length < 1) return 0;
+  const cards = bond.needs.map(id => CARD_DB.find(c => c.id === id)).filter(Boolean);
+  if (!cards.length) return 0;
+
+  // score = Σ log10(1/p_i) + 組合複雜度修正
+  const baseScore = cards.reduce((sum, card) => {
+    const p = Math.max(getCardDropProbability(card), 1e-9);
+    return sum + Math.log10(1 / p);
+  }, 0);
+
+  const raritySet = new Set(cards.map(c => c.rarity));
+  const comboBonus = Math.max(0, cards.length - 1) * 0.18;     // 需求張數越多越難
+  const diversityBonus = Math.max(0, raritySet.size - 1) * 0.08; // 稀有度跨層加權
+  return baseScore + comboBonus + diversityBonus;
+}
 
 function getBondTier(bond) {
   if (!bond) return 'bronze';
-  if (bond.tier && TIER_INFO[bond.tier]) return bond.tier;
   if (bond.fixedTier && TIER_INFO[bond.fixedTier]) return bond.fixedTier;
+
+  // 自訂羈絆可保留手動等級；系統內建羈絆使用機率模型自動分級
+  const isCustomBond = String(bond.id || '').startsWith('BOND_CUSTOM_');
+  if (isCustomBond && bond.tier && TIER_INFO[bond.tier]) return bond.tier;
+
   if (Array.isArray(bond.needs) && bond.needs.length) {
-    const rarityWeights = { R:1, SR:2.5, SSR:4.5, UR:8 };
-    const cards = bond.needs.map(id => CARD_DB.find(c => c.id === id)).filter(Boolean);
-    const score = cards.reduce((sum, card) => sum + (rarityWeights[card.rarity] || 1), 0)
-      + Math.max(0, cards.length - 1) * 0.8
-      + (cards.some(card => card.rarity === 'UR') ? 2.5 : 0)
-      + (cards.filter(card => card.rarity === 'SSR').length >= 2 ? 1.5 : 0);
-    if (score >= 16) return 'legend';
-    if (score >= 11) return 'diamond';
-    if (score >= 7.5) return 'gold';
-    if (score >= 4.5) return 'silver';
-    return 'bronze';
+    const score = estimateBondDifficultyScore(bond);
+    const row = BOND_TIER_THRESHOLDS.find(r => score <= r.max);
+    return row ? row.tier : 'legend';
   }
+
+  if (bond.tier && TIER_INFO[bond.tier]) return bond.tier;
   const rewardTypeTierMap = {
     medals1:'bronze',
     medals2:'silver',
@@ -3630,7 +3640,7 @@ function getBondTier(bond) {
     starbucks:'legend',
   };
   if (bond.rewardType && rewardTypeTierMap[bond.rewardType]) return rewardTypeTierMap[bond.rewardType];
-  return BOND_TIER_MAP[bond.id] || 'bronze';
+  return 'bronze';
 }
 
 const TIER_INFO = {
