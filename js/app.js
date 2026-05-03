@@ -2524,14 +2524,14 @@ function generateDynamicBonds() {
   };
 
   const specialistBondMeta = {
-    '旭成': { id:'BOND_XUCHENG_TRACK', name:'行政節奏統籌', emoji:'🗂️', tier:'gold', desc:'集齊旭成老師的全部卡片，完成班級經營與行政節奏配置。' },
-    '倩宇': { id:'BOND_QIANYU_TRACK', name:'法國號聲部全修', emoji:'🎺', tier:'gold', desc:'集齊倩宇老師的全部卡片，完成法國號教學線。' },
-    '賴惠文': { id:'BOND_PRINCIPAL_TRACK', name:'校務核心全修', emoji:'🎻', tier:'legend', desc:'集齊賴惠文校長的全部卡片，完成校務主線配置。' },
-    '國霖': { id:'BOND_GUOLIN_TRACK', name:'單簧管聲線全修', emoji:'🎶', tier:'gold', desc:'集齊王國霖老師的全部卡片，完成單簧管聲線鍛鍊。' },
-    '康榮': { id:'BOND_KANGRONG_TRACK', name:'合奏指揮全修', emoji:'🎼', tier:'gold', desc:'集齊康榮老師的全部卡片，完成合奏指揮主線。' },
-    '曉萱': { id:'BOND_XIAOXUAN_TRACK', name:'低音管聲域全修', emoji:'🪵', tier:'gold', desc:'集齊曉萱老師的全部卡片，完成低音管聲域培養。' },
-    '華翊': { id:'BOND_HUAYI_TRACK', name:'華翊語言教學核心', emoji:'📚', tier:'silver', desc:'集齊華翊卡片，完成英文教學核心羈絆。' },
-    '辛巴': { id:'BOND_SIMBA_TRACK', name:'辛巴校園療癒巡邏', emoji:'🐶', tier:'silver', desc:'集齊辛巴卡片，觸發校園療癒巡邏羈絆。' },
+    '旭成': { id:'BOND_XUCHENG_TRACK', name:'旭成的班經三拍子', emoji:'🗂️', tier:'gold', desc:'集齊旭成 R/SR/SSR，完成班級經營主線。' },
+    '倩宇': { id:'BOND_QIANYU_TRACK', name:'倩宇法號完全體', emoji:'🎺', tier:'gold', desc:'集齊倩宇 R/SR/SSR，法國號教學線成形。' },
+    '賴惠文': { id:'BOND_PRINCIPAL_TRACK', name:'校長主線滿編', emoji:'👑', tier:'legend', desc:'集齊校長 SR/SSR/UR，解鎖校務最高核心。' },
+    '國霖': { id:'BOND_GUOLIN_TRACK', name:'國霖木管雙核', emoji:'🎶', tier:'gold', desc:'集齊國霖 SR/SSR，完成木管主軸。' },
+    '康榮': { id:'BOND_KANGRONG_TRACK', name:'康榮合奏雙核心', emoji:'🎼', tier:'gold', desc:'集齊康榮 SR/SSR，完成合奏指揮線。' },
+    '曉萱': { id:'BOND_XIAOXUAN_TRACK', name:'曉萱低音全域', emoji:'🪵', tier:'gold', desc:'集齊曉萱 R/SR/SSR，守住低音地板。' },
+    '華翊': { id:'BOND_HUAYI_TRACK', name:'華翊英文開場', emoji:'📚', tier:'bronze', desc:'取得華翊卡片，啟動音二莊英文節奏。' },
+    '辛巴': { id:'BOND_SIMBA_TRACK', name:'辛巴上班打卡', emoji:'🐶', tier:'bronze', desc:'取得辛巴卡片，校務室療癒值+1。' },
   };
 
   Object.entries(specialistBondMeta).forEach(([name, meta]) => {
@@ -2544,30 +2544,30 @@ function generateDynamicBonds() {
   });
 
   [
-    { id:'BOND_CLASSROOM_STARTER', name:'教室暖身組', emoji:'🧩', tier:'bronze', needs:['C01','C02'], desc:'旭成與倩宇的基礎搭配，完成日常課堂暖身。' },
-    { id:'BOND_FOUNDATION_STEP', name:'基礎起手式', emoji:'🪜', tier:'bronze', needs:['C10','C11'], desc:'曉萱 R 與 SR 的基礎連線，建立低音域起手節奏。' },
-    { id:'BOND_ROOKIE_WOODWIND', name:'木管新手連線', emoji:'🎐', tier:'bronze', needs:['C08','C10'], desc:'國霖與曉萱的入門卡組，建立木管基礎穩定度。' },
-    { id:'BOND_DAILY_DISCIPLINE', name:'日常秩序組', emoji:'📝', tier:'bronze', needs:['C01','C05'], desc:'旭成與賴惠文共同維持班級日常秩序。' },
-    { id:'BOND_CAMPUS_HELPERS', name:'校園支援小隊', emoji:'🧰', tier:'bronze', needs:['C12','C17'], desc:'旭成 SR 與師丈協作，補齊校園日常支援。' },
-    { id:'BOND_SUPPORT_PAIR', name:'教學支援雙人組', emoji:'🤝', tier:'silver', needs:['C10','C14'], desc:'曉萱與康榮形成日常教學支援組合。' },
-    { id:'BOND_CLASS_OPERATIONS', name:'班務協作線', emoji:'🗂️', tier:'silver', needs:['C01','C14'], desc:'旭成與康榮串接班務管理與合奏協調。' },
-    { id:'BOND_ADMIN_DUO', name:'行政雙雄', emoji:'🏛️', tier:'gold', needs:['C16','C09'], desc:'旭成與康榮組成行政與音樂執行雙核心。' },
-    { id:'BOND_POWER_COUPLE', name:'夫妻檔', emoji:'💍', tier:'diamond', needs:['C07','C17'], desc:'賴惠文校長與師丈同時到位，形成校務後援與行政協調的夫妻組合。' },
-    { id:'BOND_BRASS_CHAIN', name:'銅管教學鏈', emoji:'🎺', tier:'silver', needs:['C02','C03','C04'], desc:'由倩宇老師串起法國號入門到聲部統籌的完整教學線。' },
-    { id:'BOND_LOW_REGISTER_GUARDIANS', name:'低音域守護者', emoji:'🧱', tier:'gold', needs:['C10','C11','C15'], desc:'曉萱老師從基礎到高階，完整守住樂團低音域。' },
-    { id:'BOND_WOODWIND_AXIS', name:'木管低音軸線', emoji:'🎷', tier:'silver', needs:['C13','C15'], desc:'國霖與曉萱共同構成木管聲部的中低音支撐。' },
-    { id:'BOND_STAGE_COMMAND', name:'合奏指揮中樞', emoji:'🎼', tier:'diamond', needs:['C06','C09','C13'], desc:'賴惠文、康榮與國霖形成校務、指揮與木管統籌的核心中樞。' },
-    { id:'BOND_CAMPUS_ROUTINE', name:'校園教學主軸', emoji:'🏫', tier:'silver', needs:['C12','C05','C10'], desc:'由旭成、賴惠文與曉萱構成日常教學與行政支撐。' },
-    { id:'BOND_CONDUCTING_TEAM', name:'合奏運作小組', emoji:'🎙️', tier:'silver', needs:['C09','C14'], desc:'康榮的兩張卡片組成合奏運作與協調小組。' },
-    { id:'BOND_HOMEROOM_CORE', name:'班級經營核心', emoji:'📘', tier:'gold', needs:['C01','C12','C16'], desc:'集齊旭成的 R、SR、SSR 三張卡，完成班級經營完整線。' },
-    { id:'BOND_ADMIN_SUPPORT', name:'行政後援組', emoji:'🧾', tier:'silver', needs:['C17','C16'], desc:'師丈與旭成共同維持行政後援與班級秩序。' },
-    { id:'BOND_ENSEMBLE_CORE', name:'管樂教學核心', emoji:'🎵', tier:'gold', needs:['C04','C13','C15'], desc:'倩宇、國霖、曉萱組成完整的管樂教學核心。' },
-    { id:'BOND_GRAND_REUNION', name:'莊敬大團圓', emoji:'🌟', tier:'legend', needs:['C16','C04','C07','C13','C09','C15','C17'], desc:'集齊所有老師最高階卡片各一張，完成莊敬音樂科終極陣容。' },
-    { id:'BOND_MENTOR_TRIANGLE', name:'三莊導師聯盟', emoji:'🏫', tier:'gold', needs:['C16','C13','C18'], desc:'旭成（音三莊）、國霖（音一莊）、華翊（音二莊）導師連線完成。' },
-    { id:'BOND_LANGUAGE_AXIS', name:'旭成×華翊 語文雙核', emoji:'🈶', tier:'silver', needs:['C16','C18'], desc:'國文老師旭成與英文老師華翊形成語文教學雙核心。' },
-    { id:'BOND_SIMBA_PRINCIPAL', name:'校長與辛巴', emoji:'🐾', tier:'silver', needs:['C19','C07'], desc:'辛巴與校長同框，校務室幸福指數上升。' },
-    { id:'BOND_SIMBA_SHIZHANG', name:'師丈與辛巴', emoji:'🧸', tier:'silver', needs:['C19','C17'], desc:'師丈與辛巴組成校園後援療癒組。' },
-    { id:'BOND_SIMBA_FAMILY', name:'辛巴全家福', emoji:'👨‍👩‍👧‍👦', tier:'diamond', needs:['C19','C07','C17'], desc:'辛巴、校長、師丈三人同時到位，觸發校園最強療癒羈絆。' },
+    { id:'BOND_CLASSROOM_STARTER', name:'晨點名搭檔', emoji:'🧩', tier:'bronze', needs:['C01','C02'], desc:'兩張 R 卡起手，最容易完成的暖身羈絆。' },
+    { id:'BOND_FOUNDATION_STEP', name:'低音第一拍', emoji:'🪜', tier:'bronze', needs:['C10','C11'], desc:'曉萱 R+SR，低音域入門線。' },
+    { id:'BOND_ROOKIE_WOODWIND', name:'木管開局包', emoji:'🎐', tier:'bronze', needs:['C08','C10'], desc:'國霖 SR + 曉萱 R 的木管起手組。' },
+    { id:'BOND_DAILY_DISCIPLINE', name:'走廊巡堂線', emoji:'📝', tier:'bronze', needs:['C01','C05'], desc:'旭成與校長的日常秩序連線。' },
+    { id:'BOND_CAMPUS_HELPERS', name:'行政補位組', emoji:'🧰', tier:'silver', needs:['C12','C17'], desc:'雙 SR 組合，難度中等。' },
+    { id:'BOND_SUPPORT_PAIR', name:'課堂救援二人組', emoji:'🤝', tier:'bronze', needs:['C10','C14'], desc:'R+SR 的支援羈絆。' },
+    { id:'BOND_CLASS_OPERATIONS', name:'班務接力', emoji:'🗂️', tier:'bronze', needs:['C01','C14'], desc:'R+SR，班務銜接型羈絆。' },
+    { id:'BOND_ADMIN_DUO', name:'教務鋼鐵雙核', emoji:'🏛️', tier:'diamond', needs:['C16','C09'], desc:'雙 SSR 組合，屬高難度羈絆。' },
+    { id:'BOND_POWER_COUPLE', name:'校務夫妻檔', emoji:'💍', tier:'diamond', needs:['C07','C17'], desc:'UR+SR，抽取門檻高。' },
+    { id:'BOND_BRASS_CHAIN', name:'法號三連段', emoji:'🎺', tier:'gold', needs:['C02','C03','C04'], desc:'R/SR/SSR 三段式教學線。' },
+    { id:'BOND_LOW_REGISTER_GUARDIANS', name:'低音城牆', emoji:'🧱', tier:'gold', needs:['C10','C11','C15'], desc:'R/SR/SSR 三段防線。' },
+    { id:'BOND_WOODWIND_AXIS', name:'木管主樑', emoji:'🎷', tier:'diamond', needs:['C13','C15'], desc:'雙 SSR 木管核心。' },
+    { id:'BOND_STAGE_COMMAND', name:'舞台總控台', emoji:'🎼', tier:'legend', needs:['C06','C09','C13'], desc:'三張 SSR，傳說級指揮中樞。' },
+    { id:'BOND_CAMPUS_ROUTINE', name:'日常運轉軸', emoji:'🏫', tier:'silver', needs:['C12','C05','C10'], desc:'SR/SR/R 的日常教學主軸。' },
+    { id:'BOND_CONDUCTING_TEAM', name:'合奏調度組', emoji:'🎙️', tier:'gold', needs:['C09','C14'], desc:'SSR+SR 的運作羈絆。' },
+    { id:'BOND_HOMEROOM_CORE', name:'音三莊班經完全體', emoji:'📘', tier:'gold', needs:['C01','C12','C16'], desc:'旭成 R/SR/SSR 完整線。' },
+    { id:'BOND_ADMIN_SUPPORT', name:'後勤定心丸', emoji:'🧾', tier:'gold', needs:['C17','C16'], desc:'SR+SSR 的行政後援。' },
+    { id:'BOND_ENSEMBLE_CORE', name:'管樂三巨頭', emoji:'🎵', tier:'legend', needs:['C04','C13','C15'], desc:'三張 SSR，同步到位的高門檻羈絆。' },
+    { id:'BOND_GRAND_REUNION', name:'莊敬終極大團圓', emoji:'🌟', tier:'legend', needs:['C16','C04','C07','C13','C09','C15','C17'], desc:'含 UR 的多卡終極收藏線。' },
+    { id:'BOND_MENTOR_TRIANGLE', name:'三莊導師會議', emoji:'🏫', tier:'diamond', needs:['C16','C13','C18'], desc:'旭成（音三）+國霖（音一）+華翊（音二）導師連線。' },
+    { id:'BOND_LANGUAGE_AXIS', name:'國英教研聯盟', emoji:'🈶', tier:'gold', needs:['C16','C18'], desc:'旭成（國文）與華翊（英文）的語文雙核。' },
+    { id:'BOND_SIMBA_PRINCIPAL', name:'校長的巡邏犬', emoji:'🐾', tier:'gold', needs:['C19','C07'], desc:'辛巴 + 校長 UR，屬高價值組合。' },
+    { id:'BOND_SIMBA_SHIZHANG', name:'師丈放風時間', emoji:'🧸', tier:'silver', needs:['C19','C17'], desc:'辛巴與師丈的療癒搭檔。' },
+    { id:'BOND_SIMBA_FAMILY', name:'校務室全家福', emoji:'👨‍👩‍👧‍👦', tier:'diamond', needs:['C19','C07','C17'], desc:'辛巴、校長、師丈三人同場。' },
   ].forEach(pushBond);
 
   if (typeof _customBonds !== 'undefined') {
@@ -2597,10 +2597,10 @@ let isOpening = false;
 let _pendingCard = null;
 
 // ══════════════════════════════════════════════════════════════
-// 保底機制（Pity System）：連續未抽中 SSR/UR 達 7 次強制給出
+// 保底機制（Pity System）：連續未抽中 SSR/UR 達 10 次強制給出
 // Firebase 路徑：students/{id}/pityCount
 // ══════════════════════════════════════════════════════════════
-const PITY_THRESHOLD = 7;
+const PITY_THRESHOLD = 10;
 
 // 更新保底進度條 UI
 function _updatePityUI(count) {
