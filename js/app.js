@@ -2534,7 +2534,7 @@ function generateDynamicBonds() {
 
   Object.entries(specialistBondMeta).forEach(([name, meta]) => {
     const cards = CARD_DB.filter(c => c.name === name);
-    if (cards.length < 1) return;
+    if (cards.length < 2) return;
     pushBond({
       ...meta,
       needs: cards.map(c => c.id),
