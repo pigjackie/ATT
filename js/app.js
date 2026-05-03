@@ -2319,18 +2319,16 @@ const CARD_DB = [
   {id:'C06',name:'賴惠文',rarity:'SSR', img:'CARDS/校長SSR_結果.jpg',     title:'校務總籌', quote:'團隊一穩，聲音就會站起來。'},
   {id:'C07',name:'賴惠文',rarity:'UR',  img:'CARDS/校長UR_結果.jpg',      title:'莊敬大家長', quote:'今天的標準，要比昨天更整齊。'},
   {id:'C08',name:'國霖',rarity:'SR',  img:'CARDS/國霖SR_結果.jpg',      title:'單簧管大師', quote:'音準站穩，整段就會發光。'},
-  {id:'C09',name:'康榮',rarity:'SSR', img:'CARDS/康榮SSR_結果.jpg',     title:'音樂總監', quote:'你們的聲音，要有同一個方向。'},
+  {id:'C09',name:'康榮',rarity:'SR',  img:'CARDS/康榮SR修正.jpg',       title:'菁英戰略官｜智慧領航者', quote:'方向先定，團隊才會快。'},
   {id:'C10',name:'曉萱',rarity:'R',   img:'CARDS/曉萱R_結果.jpg',       title:'低音管導師', quote:'低音穩住，全團才有地板。'},
   {id:'C11',name:'曉萱',rarity:'SR',  img:'CARDS/曉萱SR_結果.jpg',      title:'低音管精靈', quote:'低音不是背景，是支撐。'},
   {id:'C12',name:'旭成',rarity:'SR',  img:'CARDS/旭成SR_結果_結果.jpg', title:'班級經營講師', quote:'上課不要看手機。'},
-  {id:'C13',name:'國霖',rarity:'SSR', img:'CARDS/國霖SR_結果.jpg',      title:'木管聲部統籌', quote:'音色先站穩，技巧自然跟上。'},
-  {id:'C14',name:'康榮',rarity:'SR',  img:'CARDS/康榮SSR_結果.jpg',     title:'合奏協調', quote:'每個聲部都要知道自己的位置。'},
+  {id:'C13',name:'華翊',rarity:'SR',  img:'CARDS/華翊R.jpg',            title:'英文老師｜音二莊導師', quote:'語言是看世界的另一種節奏。'},
+  {id:'C14',name:'辛巴',rarity:'R',   img:'CARDS/辛巴.jpg',             title:'校長與師丈的狗', quote:'今天也要巡邏辦公室。'},
   {id:'C15',name:'曉萱',rarity:'SSR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音域守護者', quote:'低音站穩，樂團才會穩。'},
   {id:'C16',name:'旭成',rarity:'SSR', img:'CARDS/旭成ssr2.jpg',         title:'學務協調長', quote:'規矩站穩，班級就會穩。'},
   {id:'C17',name:'師丈',rarity:'SR',  img:'CARDS/師丈SR.jpg',            title:'校務後援', quote:'有需要幫忙就先把流程理清楚。'},
-  {id:'C18',name:'華翊',rarity:'SR',  img:'CARDS/華翊R.jpg',             title:'英文老師｜音二莊導師', quote:'語言是看世界的另一種節奏。'},
-  {id:'C19',name:'辛巴',rarity:'R',   img:'CARDS/辛巴.jpg',              title:'校長與師丈的狗', quote:'今天也要巡邏辦公室。'},
-  {id:'C20',name:'槓龜',rarity:'R',   img:'CARDS/槓龜.jpg',              title:'音二莊限定卡', quote:'沒中獎也是一種回憶。'},
+  {id:'C18',name:'槓龜',rarity:'R',   img:'CARDS/槓龜.jpg',              title:'音二莊限定卡', quote:'沒中獎也是一種回憶。'},
 ];
 // ════════════════════════════════════════════════════════════════
 // 班級專屬獎品設定
@@ -2527,8 +2525,8 @@ function generateDynamicBonds() {
     '旭成': { id:'BOND_XUCHENG_TRACK', name:'旭成的班經三拍子', emoji:'🗂️', tier:'gold', desc:'集齊旭成 R/SR/SSR，完成班級經營主線。' },
     '倩宇': { id:'BOND_QIANYU_TRACK', name:'倩宇法號完全體', emoji:'🎺', tier:'gold', desc:'集齊倩宇 R/SR/SSR，法國號教學線成形。' },
     '賴惠文': { id:'BOND_PRINCIPAL_TRACK', name:'校長主線滿編', emoji:'👑', tier:'legend', desc:'集齊校長 SR/SSR/UR，解鎖校務最高核心。' },
-    '國霖': { id:'BOND_GUOLIN_TRACK', name:'國霖木管雙核', emoji:'🎶', tier:'gold', desc:'集齊國霖 SR/SSR，完成木管主軸。' },
-    '康榮': { id:'BOND_KANGRONG_TRACK', name:'康榮合奏雙核心', emoji:'🎼', tier:'gold', desc:'集齊康榮 SR/SSR，完成合奏指揮線。' },
+    '國霖': { id:'BOND_GUOLIN_TRACK', name:'國霖木管主軸', emoji:'🎶', tier:'silver', desc:'國霖目前僅有 SR 線，屬穩定中階羈絆。' },
+    '康榮': { id:'BOND_KANGRONG_TRACK', name:'康榮戰略中樞', emoji:'🎼', tier:'silver', desc:'康榮目前以 SR 卡為主，強調策略與調度。' },
     '曉萱': { id:'BOND_XIAOXUAN_TRACK', name:'曉萱低音全域', emoji:'🪵', tier:'gold', desc:'集齊曉萱 R/SR/SSR，守住低音地板。' },
     '華翊': { id:'BOND_HUAYI_TRACK', name:'華翊英文開場', emoji:'📚', tier:'bronze', desc:'取得華翊卡片，啟動音二莊英文節奏。' },
     '辛巴': { id:'BOND_SIMBA_TRACK', name:'辛巴上班打卡', emoji:'🐶', tier:'bronze', desc:'取得辛巴卡片，校務室療癒值+1。' },
@@ -2549,25 +2547,25 @@ function generateDynamicBonds() {
     { id:'BOND_ROOKIE_WOODWIND', name:'木管開局包', emoji:'🎐', tier:'bronze', needs:['C08','C10'], desc:'國霖 SR + 曉萱 R 的木管起手組。' },
     { id:'BOND_DAILY_DISCIPLINE', name:'走廊巡堂線', emoji:'📝', tier:'bronze', needs:['C01','C05'], desc:'旭成與校長的日常秩序連線。' },
     { id:'BOND_CAMPUS_HELPERS', name:'行政補位組', emoji:'🧰', tier:'silver', needs:['C12','C17'], desc:'雙 SR 組合，難度中等。' },
-    { id:'BOND_SUPPORT_PAIR', name:'課堂救援二人組', emoji:'🤝', tier:'bronze', needs:['C10','C14'], desc:'R+SR 的支援羈絆。' },
-    { id:'BOND_CLASS_OPERATIONS', name:'班務接力', emoji:'🗂️', tier:'bronze', needs:['C01','C14'], desc:'R+SR，班務銜接型羈絆。' },
-    { id:'BOND_ADMIN_DUO', name:'教務鋼鐵雙核', emoji:'🏛️', tier:'diamond', needs:['C16','C09'], desc:'雙 SSR 組合，屬高難度羈絆。' },
+    { id:'BOND_SUPPORT_PAIR', name:'課堂救援二人組', emoji:'🤝', tier:'bronze', needs:['C10','C09'], desc:'曉萱 + 康榮（SR）支援羈絆。' },
+    { id:'BOND_CLASS_OPERATIONS', name:'班務接力', emoji:'🗂️', tier:'bronze', needs:['C01','C09'], desc:'旭成 + 康榮（SR）班務銜接。' },
+    { id:'BOND_ADMIN_DUO', name:'教務鋼鐵雙核', emoji:'🏛️', tier:'gold', needs:['C16','C09'], desc:'旭成 SSR + 康榮 SR 的教務核心羈絆。' },
     { id:'BOND_POWER_COUPLE', name:'校務夫妻檔', emoji:'💍', tier:'diamond', needs:['C07','C17'], desc:'UR+SR，抽取門檻高。' },
     { id:'BOND_BRASS_CHAIN', name:'法號三連段', emoji:'🎺', tier:'gold', needs:['C02','C03','C04'], desc:'R/SR/SSR 三段式教學線。' },
     { id:'BOND_LOW_REGISTER_GUARDIANS', name:'低音城牆', emoji:'🧱', tier:'gold', needs:['C10','C11','C15'], desc:'R/SR/SSR 三段防線。' },
-    { id:'BOND_WOODWIND_AXIS', name:'木管主樑', emoji:'🎷', tier:'diamond', needs:['C13','C15'], desc:'雙 SSR 木管核心。' },
-    { id:'BOND_STAGE_COMMAND', name:'舞台總控台', emoji:'🎼', tier:'legend', needs:['C06','C09','C13'], desc:'三張 SSR，傳說級指揮中樞。' },
+    { id:'BOND_WOODWIND_AXIS', name:'木管主樑', emoji:'🎷', tier:'gold', needs:['C08','C15'], desc:'國霖 SR + 曉萱 SSR 的木管核心。' },
+    { id:'BOND_STAGE_COMMAND', name:'舞台總控台', emoji:'🎼', tier:'gold', needs:['C06','C09','C15'], desc:'校務總籌＋康榮戰略＋低音守護的舞台中樞。' },
     { id:'BOND_CAMPUS_ROUTINE', name:'日常運轉軸', emoji:'🏫', tier:'silver', needs:['C12','C05','C10'], desc:'SR/SR/R 的日常教學主軸。' },
-    { id:'BOND_CONDUCTING_TEAM', name:'合奏調度組', emoji:'🎙️', tier:'gold', needs:['C09','C14'], desc:'SSR+SR 的運作羈絆。' },
+    { id:'BOND_CONDUCTING_TEAM', name:'合奏調度組', emoji:'🎙️', tier:'silver', needs:['C09','C12'], desc:'康榮 SR 與旭成 SR 的中階調度羈絆。' },
     { id:'BOND_HOMEROOM_CORE', name:'音三莊班經完全體', emoji:'📘', tier:'gold', needs:['C01','C12','C16'], desc:'旭成 R/SR/SSR 完整線。' },
     { id:'BOND_ADMIN_SUPPORT', name:'後勤定心丸', emoji:'🧾', tier:'gold', needs:['C17','C16'], desc:'SR+SSR 的行政後援。' },
-    { id:'BOND_ENSEMBLE_CORE', name:'管樂三巨頭', emoji:'🎵', tier:'legend', needs:['C04','C13','C15'], desc:'三張 SSR，同步到位的高門檻羈絆。' },
-    { id:'BOND_GRAND_REUNION', name:'莊敬終極大團圓', emoji:'🌟', tier:'legend', needs:['C16','C04','C07','C13','C09','C15','C17'], desc:'含 UR 的多卡終極收藏線。' },
-    { id:'BOND_MENTOR_TRIANGLE', name:'三莊導師會議', emoji:'🏫', tier:'diamond', needs:['C16','C13','C18'], desc:'旭成（音三）+國霖（音一）+華翊（音二）導師連線。' },
-    { id:'BOND_LANGUAGE_AXIS', name:'國英教研聯盟', emoji:'🈶', tier:'gold', needs:['C16','C18'], desc:'旭成（國文）與華翊（英文）的語文雙核。' },
-    { id:'BOND_SIMBA_PRINCIPAL', name:'校長的巡邏犬', emoji:'🐾', tier:'gold', needs:['C19','C07'], desc:'辛巴 + 校長 UR，屬高價值組合。' },
-    { id:'BOND_SIMBA_SHIZHANG', name:'師丈放風時間', emoji:'🧸', tier:'silver', needs:['C19','C17'], desc:'辛巴與師丈的療癒搭檔。' },
-    { id:'BOND_SIMBA_FAMILY', name:'校務室全家福', emoji:'👨‍👩‍👧‍👦', tier:'diamond', needs:['C19','C07','C17'], desc:'辛巴、校長、師丈三人同場。' },
+    { id:'BOND_ENSEMBLE_CORE', name:'管樂三核心', emoji:'🎵', tier:'gold', needs:['C04','C08','C15'], desc:'倩宇 SSR + 國霖 SR + 曉萱 SSR。' },
+    { id:'BOND_GRAND_REUNION', name:'莊敬終極大團圓', emoji:'🌟', tier:'legend', needs:['C16','C04','C07','C08','C09','C15','C17'], desc:'含 UR 的多卡終極收藏線。' },
+    { id:'BOND_MENTOR_TRIANGLE', name:'三莊導師會議', emoji:'🏫', tier:'diamond', needs:['C16','C08','C13'], desc:'旭成（音三）+國霖（音一）+華翊（音二）導師連線。' },
+    { id:'BOND_LANGUAGE_AXIS', name:'國英教研聯盟', emoji:'🈶', tier:'gold', needs:['C16','C13'], desc:'旭成（國文）與華翊（英文）的語文雙核。' },
+    { id:'BOND_SIMBA_PRINCIPAL', name:'校長的巡邏犬', emoji:'🐾', tier:'gold', needs:['C14','C07'], desc:'辛巴 + 校長 UR，屬高價值組合。' },
+    { id:'BOND_SIMBA_SHIZHANG', name:'師丈放風時間', emoji:'🧸', tier:'silver', needs:['C14','C17'], desc:'辛巴與師丈的療癒搭檔。' },
+    { id:'BOND_SIMBA_FAMILY', name:'校務室全家福', emoji:'👨‍👩‍👧‍👦', tier:'diamond', needs:['C14','C07','C17'], desc:'辛巴、校長、師丈三人同場。' },
   ].forEach(pushBond);
 
   if (typeof _customBonds !== 'undefined') {
@@ -2615,7 +2613,7 @@ function _updatePityUI(count) {
 
 // ── 抽卡邏輯：動態卡池 + 保底機制 ──
 const CLASS_LOCKED_CARD_IDS = {
-  '音二莊': ['C20'],
+  '音二莊': ['C18'],
 };
 
 function filterPoolByClass(pool, stuClass) {
