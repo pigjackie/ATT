@@ -2326,6 +2326,9 @@ const CARD_DB = [
   {id:'C15',name:'曉萱',rarity:'SSR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音域守護者', quote:'低音站穩，樂團才會穩。'},
   {id:'C16',name:'旭成',rarity:'SSR', img:'CARDS/旭成ssr2.jpg',         title:'學務協調長', quote:'規矩站穩，班級就會穩。'},
   {id:'C17',name:'師丈',rarity:'SR',  img:'CARDS/師丈SR.jpg',            title:'校務後援', quote:'有需要幫忙就先把流程理清楚。'},
+  {id:'C18',name:'華翊',rarity:'SR',  img:'CARDS/華翊R.jpg',             title:'英文老師｜音二莊導師', quote:'語言是看世界的另一種節奏。'},
+  {id:'C19',name:'辛巴',rarity:'R',   img:'CARDS/辛巴.jpg',              title:'校長與師丈的狗', quote:'今天也要巡邏辦公室。'},
+  {id:'C20',name:'槓龜',rarity:'R',   img:'CARDS/槓龜.jpg',              title:'音二莊限定卡', quote:'沒中獎也是一種回憶。'},
 ];
 // ════════════════════════════════════════════════════════════════
 // 班級專屬獎品設定
@@ -2499,11 +2502,13 @@ function generateDynamicBonds() {
     '國霖': { id:'BOND_GUOLIN_TRACK', name:'單簧管聲線全修', emoji:'🎶', tier:'gold', desc:'集齊王國霖老師的全部卡片，完成單簧管聲線鍛鍊。' },
     '康榮': { id:'BOND_KANGRONG_TRACK', name:'合奏指揮全修', emoji:'🎼', tier:'gold', desc:'集齊康榮老師的全部卡片，完成合奏指揮主線。' },
     '曉萱': { id:'BOND_XIAOXUAN_TRACK', name:'低音管聲域全修', emoji:'🪵', tier:'gold', desc:'集齊曉萱老師的全部卡片，完成低音管聲域培養。' },
+    '華翊': { id:'BOND_HUAYI_TRACK', name:'語言教學核心', emoji:'📚', tier:'silver', desc:'華翊老師穩定英文教學節奏，打造音二莊語文力。' },
+    '辛巴': { id:'BOND_SIMBA_TRACK', name:'校園療癒巡邏', emoji:'🐶', tier:'silver', desc:'辛巴出勤，校園氣氛與士氣同步提升。' },
   };
 
   Object.entries(specialistBondMeta).forEach(([name, meta]) => {
     const cards = CARD_DB.filter(c => c.name === name);
-    if (cards.length < 2) return;
+    if (cards.length < 1) return;
     pushBond({
       ...meta,
       needs: cards.map(c => c.id),
@@ -2530,6 +2535,11 @@ function generateDynamicBonds() {
     { id:'BOND_ADMIN_SUPPORT', name:'行政後援組', emoji:'🧾', tier:'silver', needs:['C17','C16'], desc:'師丈與旭成共同維持行政後援與班級秩序。' },
     { id:'BOND_ENSEMBLE_CORE', name:'管樂教學核心', emoji:'🎵', tier:'gold', needs:['C04','C13','C15'], desc:'倩宇、國霖、曉萱組成完整的管樂教學核心。' },
     { id:'BOND_GRAND_REUNION', name:'莊敬大團圓', emoji:'🌟', tier:'legend', needs:['C16','C04','C07','C13','C09','C15','C17'], desc:'集齊所有老師最高階卡片各一張，完成莊敬音樂科終極陣容。' },
+    { id:'BOND_MENTOR_TRIANGLE', name:'三莊導師聯盟', emoji:'🏫', tier:'gold', needs:['C16','C13','C18'], desc:'旭成（音三莊）、國霖（音一莊）、華翊（音二莊）導師連線完成。' },
+    { id:'BOND_LANGUAGE_AXIS', name:'語文雙核', emoji:'🈶', tier:'silver', needs:['C16','C18'], desc:'國文老師旭成與英文老師華翊形成語文教學雙核心。' },
+    { id:'BOND_SIMBA_PRINCIPAL', name:'校長與辛巴', emoji:'🐾', tier:'silver', needs:['C19','C07'], desc:'辛巴與校長同框，校務室幸福指數上升。' },
+    { id:'BOND_SIMBA_SHIZHANG', name:'師丈與辛巴', emoji:'🧸', tier:'silver', needs:['C19','C17'], desc:'師丈與辛巴組成校園後援療癒組。' },
+    { id:'BOND_SIMBA_FAMILY', name:'辛巴全家福', emoji:'👨‍👩‍👧‍👦', tier:'diamond', needs:['C19','C07','C17'], desc:'辛巴、校長、師丈三人同時到位，觸發校園最強療癒羈絆。' },
   ].forEach(pushBond);
 
   if (typeof _customBonds !== 'undefined') {
@@ -2576,10 +2586,21 @@ function _updatePityUI(count) {
 }
 
 // ── 抽卡邏輯：動態卡池 + 保底機制 ──
-function drawCard(pityCount) {
+const CLASS_LOCKED_CARD_IDS = {
+  '音二莊': ['C20'],
+};
+
+function filterPoolByClass(pool, stuClass) {
+  if (!Array.isArray(pool) || !pool.length) return pool || [];
+  const onlyForCls = CLASS_LOCKED_CARD_IDS['音二莊'] || [];
+  if (stuClass === '音二莊') return pool;
+  return pool.filter(card => !onlyForCls.includes(card.id));
+}
+
+function drawCard(pityCount, stuClass) {
   // 達到保底門檻：強制 SSR（從所有 SSR+UR 中隨機）
   if (pityCount >= PITY_THRESHOLD) {
-    let pool = CARD_DB.filter(c => c.rarity === 'SSR' || c.rarity === 'UR');
+    let pool = filterPoolByClass(CARD_DB.filter(c => c.rarity === 'SSR' || c.rarity === 'UR'), stuClass);
     if (!pool.length) pool = CARD_DB;
     return { card: pool[Math.floor(Math.random() * pool.length)], pityTriggered: true };
   }
@@ -2595,11 +2616,11 @@ function drawCard(pityCount) {
   else if (roll < thSR)  rarity = 'SR';
   else                   rarity = 'R';
 
-  let pool = CARD_DB.filter(c => c.rarity === rarity);
-  if (!pool.length && rarity === 'UR')  pool = CARD_DB.filter(c => c.rarity === 'SSR');
-  if (!pool.length && rarity === 'SSR') pool = CARD_DB.filter(c => c.rarity === 'SR');
-  if (!pool.length && rarity === 'SR')  pool = CARD_DB.filter(c => c.rarity === 'R');
-  if (!pool.length) pool = CARD_DB;
+  let pool = filterPoolByClass(CARD_DB.filter(c => c.rarity === rarity), stuClass);
+  if (!pool.length && rarity === 'UR')  pool = filterPoolByClass(CARD_DB.filter(c => c.rarity === 'SSR'), stuClass);
+  if (!pool.length && rarity === 'SSR') pool = filterPoolByClass(CARD_DB.filter(c => c.rarity === 'SR'), stuClass);
+  if (!pool.length && rarity === 'SR')  pool = filterPoolByClass(CARD_DB.filter(c => c.rarity === 'R'), stuClass);
+  if (!pool.length) pool = filterPoolByClass(CARD_DB, stuClass);
   return { card: pool[Math.floor(Math.random() * pool.length)], pityTriggered: false };
 }
 
@@ -2673,7 +2694,8 @@ async function triggerPackOpen() {
     box.classList.add('shaking');
 
     // 抽卡（含保底判斷）
-    const { card, pityTriggered } = drawCard(currentPity);
+    const stuClass = byId(_currentStuId)?.cls || '';
+    const { card, pityTriggered } = drawCard(currentPity, stuClass);
     _pendingCard = card;
 
     // 計算新保底計數
