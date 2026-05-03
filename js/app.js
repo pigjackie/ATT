@@ -2530,8 +2530,8 @@ function generateDynamicBonds() {
     '國霖': { id:'BOND_GUOLIN_TRACK', name:'單簧管聲線全修', emoji:'🎶', tier:'gold', desc:'集齊王國霖老師的全部卡片，完成單簧管聲線鍛鍊。' },
     '康榮': { id:'BOND_KANGRONG_TRACK', name:'合奏指揮全修', emoji:'🎼', tier:'gold', desc:'集齊康榮老師的全部卡片，完成合奏指揮主線。' },
     '曉萱': { id:'BOND_XIAOXUAN_TRACK', name:'低音管聲域全修', emoji:'🪵', tier:'gold', desc:'集齊曉萱老師的全部卡片，完成低音管聲域培養。' },
-    '華翊': { id:'BOND_HUAYI_TRACK', name:'語言教學核心', emoji:'📚', tier:'silver', desc:'華翊老師穩定英文教學節奏，打造音二莊語文力。' },
-    '辛巴': { id:'BOND_SIMBA_TRACK', name:'校園療癒巡邏', emoji:'🐶', tier:'silver', desc:'辛巴出勤，校園氣氛與士氣同步提升。' },
+    '華翊': { id:'BOND_HUAYI_TRACK', name:'華翊語言教學核心', emoji:'📚', tier:'silver', desc:'集齊華翊卡片，完成英文教學核心羈絆。' },
+    '辛巴': { id:'BOND_SIMBA_TRACK', name:'辛巴校園療癒巡邏', emoji:'🐶', tier:'silver', desc:'集齊辛巴卡片，觸發校園療癒巡邏羈絆。' },
   };
 
   Object.entries(specialistBondMeta).forEach(([name, meta]) => {
@@ -2564,7 +2564,7 @@ function generateDynamicBonds() {
     { id:'BOND_ENSEMBLE_CORE', name:'管樂教學核心', emoji:'🎵', tier:'gold', needs:['C04','C13','C15'], desc:'倩宇、國霖、曉萱組成完整的管樂教學核心。' },
     { id:'BOND_GRAND_REUNION', name:'莊敬大團圓', emoji:'🌟', tier:'legend', needs:['C16','C04','C07','C13','C09','C15','C17'], desc:'集齊所有老師最高階卡片各一張，完成莊敬音樂科終極陣容。' },
     { id:'BOND_MENTOR_TRIANGLE', name:'三莊導師聯盟', emoji:'🏫', tier:'gold', needs:['C16','C13','C18'], desc:'旭成（音三莊）、國霖（音一莊）、華翊（音二莊）導師連線完成。' },
-    { id:'BOND_LANGUAGE_AXIS', name:'語文雙核', emoji:'🈶', tier:'silver', needs:['C16','C18'], desc:'國文老師旭成與英文老師華翊形成語文教學雙核心。' },
+    { id:'BOND_LANGUAGE_AXIS', name:'旭成×華翊 語文雙核', emoji:'🈶', tier:'silver', needs:['C16','C18'], desc:'國文老師旭成與英文老師華翊形成語文教學雙核心。' },
     { id:'BOND_SIMBA_PRINCIPAL', name:'校長與辛巴', emoji:'🐾', tier:'silver', needs:['C19','C07'], desc:'辛巴與校長同框，校務室幸福指數上升。' },
     { id:'BOND_SIMBA_SHIZHANG', name:'師丈與辛巴', emoji:'🧸', tier:'silver', needs:['C19','C17'], desc:'師丈與辛巴組成校園後援療癒組。' },
     { id:'BOND_SIMBA_FAMILY', name:'辛巴全家福', emoji:'👨‍👩‍👧‍👦', tier:'diamond', needs:['C19','C07','C17'], desc:'辛巴、校長、師丈三人同時到位，觸發校園最強療癒羈絆。' },
