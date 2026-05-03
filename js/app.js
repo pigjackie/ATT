@@ -2513,6 +2513,15 @@ function generateDynamicBonds() {
     legend: '需找老師兌換：傳說徽章',
   };
   const pushBond = bond => {
+    // 全域硬限制：羈絆至少需要 2 張卡（含稀有度型羈絆至少 2 張）
+    if (bond?.rarityPool) {
+      const needN = Number(bond.rarityCount || 0);
+      if (needN < 2) return;
+    } else {
+      const needIds = Array.isArray(bond?.needs) ? bond.needs.filter(Boolean) : [];
+      if (needIds.length < 2) return;
+    }
+
     const allExist = (bond.needs||[]).every(id => CARD_DB.some(c => c.id === id));
     if (!allExist) return;
     bonds.push({
@@ -2570,6 +2579,13 @@ function generateDynamicBonds() {
 
   if (typeof _customBonds !== 'undefined') {
     _customBonds.forEach(b => {
+      if (b?.rarityPool) {
+        const needN = Number(b.rarityCount || 0);
+        if (needN < 2) return;
+      } else {
+        const needIds = Array.isArray(b?.needs) ? b.needs.filter(Boolean) : [];
+        if (needIds.length < 2) return;
+      }
       const allExist = (b.needs||[]).every(id => CARD_DB.some(c=>c.id===id));
       if (allExist && !bonds.some(x=>x.id===b.id)) bonds.push(b);
     });
@@ -3103,6 +3119,13 @@ async function renderBag() {
   bondList.insertAdjacentHTML('beforeend', tierLegendHtml);
 
   for (const bond of DYNAMIC_BONDS) {
+    if (bond?.rarityPool) {
+      if (Number(bond.rarityCount || 0) < 2) continue;
+    } else {
+      const needIds = Array.isArray(bond?.needs) ? bond.needs.filter(Boolean) : [];
+      if (needIds.length < 2) continue;
+    }
+
     const isRarityType = !!bond.rarityPool;
     const canRedeem    = isRarityType ? checkRarityBond(bond, inv)
                                       : bond.needs.every(id => (inv[id]||0) >= 1);
