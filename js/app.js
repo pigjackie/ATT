@@ -2629,13 +2629,13 @@ function _updatePityUI(count) {
 
 // ── 抽卡邏輯：動態卡池 + 保底機制 ──
 const CLASS_LOCKED_CARD_IDS = {
-  '音二莊': ['C18'],
+  '音一莊': ['C18'],
 };
 
 function filterPoolByClass(pool, stuClass) {
   if (!Array.isArray(pool) || !pool.length) return pool || [];
-  const onlyForCls = CLASS_LOCKED_CARD_IDS['音二莊'] || [];
-  if (stuClass === '音二莊') return pool;
+  const onlyForCls = CLASS_LOCKED_CARD_IDS['音一莊'] || [];
+  if (stuClass === '音一莊') return pool;
   return pool.filter(card => !onlyForCls.includes(card.id));
 }
 
