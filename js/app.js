@@ -2031,10 +2031,12 @@ async function loadDynamicData() {
 
     // 自訂學生
     const extraStus = (await dbGet('customStudents')) || {};
+    const deletedStuMap = (await dbGet('deletedStudents')) || {};
+    const deletedStuIds = new Set(Object.keys(deletedStuMap).filter(Boolean));
     const extraStuArr = Object.entries(extraStus).map(([k,s])=>({...s, _fbKey:k}));
     // Remove existing custom students then re-add
     const baseIds = STUDENTS.filter(s=>!s._fbKey).map(s=>s.id);
-    const basePart = STUDENTS.filter(s=>!s._fbKey);
+    const basePart = STUDENTS.filter(s=>!s._fbKey && !deletedStuIds.has(s.id));
     STUDENTS = [...basePart, ...extraStuArr.filter(s=>!baseIds.includes(s.id))];
 
     await loadCustomCardData();
@@ -2213,7 +2215,7 @@ function renderStudentMgmt() {
         </div>
         <div style="display:flex;gap:6px;flex-wrap:wrap">
           <button class="btn" onclick="openEditStudent('${s.id}')" style="font-size:11px">✏️ 編輯</button>
-          ${s._fbKey?`<button class="btn d" onclick="delStudent('${s._fbKey}','${s.name}')" style="font-size:11px">🗑️ 刪除</button>`:''}
+          <button class="btn d" onclick="delStudent('${s.id}')" style="font-size:11px">🗑️ 刪除</button>
         </div>
       </div>`).join('')}`;
 }
@@ -2283,7 +2285,10 @@ function openEditStudent(stuId) {
     }},{label:'取消',fn:()=>true}]);
 }
 
-async function delStudent(fbKey, name) {
+async function delStudent(stuId) {
+  const stu = STUDENTS.find(s=>s.id===stuId);
+  if (!stu) { toast('找不到這位學生資料','err'); return; }
+  const isCustom = !!stu._fbKey;
   openDlg(`🗑️ 刪除學生「${name}」`,
     `<div class="dlg-msg" style="color:var(--red)">確認刪除學生「${name}」？<br>
      <label style="font-size:13px;color:var(--tx2);display:block;margin-top:10px">
@@ -2310,6 +2315,43 @@ async function delStudent(fbKey, name) {
 // 抽卡系統
 // ════════════════════════════════════════════════════════════════
 
+async function delStudent(stuId) {
+  const stu = STUDENTS.find(s=>s.id===stuId);
+  if (!stu) { toast('找不到這位學生資料','err'); return; }
+  const isCustom = !!stu._fbKey;
+  openDlg(`🗑️ 刪除學生「${stu.name}」？`,
+    `<div class="dlg-msg" style="color:var(--red)">此操作會刪除學生「${stu.name}」！<br>
+     <label style="font-size:13px;color:var(--tx2);display:block;margin-top:10px">
+       <input type="checkbox" id="delStuData" style="margin-right:6px"> 同時清除學生資料（卡片、點數、任務等）
+     </label>
+     ${isCustom ? '' : '<div style="margin-top:10px;font-size:12px;color:var(--tx3)">內建學生會從教師名單隱藏，若不勾選清除資料，之後仍可恢復資料。</div>'}
+     </div>`,
+    [{label:'確認刪除',cls:'del',fn:async()=>{
+      const clearData = document.getElementById('delStuData')?.checked;
+      if (isCustom) {
+        await db.ref(`${ROOT}/customStudents/${stu._fbKey}`).remove();
+      } else {
+        await dbSet(`deletedStudents/${stu.id}`, {
+          id: stu.id,
+          name: stu.name,
+          cls: stu.cls,
+          deletedBy: me?.name || 'teacher',
+          deletedAt: now()
+        });
+      }
+      if (clearData) {
+        await db.ref(`${ROOT}/students/${stu.id}`).remove();
+        await db.ref(`${ROOT}/stuMsgs/${stu.id}`).remove();
+      }
+      toast(`學生「${stu.name}」已刪除`,'ok');
+      await loadDynamicData();
+      renderStudentMgmt();
+      buildClsBtns('clsBtns', switchCls);
+      buildClsBtns('clsBtnsR', switchClsR);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
 const CARD_DB = [
   {id:'C01',name:'旭成',rarity:'R',   img:'CARDS/旭成R.jpg',             title:'班級巡堂員', quote:'先把基本動作做好。'},
   {id:'C02',name:'倩宇',rarity:'R',   img:'CARDS/倩宇R_結果.jpg',       title:'法國號導師', quote:'先把嘴型站穩，再談音量。'},
@@ -2328,7 +2370,7 @@ const CARD_DB = [
   {id:'C15',name:'曉萱',rarity:'SSR', img:'CARDS/曉萱SR_結果.jpg',      title:'低音域守護者', quote:'低音站穩，樂團才會穩。'},
   {id:'C16',name:'旭成',rarity:'SSR', img:'CARDS/旭成ssr2.jpg',         title:'學務協調長', quote:'規矩站穩，班級就會穩。'},
   {id:'C17',name:'師丈',rarity:'SR',  img:'CARDS/師丈SR.jpg',            title:'校務後援', quote:'有需要幫忙就先把流程理清楚。'},
-  {id:'C18',name:'槓龜',rarity:'R',   img:'CARDS/槓龜.jpg',              title:'音二莊限定卡', quote:'沒中獎也是一種回憶。'},
+  {id:'C18',name:'槓龜',rarity:'R',   img:'CARDS/槓龜.jpg',              title:'音一莊限定卡', quote:'沒中獎也是一種回憶。'},
 ];
 // ════════════════════════════════════════════════════════════════
 // 班級專屬獎品設定
@@ -2499,6 +2541,7 @@ function getCardImageSrc(card) {
 
 // ── 稀有度機率（總和 100） ──
 const RARITY_WEIGHT = {UR:2, SSR:13, SR:40, R:45};
+const MISS_CARD_RATE = 0.15;
 
 // ── 動態生成羈絆清單 ──
 let DYNAMIC_BONDS = [];
@@ -2645,6 +2688,12 @@ function drawCard(pityCount, stuClass) {
     let pool = filterPoolByClass(CARD_DB.filter(c => c.rarity === 'SSR' || c.rarity === 'UR'), stuClass);
     if (!pool.length) pool = CARD_DB;
     return { card: pool[Math.floor(Math.random() * pool.length)], pityTriggered: true };
+  }
+
+  const classLockedMissIds = CLASS_LOCKED_CARD_IDS[stuClass] || [];
+  if (classLockedMissIds.includes('C18') && Math.random() < MISS_CARD_RATE) {
+    const missCard = CARD_DB.find(c => c.id === 'C18');
+    if (missCard) return { card: missCard, pityTriggered: false };
   }
 
   const roll = Math.random() * 100;
