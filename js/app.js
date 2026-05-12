@@ -2207,15 +2207,15 @@ function renderStudentMgmt() {
     <div style="font-size:12px;color:var(--tx3);margin-bottom:8px">共 ${stus.length} 位學生</div>
     ${stus.map(s=>`
       <div class="titem" style="margin-bottom:6px">
-        <div>
+        <div style="flex:1;min-width:0">
           <div class="ti-name">${s.name} <span style="font-size:11px;color:var(--tx3)">${s.id}</span>
             ${s._fbKey?'<span style="font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(46,204,113,.15);color:var(--green);margin-left:4px">自訂</span>':''}
           </div>
           <div class="ti-cls">${s.cls}</div>
         </div>
-        <div style="display:flex;gap:6px;flex-wrap:wrap">
-          <button class="btn" onclick="openEditStudent('${s.id}')" style="font-size:11px">✏️ 編輯</button>
-          <button class="btn d" onclick="delStudent('${s.id}')" style="font-size:11px">🗑️ 刪除</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;min-width:168px">
+          <button class="btn" onclick="openEditStudent('${s.id}')" style="font-size:11px;min-width:78px">✏️ 編輯學生</button>
+          <button class="btn d" onclick="delStudent('${s.id}')" style="font-size:11px;min-width:78px;font-weight:bold">🗑️ 刪除學生</button>
         </div>
       </div>`).join('')}`;
 }
