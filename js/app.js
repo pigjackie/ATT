@@ -333,6 +333,16 @@ function canAccessCardRewardMgmt() {
   return !!me && me.role !== 'student';
 }
 
+function canManageStudentClass(cls) {
+  if (!me || me.role === 'student') return false;
+  if (me.role === 'master') return true;
+  return Array.isArray(me.classes) && me.classes.includes(cls);
+}
+
+function canManageStudent(stu) {
+  return !!stu && canManageStudentClass(stu.cls);
+}
+
 function enterApp() {
   document.getElementById('curUser').textContent = me.name;
   document.getElementById('tab-teachers').style.display = me.role!=='student'?'':'none';
@@ -344,7 +354,7 @@ function enterApp() {
   const rewardTabBtn = document.getElementById('mgmtRewardBtn');
   if (mgmtTeacherBtn) mgmtTeacherBtn.style.display = isMaster ? '' : 'none';
   if (mgmtClassBtn) mgmtClassBtn.style.display = isMaster ? '' : 'none';
-  if (mgmtStudentBtn) mgmtStudentBtn.style.display = isMaster ? '' : 'none';
+  if (mgmtStudentBtn) mgmtStudentBtn.style.display = canAccessCardRewardMgmt() ? '' : 'none';
   if (cardTabBtn) cardTabBtn.style.display = canAccessCardRewardMgmt() ? '' : 'none';
   if (rewardTabBtn) rewardTabBtn.style.display = canAccessCardRewardMgmt() ? '' : 'none';
   showScreen('appScreen');
@@ -397,12 +407,12 @@ function switchTab(t) {
       if (me?.role === 'master') {
         renderTeachers();
         renderClassMgmt();
-        renderStudentMgmt();
       }
+      if (canAccessCardRewardMgmt()) renderStudentMgmt();
       if (canAccessCardRewardMgmt()) {
         renderCardMgmt();
       }
-      switchMgmt(me?.role === 'master' ? 'teacher' : 'card');
+      switchMgmt(me?.role === 'master' ? 'teacher' : 'student');
     });
   }
   if (t==='inbox') renderInbox();
@@ -744,6 +754,8 @@ async function openDetail(stu) {
   }
   const medals = d.medals||0;
   document.getElementById('dpMedalsN').textContent = medals;
+  const randomDelBtn = document.getElementById('dpRandomDeleteCardBtn');
+  if (randomDelBtn) randomDelBtn.style.display = canManageStudent(stu) ? '' : 'none';
   const mr = document.getElementById('dpMedals');
   mr.innerHTML = medals>0
     ? Array(Math.min(medals,12)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>12?`<span style="color:var(--gold);font-size:18px;align-self:center">+${medals-12}</span>`:'')
@@ -2167,7 +2179,7 @@ function renderStudentMgmt() {
     allBtn.style.cssText = 'background:var(--gold);color:#000;font-weight:bold';
     allBtn.onclick = () => filterStuMgmt('all');
     filterBar.appendChild(allBtn);
-    CLASSES.forEach(cls => {
+    (me?.role === 'master' ? CLASSES : (me?.classes || [])).forEach(cls => {
       const b = document.createElement('button');
       b.className = 'btn cls-filter-btn';
       b.dataset.cls = cls;
@@ -2178,7 +2190,7 @@ function renderStudentMgmt() {
   } else if (filterBar) {
     // Refresh filter buttons for new classes
     const existing = [...filterBar.querySelectorAll('.cls-filter-btn')].map(b=>b.dataset.cls);
-    CLASSES.filter(c=>!existing.includes(c)).forEach(cls=>{
+    (me?.role === 'master' ? CLASSES : (me?.classes || [])).filter(c=>!existing.includes(c)).forEach(cls=>{
       const b = document.createElement('button');
       b.className = 'btn cls-filter-btn';
       b.dataset.cls = cls;
@@ -2197,7 +2209,7 @@ function renderStudentMgmt() {
   if (!list) return;
 
   const q = (document.getElementById('stuMgmtSearch')?.value||'').trim().toLowerCase();
-  let stus = STUDENTS;
+  let stus = STUDENTS.filter(s=>canManageStudent(s));
   if (_mgmtStuCls !== 'all') stus = stus.filter(s=>s.cls===_mgmtStuCls);
   if (q) stus = stus.filter(s=>s.name.toLowerCase().includes(q)||s.id.toLowerCase().includes(q));
 
@@ -2220,8 +2232,133 @@ function renderStudentMgmt() {
       </div>`).join('')}`;
 }
 
+async function chgBolt(delta) {
+  if (!curStu || !canManageStudent(curStu)) return;
+  if (delta > 0) {
+    openDlg('⚡ 新增閃電',
+      `<div class="dlg-msg" style="color:var(--red);margin-bottom:10px;font-size:13px">新增閃電後，系統會自動扣除 1 顆星星；請務必填寫原因。</div>
+       <div class="dlg-label">原因</div><input class="dlg-input" type="text" id="boltReason" placeholder="請填寫新增閃電的原因">`,
+      [{label:'確認新增',cls:'ok',fn:async()=>{
+        const reason = document.getElementById('boltReason').value.trim();
+        if(!reason){toast('請填寫原因','err');return false;}
+        const d = await dbGet(`students/${curStu.id}`);
+        const curBolts = (d?.bolts||0) + 1;
+        const curPts = typeof d?.points === 'number' ? d.points : parseInt(d?.points)||0;
+        const newPts = Math.max(0, curPts - 1);
+        const lk = Date.now()+'';
+        const upd = {
+          [`${ROOT}/students/${curStu.id}/bolts`]: curBolts,
+          [`${ROOT}/students/${curStu.id}/log/${lk}_bolt`]: {time:now(), action:'新增閃電', reason, teacher:me.name, delta:0}
+        };
+        if (curPts > 0) {
+          upd[`${ROOT}/students/${curStu.id}/points`] = newPts;
+          upd[`${ROOT}/students/${curStu.id}/log/${lk}_pt`] = {time:now(), action:'閃電自動扣星', reason, teacher:me.name, delta:-1};
+        }
+        await db.ref('/').update(upd);
+        const newPen = Math.floor(curBolts/3);
+        const oldPen = Math.floor((curBolts-1)/3);
+        const notifyText = curPts > 0
+          ? `⚡ 新增閃電 1 次，並自動扣除 1 顆星星。原因：${reason}`
+          : `⚡ 新增閃電 1 次。原因：${reason}`;
+        await sendNotifToStudent(curStu.id, curStu.name, newPen > oldPen ? `${notifyText}\n已累積 ${curBolts} 個閃電，觸發一次懲罰。` : notifyText, 'punishment');
+        toast(curPts > 0 ? `閃電已新增，星星 ${curPts} → ${newPts}` : '閃電已新增（目前無星星可扣）', newPen > oldPen ? 'err' : 'ok');
+        openDetail(curStu);
+        return true;
+      }},{label:'取消',fn:()=>true}]
+    );
+    return;
+  }
+
+  openDlg('移除閃電',
+    `<div class="dlg-label">原因</div><input class="dlg-input" type="text" id="removeBoltReason" placeholder="請填寫移除閃電的原因">`,
+    [{label:'確認移除',cls:'ok',fn:async()=>{
+      const reason = document.getElementById('removeBoltReason').value.trim();
+      if(!reason){toast('請填寫原因','err');return false;}
+      const d = await dbGet(`students/${curStu.id}`);
+      const curBolts = Math.max(0, (d?.bolts||0) - 1);
+      await dbUpd(`students/${curStu.id}`, {
+        bolts: curBolts,
+        [`log/${Date.now()}`]: {time:now(), action:'移除閃電', reason, teacher:me.name, delta:0}
+      });
+      toast('閃電已移除','ok');
+      openDetail(curStu);
+      return true;
+    }},{label:'取消',fn:()=>true}]
+  );
+}
+
+async function delStudent(stuId) {
+  const stu = STUDENTS.find(s=>s.id===stuId);
+  if (!stu) { toast('找不到這位學生資料','err'); return; }
+  if (!canManageStudent(stu)) { toast('你沒有這位學生的管理權限','err'); return; }
+  const isCustom = !!stu._fbKey;
+  openDlg(`🗑️ 刪除學生「${stu.name}」？`,
+    `<div class="dlg-msg" style="color:var(--red)">此操作會刪除學生「${stu.name}」！<br>
+     <label style="font-size:13px;color:var(--tx2);display:block;margin-top:10px">
+       <input type="checkbox" id="delStuData" style="margin-right:6px"> 同時清除學生資料（卡片、點數、任務等）
+     </label>
+     ${isCustom ? '' : '<div style="margin-top:10px;font-size:12px;color:var(--tx3)">內建學生會先從名單隱藏；若不勾選清除資料，之後仍可恢復。</div>'}
+     </div>`,
+    [{label:'確認刪除',cls:'del',fn:async()=>{
+      const clearData = document.getElementById('delStuData')?.checked;
+      if (isCustom) {
+        await db.ref(`${ROOT}/customStudents/${stu._fbKey}`).remove();
+      } else {
+        await dbSet(`deletedStudents/${stu.id}`, {
+          id: stu.id,
+          name: stu.name,
+          cls: stu.cls,
+          deletedBy: me?.name || 'teacher',
+          deletedAt: now()
+        });
+      }
+      if (clearData) {
+        await db.ref(`${ROOT}/students/${stu.id}`).remove();
+        await db.ref(`${ROOT}/stuMsgs/${stu.id}`).remove();
+      }
+      toast(`學生「${stu.name}」已刪除`,'ok');
+      await loadDynamicData();
+      renderStudentMgmt();
+      buildClsBtns('clsBtns', switchCls);
+      buildClsBtns('clsBtnsR', switchClsR);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+async function randomDeleteStudentCard() {
+  if (!curStu || !canManageStudent(curStu)) { toast('你沒有這位學生的管理權限','err'); return; }
+  openDlg('🎲 隨機刪除一張卡牌',
+    `<div class="dlg-msg" style="color:var(--red);margin-bottom:10px">系統會從該學生持有的卡牌中隨機刪除 1 張。</div>
+     <div class="dlg-label">原因</div>
+     <input class="dlg-input" type="text" id="randomDeleteCardReason" placeholder="請填寫刪卡原因">`,
+    [{label:'確認刪除',cls:'del',fn:async()=>{
+      const reason = document.getElementById('randomDeleteCardReason').value.trim();
+      if (!reason) { toast('請填寫原因','err'); return false; }
+      const inv = (await dbGet(`students/${curStu.id}/inventory`)) || {};
+      const pool = [];
+      Object.entries(inv).forEach(([cardId, qty]) => {
+        for (let i=0; i<(Number(qty)||0); i++) pool.push(cardId);
+      });
+      if (!pool.length) { toast('這位學生目前沒有卡牌可刪','err'); return false; }
+      const pickedId = pool[Math.floor(Math.random() * pool.length)];
+      const card = CARD_DB.find(c=>c.id===pickedId) || { id:pickedId, name:pickedId };
+      const left = Math.max(0, (Number(inv[pickedId])||0) - 1);
+      const lk = Date.now()+'';
+      await dbUpd(`students/${curStu.id}`, {
+        [`inventory/${pickedId}`]: left,
+        [`log/${lk}`]: {time:now(), action:'隨機刪除卡牌', reason:`${reason}｜刪除：${card.name}`, teacher:me.name, delta:0}
+      });
+      await sendNotifToStudent(curStu.id, curStu.name, `🎲 老師隨機刪除了你 1 張「${card.name}」。原因：${reason}`, 'punishment');
+      toast(`已刪除 1 張 ${card.name}`,'ok');
+      openDetail(curStu);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
 function openAddStudent() {
-  const clsOpts = CLASSES.map(c=>`<option value="${c}">${c}</option>`).join('');
+  const allowedClasses = me?.role === 'master' ? CLASSES : (me?.classes || []);
+  if (!allowedClasses.length) { toast('你目前沒有可管理的班級','err'); return; }
+  const clsOpts = allowedClasses.map(c=>`<option value="${c}">${c}</option>`).join('');
   openDlg('🧑‍🎓 新增學生',
     `<div class="dlg-label">姓名</div>
      <input class="dlg-input" type="text" id="nStuName" placeholder="學生姓名">
@@ -2236,6 +2373,7 @@ function openAddStudent() {
       const id   = document.getElementById('nStuId').value.trim().toUpperCase();
       const cls  = document.getElementById('nStuCls').value;
       const pw   = document.getElementById('nStuPw').value.trim() || '0000';
+      if (!canManageStudentClass(cls)) { toast('你沒有這個班級的管理權限','err'); return false; }
       if (!name||!id) { toast('請填寫姓名與學號','err'); return false; }
       if (STUDENTS.find(s=>s.id===id)) { toast('此學號已存在','err'); return false; }
       if (STUDENTS.find(s=>s.name===name&&s.cls===cls)) { toast('同班已有同名學生','err'); return false; }
@@ -2256,7 +2394,9 @@ function openAddStudent() {
 function openEditStudent(stuId) {
   const stu = STUDENTS.find(s=>s.id===stuId);
   if (!stu) return;
-  const clsOpts = CLASSES.map(c=>`<option value="${c}"${c===stu.cls?' selected':''}>${c}</option>`).join('');
+  if (!canManageStudent(stu)) { toast('你沒有這位學生的管理權限','err'); return; }
+  const allowedClasses = me?.role === 'master' ? CLASSES : (me?.classes || []);
+  const clsOpts = allowedClasses.map(c=>`<option value="${c}"${c===stu.cls?' selected':''}>${c}</option>`).join('');
   openDlg(`✏️ 編輯學生「${stu.name}」`,
     `<div class="dlg-label">姓名</div>
      <input class="dlg-input" type="text" id="eStuName" value="${stu.name}" ${stu._fbKey?'':'readonly style="opacity:.5"'}>
@@ -2272,6 +2412,7 @@ function openEditStudent(stuId) {
       if (stu._fbKey) {
         const newName = document.getElementById('eStuName').value.trim();
         const newCls  = document.getElementById('eStuCls').value;
+        if (!canManageStudentClass(newCls)) { toast('你不能把學生移到這個班級','err'); return false; }
         if (!newName) { toast('姓名不能為空','err'); return false; }
         upd[`${ROOT}/customStudents/${stu._fbKey}/name`] = newName;
         upd[`${ROOT}/customStudents/${stu._fbKey}/cls`]  = newCls;
