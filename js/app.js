@@ -754,8 +754,13 @@ async function openDetail(stu) {
   }
   const medals = d.medals||0;
   document.getElementById('dpMedalsN').textContent = medals;
+  const canShowCardPenalty = canManageStudent(stu);
   const randomDelBtn = document.getElementById('dpRandomDeleteCardBtn');
-  if (randomDelBtn) randomDelBtn.style.display = canManageStudent(stu) ? '' : 'none';
+  const randomDelBtnAlt = document.getElementById('dpRandomDeleteCardBtnAlt');
+  const cardPenaltySec = document.getElementById('dpCardPenaltySec');
+  if (randomDelBtn) randomDelBtn.style.display = canShowCardPenalty ? '' : 'none';
+  if (randomDelBtnAlt) randomDelBtnAlt.style.display = canShowCardPenalty ? '' : 'none';
+  if (cardPenaltySec) cardPenaltySec.style.display = canShowCardPenalty ? '' : 'none';
   const mr = document.getElementById('dpMedals');
   mr.innerHTML = medals>0
     ? Array(Math.min(medals,12)).fill(0).map(()=>`<div class="mcoin">🏅</div>`).join('')+(medals>12?`<span style="color:var(--gold);font-size:18px;align-self:center">+${medals-12}</span>`:'')
