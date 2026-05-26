@@ -130,6 +130,16 @@ function loadLearningFrame(kind, frameId) {
   }
 }
 
+function openLearningSite(kind) {
+  const site = LEARNING_SITES[kind];
+  if (!site) return;
+  if (!me) {
+    toast('請先登入 ATT 再使用學習網站', 'err');
+    return;
+  }
+  window.location.href = site.url;
+}
+
 const now = () => new Date().toLocaleString('zh-TW',{hour12:false});
 const WEEKDAYS = ['日','一','二','三','四','五','六'];
 
@@ -1599,13 +1609,7 @@ function openStuPiano() {
 }
 
 function openStuLearning(kind) {
-  const site = LEARNING_SITES[kind];
-  const overlay = document.getElementById('stuLearningOverlay');
-  const title = document.getElementById('stuLearningTitle');
-  if (!site || !overlay || !title) return;
-  title.textContent = site.title;
-  overlay.style.display = 'flex';
-  loadLearningFrame(kind, 'stuLearningFrame');
+  openLearningSite(kind);
 }
 
 function closeStuLearning() {
