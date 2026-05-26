@@ -73,6 +73,8 @@
     <button class="navtab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
     <button class="navtab" onclick="switchTab('cal')" id="tab-cal">📅 行事曆</button>
     <button class="navtab" onclick="switchTab('piano')" id="tab-piano">🎹 琴房預約</button>
+    <button class="navtab" onclick="switchTab('theory')" id="tab-theory">🎼 樂理學習</button>
+    <button class="navtab" onclick="switchTab('history')" id="tab-history">🏛️ 音樂史</button>
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
   </div>
   <div class="content">
@@ -201,6 +203,12 @@
 
     <div id="tabPiano" style="display:none; height:calc(100vh - 120px); margin:-16px;">
       <iframe id="pianoFrame" style="width:100%; height:100%; border:none;" src=""></iframe>
+    </div>
+    <div id="tabTheory" class="learning-frame-tab" style="display:none">
+      <iframe id="theoryFrame" class="learning-frame" title="樂理學習工具網" src=""></iframe>
+    </div>
+    <div id="tabHistory" class="learning-frame-tab" style="display:none">
+      <iframe id="historyFrame" class="learning-frame" title="音樂史互動學習網" src=""></iframe>
     </div>
     <div id="tabTeachers" style="display:none">
       <!-- 管理子分頁列 -->
@@ -513,6 +521,8 @@
     <button class="stu-quick-btn piano" onclick="openStuPiano()">🎹 預約琴房</button>
     <button class="stu-quick-btn exit" onclick="openApplyExit()">🚪 申請外出</button>
     <button class="stu-quick-btn cal" onclick="openStuCal()">📅 行事曆</button>
+    <button class="stu-quick-btn theory" onclick="openStuLearning('theory')">🎼 樂理學習</button>
+    <button class="stu-quick-btn history" onclick="openStuLearning('history')">🏛️ 音樂史</button>
     <button class="stu-quick-btn card" onclick="openCardPack()">🌟 抽卡包</button>
     <button class="stu-quick-btn" onclick="openBag()" style="border-color:var(--tx2);color:var(--tx2);font-size:12px">🎒 卡簿</button>
     <button class="stu-quick-btn" onclick="openCouponWallet()" id="couponWalletBtn" style="border-color:var(--gold);color:var(--gold);font-size:12px;position:relative">🎟️ 兌換券<span id="couponBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:bold"></span></button>
@@ -636,6 +646,14 @@
     <button class="btn d" onclick="document.getElementById('stuPianoOverlay').style.display='none'">✕ 關閉系統</button>
   </div>
   <iframe id="stuPianoFrame" style="flex:1; width:100%; border:none;"></iframe>
+</div>
+
+<div id="stuLearningOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:var(--bg); z-index:9999; flex-direction:column;">
+  <div class="learning-overlay-topbar">
+    <div class="learning-overlay-title" id="stuLearningTitle">學習工具</div>
+    <button class="btn d" onclick="closeStuLearning()">✕ 關閉</button>
+  </div>
+  <iframe id="stuLearningFrame" class="learning-frame" title="互動學習網" src=""></iframe>
 </div>
 
 <div id="detailPanel">
