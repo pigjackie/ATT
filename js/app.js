@@ -111,13 +111,9 @@ let batchSel = new Set();
 let stuBannerOpen = false;
 
 const LEARNING_SITES = {
-  theory: {
-    title: '🎼 樂理學習工具網',
-    url: 'https://sites.google.com/gsuite.ntpc.edu.tw/music--theory?usp=sharing'
-  },
-  history: {
-    title: '🏛️ 音樂史互動學習網',
-    url: 'https://sites.google.com/gsuite.ntpc.edu.tw/music-history?usp=sharing'
+  learning: {
+    title: '🎼 莊敬音樂科學習互動平台',
+    url: 'https://jjvsmusictest.github.io/jjvsmusic-site/'
   }
 };
 
@@ -419,14 +415,14 @@ function enterStudentView(stu) {
 
 function switchTab(t) {
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
-  ['att','apply','exitlog','inbox','report','teachers','piano','cal','theory','history'].forEach(id=>{
+  ['att','apply','exitlog','inbox','report','teachers','piano','cal','learning'].forEach(id=>{
     const key = 'tab'+id.charAt(0).toUpperCase()+id.slice(1);
     const el = document.getElementById(key);
     if (el) el.style.display = 'none';
   });
   const btn = document.getElementById('tab-'+t);
   if (btn) btn.classList.add('on');
-  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano',cal:'tabCal',theory:'tabTheory',history:'tabHistory'};
+  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano',cal:'tabCal',learning:'tabLearning'};
   const content = document.getElementById(map[t]);
   if (content) content.style.display = '';
 
@@ -455,8 +451,7 @@ function switchTab(t) {
       frame.src = `https://jjvsmusic.github.io/musicbooking/?sso=${authData}`;
     }
   }
-  if (t==='theory') loadLearningFrame('theory', 'theoryFrame');
-  if (t==='history') loadLearningFrame('history', 'historyFrame');
+  if (t==='learning') loadLearningFrame('learning', 'learningFrame');
 }
 
 function buildClsBtns(containerId, clickFn) {
@@ -1609,7 +1604,13 @@ function openStuPiano() {
 }
 
 function openStuLearning(kind) {
-  openLearningSite(kind);
+  const site = LEARNING_SITES[kind];
+  const overlay = document.getElementById('stuLearningOverlay');
+  const title = document.getElementById('stuLearningTitle');
+  if (!site || !overlay || !title) return;
+  title.textContent = site.title;
+  overlay.style.display = 'flex';
+  loadLearningFrame(kind, 'stuLearningFrame');
 }
 
 function closeStuLearning() {
