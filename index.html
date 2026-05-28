@@ -73,8 +73,7 @@
     <button class="navtab" onclick="switchTab('report')" id="tab-report">📊 報表</button>
     <button class="navtab" onclick="switchTab('cal')" id="tab-cal">📅 行事曆</button>
     <button class="navtab" onclick="switchTab('piano')" id="tab-piano">🎹 琴房預約</button>
-    <button class="navtab" onclick="window.location.href='https://sites.google.com/gsuite.ntpc.edu.tw/music--theory?usp=sharing'" id="tab-theory">🎼 樂理學習</button>
-    <button class="navtab" onclick="window.location.href='https://sites.google.com/gsuite.ntpc.edu.tw/music-history?usp=sharing'" id="tab-history">🏛️ 音樂史</button>
+    <button class="navtab" onclick="switchTab('learning')" id="tab-learning">🎼 學習互動平台</button>
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
   </div>
   <div class="content">
@@ -204,11 +203,8 @@
     <div id="tabPiano" style="display:none; height:calc(100vh - 120px); margin:-16px;">
       <iframe id="pianoFrame" style="width:100%; height:100%; border:none;" src=""></iframe>
     </div>
-    <div id="tabTheory" class="learning-frame-tab" style="display:none">
-      <iframe id="theoryFrame" class="learning-frame" title="樂理學習工具網" src=""></iframe>
-    </div>
-    <div id="tabHistory" class="learning-frame-tab" style="display:none">
-      <iframe id="historyFrame" class="learning-frame" title="音樂史互動學習網" src=""></iframe>
+    <div id="tabLearning" class="learning-frame-tab" style="display:none">
+      <iframe id="learningFrame" class="learning-frame" title="莊敬音樂科學習互動平台" src=""></iframe>
     </div>
     <div id="tabTeachers" style="display:none">
       <!-- 管理子分頁列 -->
@@ -521,8 +517,7 @@
     <button class="stu-quick-btn piano" onclick="openStuPiano()">🎹 預約琴房</button>
     <button class="stu-quick-btn exit" onclick="openApplyExit()">🚪 申請外出</button>
     <button class="stu-quick-btn cal" onclick="openStuCal()">📅 行事曆</button>
-    <button class="stu-quick-btn theory" onclick="window.location.href='https://sites.google.com/gsuite.ntpc.edu.tw/music--theory?usp=sharing'">🎼 樂理學習</button>
-    <button class="stu-quick-btn history" onclick="window.location.href='https://sites.google.com/gsuite.ntpc.edu.tw/music-history?usp=sharing'">🏛️ 音樂史</button>
+    <button class="stu-quick-btn theory" onclick="openStuLearning('learning')">🎼 學習互動平台</button>
     <button class="stu-quick-btn card" onclick="openCardPack()">🌟 抽卡包</button>
     <button class="stu-quick-btn" onclick="openBag()" style="border-color:var(--tx2);color:var(--tx2);font-size:12px">🎒 卡簿</button>
     <button class="stu-quick-btn" onclick="openCouponWallet()" id="couponWalletBtn" style="border-color:var(--gold);color:var(--gold);font-size:12px;position:relative">🎟️ 兌換券<span id="couponBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:bold"></span></button>
