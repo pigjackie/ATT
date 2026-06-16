@@ -117,6 +117,63 @@ const LEARNING_SITES = {
   }
 };
 
+const MUSIC_RESOURCES = [
+  {
+    icon: '📝',
+    title: '請假系統',
+    desc: '學生請假與相關申請入口',
+    url: 'https://epfolio.jjvs.ntpc.edu.tw/auth/Auth/Login?sys=Auth'
+  },
+  {
+    icon: '📋',
+    title: '查看出缺勤',
+    desc: '查詢校務系統出缺勤紀錄',
+    url: 'https://jjschool.jjvs.ntpc.edu.tw/school/Landing'
+  },
+  {
+    icon: '🎓',
+    title: '學習歷程',
+    desc: '查看功過、成績與學習歷程資料',
+    url: 'https://epfolio.jjvs.ntpc.edu.tw/epfolio/'
+  },
+  {
+    icon: '🎹',
+    title: '琴房預約系統',
+    desc: '預約琴房練習時段',
+    url: 'https://jjvsmusic.github.io/musicbooking/'
+  },
+  {
+    icon: '🎼',
+    title: '莊敬音樂術科考資訊網站',
+    desc: '術科考資訊與相關公告',
+    url: 'https://reurl.cc/R2RqMr'
+  },
+  {
+    icon: '📁',
+    title: '音樂科各式申請文件檔',
+    desc: 'Google Drive 申請文件與表單資料夾',
+    url: 'https://drive.google.com/drive/folders/1_aELuORUyLoWcqT3QM9uflSrDR-W6x82?usp=sharing'
+  }
+];
+
+function resourceCardHtml(resource) {
+  return `
+    <a class="resource-card" href="${resource.url}" target="_blank" rel="noopener noreferrer">
+      <div class="resource-icon">${resource.icon}</div>
+      <div class="resource-info">
+        <div class="resource-title">${resource.title}</div>
+        <div class="resource-desc">${resource.desc}</div>
+      </div>
+      <div class="resource-arrow">↗</div>
+    </a>`;
+}
+
+function renderMusicResources(containerId) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = MUSIC_RESOURCES.map(resourceCardHtml).join('');
+}
+
 function loadLearningFrame(kind, frameId) {
   const frame = document.getElementById(frameId);
   const site = LEARNING_SITES[kind];
@@ -415,14 +472,14 @@ function enterStudentView(stu) {
 
 function switchTab(t) {
   document.querySelectorAll('.navtab').forEach(b=>b.classList.remove('on'));
-  ['att','apply','exitlog','inbox','report','teachers','piano','cal','learning'].forEach(id=>{
+  ['att','apply','exitlog','inbox','report','teachers','piano','cal','learning','resources'].forEach(id=>{
     const key = 'tab'+id.charAt(0).toUpperCase()+id.slice(1);
     const el = document.getElementById(key);
     if (el) el.style.display = 'none';
   });
   const btn = document.getElementById('tab-'+t);
   if (btn) btn.classList.add('on');
-  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano',cal:'tabCal',learning:'tabLearning'};
+  const map = {att:'tabAtt',apply:'tabApply',exitlog:'tabExitLog',inbox:'tabInbox',report:'tabReport',teachers:'tabTeachers',piano:'tabPiano',cal:'tabCal',learning:'tabLearning',resources:'tabResources'};
   const content = document.getElementById(map[t]);
   if (content) content.style.display = '';
 
@@ -452,6 +509,7 @@ function switchTab(t) {
     }
   }
   if (t==='learning') loadLearningFrame('learning', 'learningFrame');
+  if (t==='resources') renderMusicResources('teacherResourceGrid');
 }
 
 function buildClsBtns(containerId, clickFn) {
@@ -1615,6 +1673,18 @@ function openStuLearning(kind) {
 
 function closeStuLearning() {
   const overlay = document.getElementById('stuLearningOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function openMusicResources() {
+  const overlay = document.getElementById('resourceOverlay');
+  if (!overlay) return;
+  renderMusicResources('studentResourceGrid');
+  overlay.style.display = 'flex';
+}
+
+function closeMusicResources() {
+  const overlay = document.getElementById('resourceOverlay');
   if (overlay) overlay.style.display = 'none';
 }
 

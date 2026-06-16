@@ -74,6 +74,7 @@
     <button class="navtab" onclick="switchTab('cal')" id="tab-cal">📅 行事曆</button>
     <button class="navtab" onclick="switchTab('piano')" id="tab-piano">🎹 琴房預約</button>
     <button class="navtab" onclick="switchTab('learning')" id="tab-learning">🎼 學習互動平台</button>
+    <button class="navtab" onclick="switchTab('resources')" id="tab-resources">🔗 音樂科連結</button>
     <button class="navtab" onclick="switchTab('teachers')" id="tab-teachers" style="display:none">⚙️ 教師管理</button>
   </div>
   <div class="content">
@@ -205,6 +206,13 @@
     </div>
     <div id="tabLearning" class="learning-frame-tab" style="display:none">
       <iframe id="learningFrame" class="learning-frame" title="莊敬音樂科學習互動平台" src=""></iframe>
+    </div>
+    <div id="tabResources" style="display:none">
+      <div class="resource-page-head">
+        <h3>🔗 音樂科各式連結與資料</h3>
+        <p>登入 ATT 後使用。部分校務系統會開啟新視窗，請依學校帳號完成登入。</p>
+      </div>
+      <div class="resource-grid" id="teacherResourceGrid"></div>
     </div>
     <div id="tabTeachers" style="display:none">
       <!-- 管理子分頁列 -->
@@ -518,6 +526,7 @@
     <button class="stu-quick-btn exit" onclick="openApplyExit()">🚪 申請外出</button>
     <button class="stu-quick-btn cal" onclick="openStuCal()">📅 行事曆</button>
     <button class="stu-quick-btn theory" onclick="openStuLearning('learning')">🎼 學習互動平台</button>
+    <button class="stu-quick-btn resources" onclick="openMusicResources()">🔗 音樂科連結</button>
     <button class="stu-quick-btn card" onclick="openCardPack()">🌟 抽卡包</button>
     <button class="stu-quick-btn" onclick="openBag()" style="border-color:var(--tx2);color:var(--tx2);font-size:12px">🎒 卡簿</button>
     <button class="stu-quick-btn" onclick="openCouponWallet()" id="couponWalletBtn" style="border-color:var(--gold);color:var(--gold);font-size:12px;position:relative">🎟️ 兌換券<span id="couponBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:bold"></span></button>
@@ -649,6 +658,20 @@
     <button class="btn d" onclick="closeStuLearning()">✕ 關閉</button>
   </div>
   <iframe id="stuLearningFrame" class="learning-frame" title="互動學習網" src=""></iframe>
+</div>
+
+<div id="resourceOverlay" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:var(--bg); z-index:9999; flex-direction:column;">
+  <div class="learning-overlay-topbar">
+    <div class="learning-overlay-title">🔗 音樂科各式連結與資料</div>
+    <button class="btn d" onclick="closeMusicResources()">✕ 關閉</button>
+  </div>
+  <div class="resource-overlay-body">
+    <div class="resource-page-head compact">
+      <h3>音樂科各式連結與資料</h3>
+      <p>請選擇需要使用的系統或文件。外部校務系統可能需要再次登入。</p>
+    </div>
+    <div class="resource-grid" id="studentResourceGrid"></div>
+  </div>
 </div>
 
 <div id="detailPanel">
