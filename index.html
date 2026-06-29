@@ -219,6 +219,7 @@
       <div style="display:flex;gap:0;border:1px solid var(--bdr);border-radius:var(--r2);overflow:hidden;margin-bottom:16px;flex-wrap:wrap">
         <button class="mgmt-tab on" id="mgmtTeacherBtn" onclick="switchMgmt('teacher')" style="flex:1;min-width:80px;padding:10px 6px;background:var(--gold);color:#000;border:none;font-size:12px;font-weight:bold;font-family:inherit;cursor:pointer;transition:.2s">⚙️ 教師帳號</button>
         <button class="mgmt-tab" id="mgmtClassBtn"   onclick="switchMgmt('class')"   style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🏫 班級管理</button>
+        <button class="mgmt-tab" id="mgmtRolloverBtn" onclick="switchMgmt('rollover')" style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🔁 新學期轉換</button>
         <button class="mgmt-tab" id="mgmtStudentBtn" onclick="switchMgmt('student')" style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🧑‍🎓 學生管理</button>
         <button class="mgmt-tab" id="mgmtCardBtn"    onclick="switchMgmt('card')"    style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🃏 卡片管理</button>
         <button class="mgmt-tab" id="mgmtRewardBtn"  onclick="switchMgmt('reward')"  style="flex:1;min-width:80px;padding:10px 6px;background:transparent;color:var(--tx2);border:none;border-left:1px solid var(--bdr);font-size:12px;font-family:inherit;cursor:pointer;transition:.2s">🎁 獎品設定</button>
@@ -243,6 +244,35 @@
           ℹ️ 內建班級（音三莊、演三莊、音二莊、演二樸、音一莊）無法刪除，自行新增的班級可刪除。
         </div>
         <div id="classList"></div>
+      </div>
+
+      <!-- 新學期班級轉換面板 -->
+      <div id="mgmtRolloverPanel" style="display:none">
+        <div class="row" style="margin-bottom:14px;flex-wrap:wrap;gap:8px">
+          <h3 style="color:var(--gold)">🔁 新學期班級轉換</h3>
+          <button class="btn g" style="margin-left:auto" onclick="generateRolloverPreview()">產生預覽</button>
+        </div>
+        <div class="rollover-box">
+          <div class="rollover-grid">
+            <label>
+              <span>畢業年度標籤</span>
+              <input id="rolloverYearLabel" class="dlg-input" type="text" placeholder="例：2026 畢業生">
+            </label>
+            <label>
+              <span>一升二</span>
+              <select id="rolloverMap1" class="dlg-input"></select>
+            </label>
+            <label>
+              <span>二升三</span>
+              <select id="rolloverMap2" class="dlg-input"></select>
+            </label>
+          </div>
+          <div class="rollover-note">
+            三年級會轉入畢業封存；一、二年級會依班級名稱與學號自動上升。預覽中可把個別學生改成留級、轉班或離校。
+          </div>
+        </div>
+        <div id="rolloverSummary" class="rollover-summary"></div>
+        <div id="rolloverPreview"></div>
       </div>
 
       <!-- 學生管理面板 -->

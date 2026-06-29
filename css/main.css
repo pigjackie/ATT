@@ -765,3 +765,49 @@ select:focus{border-color:var(--gold)}
 .medal-redeem-item.has-medals{border-color:rgba(123,47,247,.5);background:rgba(123,47,247,.05)}
 .mri-info{flex:1}.mri-name{font-size:15px;font-weight:bold;margin-bottom:2px}
 .mri-count{font-size:13px;color:rgba(160,100,255,.9);font-weight:bold}.mri-cls{font-size:11px;color:var(--tx3)}
+
+/* 新學期班級轉換 */
+.rollover-box{
+  background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r);
+  padding:14px;margin-bottom:14px;
+}
+.rollover-grid{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;
+}
+.rollover-grid label span{
+  display:block;color:var(--tx3);font-size:12px;margin-bottom:6px;
+}
+.rollover-note{
+  color:var(--tx3);font-size:12px;line-height:1.7;margin-top:12px;
+}
+.rollover-summary{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:12px;
+}
+.rollover-stat{
+  background:var(--bg1);border:1px solid var(--bdr);border-radius:var(--r2);
+  padding:10px 12px;
+}
+.rollover-stat b{display:block;color:var(--gold);font-size:20px;margin-bottom:2px}
+.rollover-table{
+  width:100%;border-collapse:collapse;background:var(--bg1);border:1px solid var(--bdr);
+  border-radius:var(--r);overflow:hidden;font-size:12px;
+}
+.rollover-table th,.rollover-table td{
+  border-bottom:1px solid var(--bdr);padding:8px;text-align:left;vertical-align:middle;
+}
+.rollover-table th{color:var(--gold);background:rgba(212,175,55,.08);white-space:nowrap}
+.rollover-table tr:last-child td{border-bottom:none}
+.rollover-table select,.rollover-table input{
+  width:100%;min-width:90px;padding:6px 8px;background:var(--bg2);border:1px solid var(--bdr);
+  border-radius:var(--r2);color:var(--tx);font-size:12px;font-family:inherit;outline:none;
+}
+.rollover-actions{
+  display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:12px;
+}
+.rollover-badge{
+  display:inline-block;padding:2px 7px;border-radius:10px;background:rgba(212,175,55,.15);
+  color:var(--gold);font-size:11px;margin-left:4px;
+}
+@media(max-width:760px){
+  .rollover-table{display:block;overflow-x:auto;white-space:nowrap}
+}

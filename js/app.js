@@ -2164,9 +2164,9 @@ async function loadDynamicData() {
     const deletedStuIds = new Set(Object.keys(deletedStuMap).filter(Boolean));
     const extraStuArr = Object.entries(extraStus).map(([k,s])=>({...s, _fbKey:k}));
     // Remove existing custom students then re-add
-    const baseIds = STUDENTS.filter(s=>!s._fbKey).map(s=>s.id);
     const basePart = STUDENTS.filter(s=>!s._fbKey && !deletedStuIds.has(s.id));
-    STUDENTS = [...basePart, ...extraStuArr.filter(s=>!baseIds.includes(s.id))];
+    const visibleBaseIds = new Set(basePart.map(s=>s.id));
+    STUDENTS = [...basePart, ...extraStuArr.filter(s=>!visibleBaseIds.has(s.id))];
 
     await loadCustomCardData();
     await applyCardTitleOverrides();
@@ -2179,7 +2179,7 @@ async function loadDynamicData() {
 let _mgmtStuCls = 'all';
 
 function switchMgmt(tab) {
-  ['teacher','class','student','card','reward'].forEach(t => {
+  ['teacher','class','rollover','student','card','reward'].forEach(t => {
     const btn   = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Btn`);
     const panel = document.getElementById(`mgmt${t.charAt(0).toUpperCase()+t.slice(1)}Panel`);
     const active = t === tab;
@@ -2191,6 +2191,7 @@ function switchMgmt(tab) {
     if (panel) panel.style.display = active ? '' : 'none';
   });
   if (tab === 'class')   renderClassMgmt();
+  if (tab === 'rollover') initRolloverPanel();
   if (tab === 'student') renderStudentMgmt();
   if (tab === 'card')    renderCardMgmt();
   if (tab === 'reward')  initRewardPanel();
@@ -2271,6 +2272,323 @@ async function delClass(k, name) {
       buildClsBtns('clsBtns', switchCls);
       return true;
     }},{label:'取消',fn:()=>true}]);
+}
+
+// ══════════════
+// 新學期班級轉換
+// ══════════════
+let _rolloverRows = [];
+
+const DEFAULT_CLASS_PROMOTION = {
+  '音一莊':'音二莊',
+  '音二莊':'音三莊',
+  '演二樸':'演三莊'
+};
+
+function safeFbKey(s) {
+  return String(s || '').replace(/[.#$\[\]\/]/g, '_') || 'key';
+}
+
+function escapeHtml(s) {
+  return String(s ?? '').replace(/[&<>"']/g, m => ({
+    '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;'
+  }[m]));
+}
+
+function initRolloverPanel() {
+  if (me?.role !== 'master') {
+    const preview = document.getElementById('rolloverPreview');
+    if (preview) preview.innerHTML = '<div class="empty">新學期全校轉換需使用最高管理者帳號。</div>';
+    return;
+  }
+  const yearInput = document.getElementById('rolloverYearLabel');
+  if (yearInput && !yearInput.value) yearInput.value = `${new Date().getFullYear()} 畢業生`;
+  fillRolloverSelect('rolloverMap1', '音二莊');
+  fillRolloverSelect('rolloverMap2', '音三莊');
+  if (!_rolloverRows.length) generateRolloverPreview();
+}
+
+function fillRolloverSelect(id, preferred) {
+  const sel = document.getElementById(id);
+  if (!sel) return;
+  const opts = [...new Set([...CLASSES, preferred].filter(Boolean))];
+  sel.innerHTML = opts.map(c=>`<option value="${escapeHtml(c)}"${c===preferred?' selected':''}>${escapeHtml(c)}</option>`).join('');
+}
+
+function getGradeFromStudent(stu) {
+  const cls = stu?.cls || '';
+  if (cls.includes('一')) return 1;
+  if (cls.includes('二')) return 2;
+  if (cls.includes('三')) return 3;
+  const m = String(stu?.id || '').match(/^[A-Z]+([123])-/i);
+  return m ? Number(m[1]) : 0;
+}
+
+function getPromotedClass(cls, grade) {
+  if (grade >= 3) return '畢業封存';
+  if (DEFAULT_CLASS_PROMOTION[cls]) return DEFAULT_CLASS_PROMOTION[cls];
+  const replaced = grade === 1 ? cls.replace('一','二') : cls.replace('二','三');
+  if (replaced !== cls && CLASSES.includes(replaced)) return replaced;
+  return document.getElementById(grade === 1 ? 'rolloverMap1' : 'rolloverMap2')?.value || cls;
+}
+
+function getPromotedId(id, grade, action) {
+  if (action === 'repeat') return id;
+  const m = String(id || '').match(/^([A-Za-z]+)([123])-(.+)$/);
+  if (!m || grade >= 3) return id;
+  return `${m[1].toUpperCase()}${grade + 1}-${m[3]}`;
+}
+
+function generateRolloverPreview() {
+  if (me?.role !== 'master') { toast('只有最高管理者可執行全校轉換','err'); return; }
+  _rolloverRows = STUDENTS
+    .filter(s => canManageStudent(s))
+    .map(s => {
+      const grade = getGradeFromStudent(s);
+      const action = grade >= 3 ? 'graduate' : 'promote';
+      const newCls = getPromotedClass(s.cls, grade);
+      return {
+        oldId: s.id,
+        newId: getPromotedId(s.id, grade, action),
+        name: s.name,
+        oldCls: s.cls,
+        newCls,
+        grade,
+        action,
+        fbKey: s._fbKey || ''
+      };
+    })
+    .sort((a,b)=>(b.grade-a.grade) || a.oldCls.localeCompare(b.oldCls,'zh-Hant') || a.oldId.localeCompare(b.oldId));
+  renderRolloverPreview();
+}
+
+function renderRolloverPreview() {
+  const preview = document.getElementById('rolloverPreview');
+  const summary = document.getElementById('rolloverSummary');
+  if (!preview || !summary) return;
+  if (!_rolloverRows.length) {
+    summary.innerHTML = '';
+    preview.innerHTML = '<div class="empty">請先產生預覽。</div>';
+    return;
+  }
+
+  const counts = {
+    promote: _rolloverRows.filter(r=>r.action==='promote').length,
+    graduate: _rolloverRows.filter(r=>r.action==='graduate').length,
+    repeat: _rolloverRows.filter(r=>r.action==='repeat').length,
+    transfer: _rolloverRows.filter(r=>r.action==='transfer').length,
+    leave: _rolloverRows.filter(r=>r.action==='leave').length
+  };
+  summary.innerHTML = `
+    <div class="rollover-stat"><b>${counts.graduate}</b>畢業封存</div>
+    <div class="rollover-stat"><b>${counts.promote}</b>自動升級</div>
+    <div class="rollover-stat"><b>${counts.transfer}</b>手動轉班</div>
+    <div class="rollover-stat"><b>${counts.repeat}</b>留級</div>
+    <div class="rollover-stat"><b>${counts.leave}</b>離校</div>`;
+
+  const classOptionsFor = selected => [...new Set([...CLASSES, selected].filter(Boolean))]
+    .map(c=>`<option value="${escapeHtml(c)}"${c===selected?' selected':''}>${escapeHtml(c)}</option>`)
+    .join('');
+  const rows = _rolloverRows.map((r,i)=>`
+    <tr>
+      <td>${escapeHtml(r.name)}${r.fbKey?'<span class="rollover-badge">自訂</span>':''}</td>
+      <td>${escapeHtml(r.oldCls)}<br><span style="color:var(--tx3)">${escapeHtml(r.oldId)}</span></td>
+      <td>
+        <select onchange="updateRolloverAction(${i},this.value)">
+          <option value="promote"${r.action==='promote'?' selected':''}>升級</option>
+          <option value="graduate"${r.action==='graduate'?' selected':''}>畢業</option>
+          <option value="repeat"${r.action==='repeat'?' selected':''}>留級</option>
+          <option value="transfer"${r.action==='transfer'?' selected':''}>轉班</option>
+          <option value="leave"${r.action==='leave'?' selected':''}>離校</option>
+        </select>
+      </td>
+      <td>
+        <select ${['graduate','leave'].includes(r.action)?'disabled':''} onchange="updateRolloverClass(${i},this.value)">
+          ${classOptionsFor(r.newCls)}
+        </select>
+      </td>
+      <td><input ${['graduate','leave'].includes(r.action)?'disabled':''} value="${escapeHtml(r.newId)}" onchange="updateRolloverId(${i},this.value.trim().toUpperCase())"></td>
+    </tr>`).join('');
+  preview.innerHTML = `
+    <div style="overflow:auto">
+      <table class="rollover-table">
+        <thead><tr><th>學生</th><th>目前</th><th>處理方式</th><th>新班級</th><th>新學號</th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    </div>
+    <div class="rollover-actions">
+      <button class="btn" onclick="generateRolloverPreview()">重新產生預覽</button>
+      <button class="btn g" onclick="confirmApplyRollover()">確認套用新學期轉換</button>
+    </div>`;
+}
+
+function updateRolloverAction(i, action) {
+  const r = _rolloverRows[i];
+  if (!r) return;
+  if (action === 'promote' && r.grade >= 3) action = 'graduate';
+  r.action = action;
+  if (action === 'graduate') {
+    r.newCls = '畢業封存';
+    r.newId = r.oldId;
+  } else if (action === 'leave') {
+    r.newCls = '離校封存';
+    r.newId = r.oldId;
+  } else if (action === 'repeat') {
+    r.newCls = r.oldCls;
+    r.newId = r.oldId;
+  } else {
+    r.newCls = getPromotedClass(r.oldCls, r.grade);
+    r.newId = getPromotedId(r.oldId, r.grade, action);
+  }
+  renderRolloverPreview();
+}
+
+function updateRolloverClass(i, cls) {
+  if (_rolloverRows[i]) _rolloverRows[i].newCls = cls;
+}
+
+function updateRolloverId(i, id) {
+  if (_rolloverRows[i]) _rolloverRows[i].newId = id;
+}
+
+function validateRolloverRows() {
+  const active = _rolloverRows.filter(r=>!['graduate','leave'].includes(r.action));
+  const ids = new Map();
+  for (const r of active) {
+    if (!r.newId || !r.newCls) return `${r.name} 缺少新學號或新班級`;
+    if (ids.has(r.newId)) return `新學號重複：${r.newId}（${ids.get(r.newId)}、${r.name}）`;
+    ids.set(r.newId, r.name);
+  }
+  return '';
+}
+
+function confirmApplyRollover() {
+  if (!_rolloverRows.length) { toast('請先產生預覽','err'); return; }
+  const err = validateRolloverRows();
+  if (err) { toast(err,'err'); return; }
+  const label = document.getElementById('rolloverYearLabel')?.value.trim() || `${new Date().getFullYear()} 畢業生`;
+  openDlg('🔁 確認新學期班級轉換',
+    `<div class="dlg-msg" style="line-height:1.8">
+      系統會先建立備份，再套用本次轉換。<br>
+      三年級會進入「${escapeHtml(label)}」封存，其餘學生會建立新班級名單。<br>
+      <b style="color:var(--red)">套用後點名名單會立即更新。</b>
+    </div>
+    <div class="dlg-label">請輸入「確認轉換」</div>
+    <input class="dlg-input" id="rolloverConfirmText" type="text" placeholder="確認轉換">`,
+    [{label:'套用轉換',cls:'ok',fn:async()=>{
+      if (document.getElementById('rolloverConfirmText').value.trim() !== '確認轉換') {
+        toast('請輸入「確認轉換」','err');
+        return false;
+      }
+      await applyRollover(label);
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
+
+async function applyRollover(label) {
+  const err = validateRolloverRows();
+  if (err) { toast(err,'err'); return; }
+  toast('正在套用新學期轉換...');
+  const stamp = Date.now();
+  const backupKey = `rollover_${stamp}`;
+  const [studentsData, stuMsgs, customStudents, deletedStudents, teachers, customClasses] = await Promise.all([
+    dbGet('students'),
+    dbGet('stuMsgs'),
+    dbGet('customStudents'),
+    dbGet('deletedStudents'),
+    dbGet('teachers'),
+    dbGet('customClasses')
+  ]);
+
+  await dbSet(`rolloverBackups/${backupKey}`, {
+    label,
+    createdAt: now(),
+    createdBy: me?.name || '',
+    rows: _rolloverRows,
+    students: studentsData || {},
+    stuMsgs: stuMsgs || {},
+    customStudents: customStudents || {},
+    deletedStudents: deletedStudents || {},
+    teachers: teachers || {},
+    customClasses: customClasses || {}
+  });
+
+  const upd = {};
+  const customByStudentId = {};
+  Object.entries(customStudents || {}).forEach(([k,s]) => {
+    if (s?.id) customByStudentId[s.id] = k;
+  });
+
+  const targetClasses = new Set();
+  _rolloverRows.forEach(r => {
+    const oldData = (studentsData || {})[r.oldId] || {};
+    const oldMsgs = (stuMsgs || {})[r.oldId] || {};
+    const oldCustomKey = r.fbKey || customByStudentId[r.oldId];
+    const archivePath = r.action === 'leave'
+      ? `${ROOT}/leaveArchive/${backupKey}/${safeFbKey(r.oldId)}`
+      : `${ROOT}/graduates/${safeFbKey(label)}/${safeFbKey(r.oldId)}`;
+
+    if (['graduate','leave'].includes(r.action)) {
+      upd[archivePath] = {
+        id: r.oldId, name: r.name, cls: r.oldCls, status: r.action,
+        archivedAt: now(), archivedBy: me?.name || '', data: oldData, messages: oldMsgs
+      };
+      upd[`${ROOT}/deletedStudents/${r.oldId}`] = {id:r.oldId,name:r.name,cls:r.oldCls,deletedBy:me?.name||'',deletedAt:now(),reason:r.action};
+      if (oldCustomKey) upd[`${ROOT}/customStudents/${oldCustomKey}`] = null;
+      upd[`${ROOT}/students/${r.oldId}`] = null;
+      upd[`${ROOT}/stuMsgs/${r.oldId}`] = null;
+      return;
+    }
+
+    targetClasses.add(r.newCls);
+    const newKey = `roll_${stamp}_${safeFbKey(r.newId)}`;
+    const nextData = {
+      ...oldData,
+      password: oldData.password || '0000',
+      rolloverFrom: r.oldId,
+      rolloverAt: now(),
+      rolloverLabel: label
+    };
+    upd[`${ROOT}/customStudents/${newKey}`] = {
+      id:r.newId, name:r.name, cls:r.newCls,
+      createdBy:me?.name || '', createdAt:now(),
+      rolloverFrom:r.oldId, rolloverLabel:label
+    };
+    upd[`${ROOT}/students/${r.newId}`] = nextData;
+    if (Object.keys(oldMsgs).length) upd[`${ROOT}/stuMsgs/${r.newId}`] = oldMsgs;
+    upd[`${ROOT}/deletedStudents/${r.oldId}`] = {id:r.oldId,name:r.name,cls:r.oldCls,deletedBy:me?.name||'',deletedAt:now(),reason:r.action};
+    if (oldCustomKey) upd[`${ROOT}/customStudents/${oldCustomKey}`] = null;
+    if (r.newId !== r.oldId) {
+      upd[`${ROOT}/students/${r.oldId}`] = null;
+      upd[`${ROOT}/stuMsgs/${r.oldId}`] = null;
+    }
+  });
+
+  const existingClasses = new Set([...(customClasses ? Object.values(customClasses).map(c=>c.name) : []), ...BASE_CLASSES]);
+  targetClasses.forEach(cls => {
+    if (!existingClasses.has(cls)) {
+      upd[`${ROOT}/customClasses/roll_${stamp}_${safeFbKey(cls)}`] = {name:cls,createdBy:me?.name||'',createdAt:now(),rolloverLabel:label};
+    }
+  });
+
+  Object.entries(teachers || {}).forEach(([k,t]) => {
+    if (!Array.isArray(t.classes)) return;
+    const nextClasses = [...new Set(t.classes.map(cls => {
+      const grade = cls.includes('一') ? 1 : cls.includes('二') ? 2 : cls.includes('三') ? 3 : 0;
+      if (grade >= 3) return '';
+      return getPromotedClass(cls, grade);
+    }).filter(Boolean))];
+    upd[`${ROOT}/teachers/${k}/classes`] = nextClasses;
+  });
+
+  await db.ref('/').update(upd);
+  toast('新學期班級轉換完成','ok');
+  _rolloverRows = [];
+  await loadDynamicData();
+  buildClsBtns('clsBtns', switchCls);
+  buildClsBtns('clsBtnsR', switchClsR);
+  renderClassMgmt();
+  renderRolloverPreview();
 }
 
 // ══════════════
