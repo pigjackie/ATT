@@ -550,16 +550,21 @@
     <button class="btn" onclick="doLogout()">登出</button>
   </div>
 
-  <!-- ── 頂部三個快捷按鈕 ── -->
+  <!-- ── 學生快捷入口 ── -->
   <div class="stu-quick-bar">
-    <button class="stu-quick-btn piano" onclick="openStuPiano()">🎹 預約琴房</button>
-    <button class="stu-quick-btn exit" onclick="openApplyExit()">🚪 申請外出</button>
-    <button class="stu-quick-btn cal" onclick="openStuCal()">📅 行事曆</button>
-    <button class="stu-quick-btn theory" onclick="openStuLearning('learning')">🎼 學習互動平台</button>
-    <button class="stu-quick-btn resources" onclick="openMusicResources()">🔗 音樂科連結</button>
-    <button class="stu-quick-btn card" onclick="openCardPack()">🌟 抽卡包</button>
-    <button class="stu-quick-btn" onclick="openBag()" style="border-color:var(--tx2);color:var(--tx2);font-size:12px">🎒 卡簿</button>
-    <button class="stu-quick-btn" onclick="openCouponWallet()" id="couponWalletBtn" style="border-color:var(--gold);color:var(--gold);font-size:12px;position:relative">🎟️ 兌換券<span id="couponBadge" style="display:none;position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-size:9px;padding:1px 5px;border-radius:8px;font-weight:bold"></span></button>
+    <div class="stu-quick-main">
+      <button class="stu-quick-btn piano" onclick="openStuPiano()"><span>🎹</span><b>琴房</b></button>
+      <button class="stu-quick-btn exit" onclick="openApplyExit()"><span>🚪</span><b>外出</b></button>
+      <button class="stu-quick-btn cal" onclick="openStuCal()"><span>📅</span><b>行事曆</b></button>
+      <button class="stu-quick-btn more" id="stuQuickMoreBtn" onclick="toggleStuQuickMore()"><span>☰</span><b>更多</b></button>
+    </div>
+    <div class="stu-quick-more" id="stuQuickMore">
+      <button class="stu-quick-btn theory" onclick="openStuLearning('learning')"><span>🎼</span><b>學習平台</b></button>
+      <button class="stu-quick-btn resources" onclick="openMusicResources()"><span>🔗</span><b>音樂連結</b></button>
+      <button class="stu-quick-btn card" onclick="openCardPack()"><span>🌟</span><b>抽卡包</b></button>
+      <button class="stu-quick-btn bag" onclick="openBag()"><span>🎒</span><b>卡簿</b></button>
+      <button class="stu-quick-btn coupon" onclick="openCouponWallet()" id="couponWalletBtn"><span>🎟️</span><b>兌換券</b><i id="couponBadge" style="display:none"></i></button>
+    </div>
   </div>
 
   <div id="stuBanner">

@@ -306,23 +306,57 @@ body::after{content:'';position:fixed;top:0;left:0;right:0;height:3px;background
   background:var(--bg1);border-bottom:1px solid var(--bdr);flex-shrink:0;
   flex-wrap:wrap;
 }
-.stu-quick-btn{
-  flex:1;min-width:0;padding:11px 8px;border-radius:var(--r2);
-  font-size:13px;font-weight:bold;font-family:inherit;cursor:pointer;
-  border:2px solid transparent;transition:.2s;text-align:center;white-space:nowrap;
+.stu-quick-main,.stu-quick-more{
+  display:grid;grid-template-columns:repeat(4,minmax(74px,1fr));gap:8px;flex:1 1 100%;
 }
+.stu-quick-btn{
+  min-width:0;min-height:58px;padding:8px 6px;border-radius:var(--r2);
+  font-size:12px;font-weight:bold;font-family:inherit;cursor:pointer;
+  border:2px solid transparent;transition:.2s;text-align:center;white-space:normal;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;line-height:1.2;
+}
+.stu-quick-btn span{display:block;font-size:20px;line-height:1}
+.stu-quick-btn b{font-size:12px;font-weight:bold;line-height:1.2}
 .stu-quick-btn.piano{background:linear-gradient(135deg,var(--gold-d),var(--gold));color:#000;border-color:var(--gold)}
 .stu-quick-btn.piano:hover{background:var(--gold-l)}
 .stu-quick-btn.exit{background:transparent;border-color:var(--green);color:var(--green)}
 .stu-quick-btn.exit:hover{background:rgba(46,204,113,.1)}
 .stu-quick-btn.cal{background:transparent;border-color:var(--blue);color:var(--blue)}
 .stu-quick-btn.cal:hover{background:rgba(52,152,219,.1)}
+.stu-quick-btn.more{background:transparent;border-color:var(--tx2);color:var(--tx2);display:none}
+.stu-quick-btn.more.on{border-color:var(--gold);color:var(--gold);background:rgba(212,175,55,.08)}
 .stu-quick-btn.theory{background:transparent;border-color:#e6b74a;color:#e6b74a}
 .stu-quick-btn.theory:hover{background:rgba(230,183,74,.12)}
 .stu-quick-btn.resources{background:transparent;border-color:#54c7a2;color:#74e0bd}
 .stu-quick-btn.resources:hover{background:rgba(84,199,162,.12)}
 .stu-quick-btn.history{background:transparent;border-color:#b58cff;color:#c8a8ff}
 .stu-quick-btn.history:hover{background:rgba(181,140,255,.12)}
+.stu-quick-btn.bag{background:transparent;border-color:var(--tx2);color:var(--tx2)}
+.stu-quick-btn.coupon{background:transparent;border-color:var(--gold);color:var(--gold);position:relative}
+.stu-quick-btn.coupon i{
+  position:absolute;top:-5px;right:-5px;background:var(--red);color:#fff;
+  font-size:9px;padding:1px 5px;border-radius:8px;font-style:normal;font-weight:bold;
+}
+
+@media(min-width:721px){
+  .stu-quick-bar{flex-wrap:nowrap}
+  .stu-quick-main,.stu-quick-more{display:contents}
+  .stu-quick-btn{flex:1 1 0;min-height:52px}
+}
+
+@media(max-width:720px){
+  .stu-quick-bar{position:sticky;top:0;z-index:20;padding:8px;background:rgba(18,18,22,.96);backdrop-filter:blur(10px)}
+  .stu-quick-main{grid-template-columns:repeat(4,1fr)}
+  .stu-quick-more{display:none;grid-template-columns:repeat(3,1fr);padding-top:2px}
+  .stu-quick-more.open{display:grid}
+  .stu-quick-btn.more{display:flex}
+  .stu-quick-btn{min-height:54px;padding:7px 4px;border-radius:9px}
+  .stu-quick-btn span{font-size:19px}
+  .stu-quick-btn b{font-size:11px}
+  #studentScreen .topbar{gap:6px;padding:8px 10px}
+  #studentScreen .topbar-title{font-size:14px;min-width:0}
+  #studentScreen .topbar-user{font-size:11px;white-space:nowrap}
+}
 
 .learning-frame-tab{height:calc(100vh - 120px);margin:-16px;background:var(--bg)}
 .learning-frame{width:100%;height:100%;border:none;background:var(--bg1);display:block}

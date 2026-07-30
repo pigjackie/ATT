@@ -1304,6 +1304,7 @@ async function rejectExit(k) {
 }
 
 function openApplyExit() {
+  closeStuQuickMore();
   openDlg('🚪 申請第八節外出',
     `<div class="dlg-label">外出原因（必填）</div><textarea class="dlg-input" id="exitR" rows="2" placeholder="請填寫外出原因..."></textarea>
      <div class="dlg-label" style="margin-top:4px">預計外出時間（必填）</div>
@@ -1651,7 +1652,22 @@ async function renderStudentCardExtras(stu, d) {
   }
 }
 
+function toggleStuQuickMore(force) {
+  const panel = document.getElementById('stuQuickMore');
+  const btn = document.getElementById('stuQuickMoreBtn');
+  if (!panel || !btn) return;
+  const open = typeof force === 'boolean' ? force : !panel.classList.contains('open');
+  panel.classList.toggle('open', open);
+  btn.classList.toggle('on', open);
+  btn.querySelector('b').textContent = open ? '收合' : '更多';
+}
+
+function closeStuQuickMore() {
+  toggleStuQuickMore(false);
+}
+
 function openStuPiano() {
+  closeStuQuickMore();
   const overlay = document.getElementById('stuPianoOverlay');
   const frame = document.getElementById('stuPianoFrame');
   overlay.style.display = 'flex';
@@ -1662,6 +1678,7 @@ function openStuPiano() {
 }
 
 function openStuLearning(kind) {
+  closeStuQuickMore();
   const site = LEARNING_SITES[kind];
   const overlay = document.getElementById('stuLearningOverlay');
   const title = document.getElementById('stuLearningTitle');
@@ -1677,6 +1694,7 @@ function closeStuLearning() {
 }
 
 function openMusicResources() {
+  closeStuQuickMore();
   const overlay = document.getElementById('resourceOverlay');
   if (!overlay) return;
   renderMusicResources('studentResourceGrid');
@@ -1692,6 +1710,7 @@ function closeMusicResources() {
 // 學生行事曆 Overlay 開關
 // ════════════════════════════════════════════════
 async function openStuCal() {
+  closeStuQuickMore();
   document.getElementById('stuCalOverlay').classList.add('on');
   await loadAndRefreshStuCal();
 }
@@ -3300,6 +3319,7 @@ function _resetPackState() {
 }
 
 async function openCardPack() {
+  closeStuQuickMore();
   if (!_currentStuId) { toast('請先以學生帳號登入', 'err'); return; }
   await loadCustomCardData();
   await applyCardTitleOverrides();
@@ -3542,6 +3562,7 @@ function closeCardZoom() {
 
 // ── 背包 ──
 async function openBag() {
+  closeStuQuickMore();
   if (!_currentStuId) { toast('請先登入','err'); return; }
   await loadCustomCardData();
   await applyCardTitleOverrides();
@@ -5168,6 +5189,7 @@ async function redeemBond(bondId) {
 let _cwFilter = 'all';
 
 async function openCouponWallet() {
+  closeStuQuickMore();
   if (!_currentStuId) { toast('請先登入','err'); return; }
   const overlay = document.getElementById('couponWalletOverlay');
   overlay.style.display = 'flex';
