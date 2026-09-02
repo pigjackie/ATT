@@ -30,7 +30,8 @@ const dbUpd = (p,v) => ref(p).update(v);
 // 基底班級（程式預設）— 動態追加自 Firebase
 let CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
 // 基底學生資料（程式預設）— 動態追加自 Firebase
-let STUDENTS = [
+let STUDENTS = [];
+/* Legacy roster retained only for historical reference. The live directory is Firebase.
   {id:"M3-01",name:"毛語程",cls:"音三莊"},{id:"M3-02",name:"林叡成",cls:"音三莊"},
   {id:"M3-03",name:"田宇紘",cls:"音三莊"},{id:"M3-04",name:"吳昆達",cls:"音三莊"},
   {id:"M3-05",name:"吳宥良",cls:"音三莊"},{id:"M3-06",name:"黃崇恩",cls:"音三莊"},
@@ -99,6 +100,7 @@ let STUDENTS = [
   {id:"M1-31",name:"張又禾",cls:"音一莊"},{id:"M1-32",name:"張允磊",cls:"音一莊"},
   {id:"M1-33",name:"黃靖勛",cls:"音一莊"}
 ];
+*/
 const MASTER = {name:"蕭旭成", pass:"0902"};
 const STATUS = ['未','出','遲','缺','假'];
 
@@ -2172,20 +2174,27 @@ const BASE_CLASSES  = ["音三莊","演三莊","音二莊","演二樸","音一�
 // 從 Firebase 讀取自訂班級與學生，合併到全域變數
 async function loadDynamicData() {
   try {
+    // Student identity data is canonical in Firebase, never in the app bundle.
+    const directory = await StudentService.loadDirectory();
+    STUDENTS = directory.students;
+
     // 自訂班級
     const extraCls = (await dbGet('customClasses')) || {};
     const extraClsNames = Object.values(extraCls).map(c=>c.name).filter(Boolean);
-    CLASSES = [...BASE_CLASSES, ...extraClsNames.filter(n=>!BASE_CLASSES.includes(n))];
+    const dynamicClasses = directory.classes.filter(Boolean);
+    CLASSES = [...BASE_CLASSES, ...dynamicClasses, ...extraClsNames]
+      .filter((name, index, all) => all.indexOf(name) === index);
 
     // 自訂學生
     const extraStus = (await dbGet('customStudents')) || {};
     const deletedStuMap = (await dbGet('deletedStudents')) || {};
     const deletedStuIds = new Set(Object.keys(deletedStuMap).filter(Boolean));
     const extraStuArr = Object.entries(extraStus).map(([k,s])=>({...s, _fbKey:k}));
-    // Remove existing custom students then re-add
-    const basePart = STUDENTS.filter(s=>!s._fbKey && !deletedStuIds.has(s.id));
-    const visibleBaseIds = new Set(basePart.map(s=>s.id));
-    STUDENTS = [...basePart, ...extraStuArr.filter(s=>!visibleBaseIds.has(s.id))];
+    // Canonical students win; legacy custom records only supplement missing IDs.
+    const canonicalIds = new Set(STUDENTS.map(s=>s.id));
+    STUDENTS = STUDENTS.concat(extraStuArr.filter(s=>
+      s.id && !canonicalIds.has(s.id) && !deletedStuIds.has(s.id)
+    ));
 
     await loadCustomCardData();
     await applyCardTitleOverrides();
