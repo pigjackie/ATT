@@ -28,7 +28,7 @@ const dbSet = (p,v) => ref(p).set(v);
 const dbUpd = (p,v) => ref(p).update(v);
 
 // 基底班級（程式預設）— 動態追加自 Firebase
-let CLASSES = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
+let CLASSES = ["音三莊","演三莊","音一莊"];
 // 基底學生資料（程式預設）— 動態追加自 Firebase
 let STUDENTS = [];
 /* Legacy roster retained only for historical reference. The live directory is Firebase.
@@ -2169,7 +2169,7 @@ window.addEventListener('load', () => {
 // 動態班級 / 學生管理
 // ════════════════════════════════════════════════════════════════
 
-const BASE_CLASSES  = ["音三莊","演三莊","音二莊","演二樸","音一莊"];
+const BASE_CLASSES  = ["音三莊","演三莊","音一莊"];
 
 // 從 Firebase 讀取自訂班級與學生，合併到全域變數
 async function loadDynamicData() {
