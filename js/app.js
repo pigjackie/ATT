@@ -459,6 +459,7 @@ function enterApp() {
     switchCls(me.classes[0]);
   });
 loadAllClassRewards().catch(e => console.warn('loadAllClassRewards:', e));
+  cleanupExitApprovalLogs();
   startApplyListener();
   startMsgListener();
 }
@@ -1279,10 +1280,11 @@ function renderApplyList(data) {
 async function approveExit(k, name) {
   const applyData = await dbGet(`exitApply/${k}`);
   const t = now();
-  await dbUpd(`exitApply/${k}`,{status:'approved',approvedBy:me.name,approvedTime:t});
+  const resolvedAt = new Date().toISOString();
+  const lk = Date.now()+'';
+  await dbUpd(`exitApply/${k}`,{status:'approved',approvedBy:me.name,approvedTime:t,approvedAt:resolvedAt,resolvedAt,logKey:lk});
   const stu = byName(name);
   if (stu) {
-    const lk = Date.now()+'';
     await dbUpd(`students/${stu.id}`,{
       [`log/${lk}`]:{time:t, action:'第八節外出核可', reason:applyData?.reason||'', teacher:me.name, delta:0}
     });
@@ -1293,12 +1295,14 @@ async function approveExit(k, name) {
 
 async function rejectExit(k) {
   const applyData = await dbGet(`exitApply/${k}`);
-  await dbUpd(`exitApply/${k}`,{status:'rejected', rejectedBy:me.name, rejectedTime:now()});
+  const t = now();
+  const resolvedAt = new Date().toISOString();
+  const lk = Date.now()+'';
+  await dbUpd(`exitApply/${k}`,{status:'rejected', rejectedBy:me.name, rejectedTime:t, rejectedAt:resolvedAt,resolvedAt,logKey:lk});
   const stu = byName(applyData?.studentName||'');
   if (stu) {
-    const lk = Date.now()+'';
     await dbUpd(`students/${stu.id}`,{
-      [`log/${lk}`]:{time:now(), action:'第八節外出申請被拒', reason:applyData?.reason||'', teacher:me.name, delta:0}
+      [`log/${lk}`]:{time:t, action:'第八節外出申請被拒', reason:applyData?.reason||'', teacher:me.name, delta:0}
     });
     await sendNotifToStudent(stu.id, applyData?.studentName||'', '第八節外出申請未獲核可', 'notice');
   }
@@ -1327,7 +1331,7 @@ function openApplyExit() {
       await dbSet(`exitApply/${k}`,{
         studentName:me.name, studentId:stu?.id||'', studentClass:stu?.cls||'',
         reason, outTime, retTime:retTime||'未填', contact:contact||'未填',
-        applyTime:now(), time:now(), status:'pending'
+        applyTime:now(), time:now(), createdAt:new Date().toISOString(), status:'pending'
       });
       toast('申請已送出，請等待審核');
       listenMyApproval(k,me.name);
@@ -1343,6 +1347,23 @@ function listenMyApproval(k, name) {
       showExitPass(name, d.approvedBy, d.approvedTime, d.applyTime||d.time, d.outTime||'', d.retTime||'');
     }
   });
+}
+
+// A teacher login performs retention cleanup; new records have ISO timestamps.
+async function cleanupExitApprovalLogs() {
+  if (!me || me.role === 'student') return;
+  try {
+    const applications = (await dbGet('exitApply')) || {};
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const updates = {};
+    Object.entries(applications).forEach(([key, app]) => {
+      const savedAt = Date.parse(app.resolvedAt || app.approvedAt || app.rejectedAt || app.createdAt || '');
+      if (!Number.isFinite(savedAt) || savedAt >= cutoff) return;
+      updates[`${ROOT}/exitApply/${key}`] = null;
+      if (app.studentId && app.logKey) updates[`${ROOT}/students/${app.studentId}/log/${app.logKey}`] = null;
+    });
+    if (Object.keys(updates).length) await db.ref('/').update(updates);
+  } catch (error) { console.warn('exit approval retention cleanup failed:', error); }
 }
 
 function showExitPass(name, teacher, time, applyTime, outTime, retTime) {
@@ -2840,11 +2861,14 @@ function openAddStudent() {
       if (!name||!id) { toast('請填寫姓名與學號','err'); return false; }
       if (STUDENTS.find(s=>s.id===id)) { toast('此學號已存在','err'); return false; }
       if (STUDENTS.find(s=>s.name===name&&s.cls===cls)) { toast('同班已有同名學生','err'); return false; }
+      if (await dbGet(`students/${id}`)) { toast('此學號已有資料，請使用其他學號','err'); return false; }
       const fbKey = 'stu_'+Date.now();
-      // Write to custom students
-      await dbSet(`customStudents/${fbKey}`, {id, name, cls, _fbKey:fbKey, createdBy:me.name, createdAt:now()});
-      // Initialize student data with password
-      await dbUpd(`students/${id}`, {password:pw});
+      const createdAt = now();
+      // Keep Firebase students canonical and update both directory paths atomically.
+      const updates = {};
+      updates[`${ROOT}/customStudents/${fbKey}`] = {id, name, cls, _fbKey:fbKey, createdBy:me.name, createdAt};
+      updates[`${ROOT}/students/${id}`] = {id, name, cls, seatNo:0, isDormitory:false, status:'active', password:pw, createdAt, updatedAt:createdAt};
+      await db.ref('/').update(updates);
       toast(`學生「${name}」已新增`,'ok');
       await loadDynamicData();
       renderStudentMgmt();
