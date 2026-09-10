@@ -1126,6 +1126,27 @@ async function resetPw() {
   openDlg('🔑 重置密碼',`<div class="dlg-msg">確認將「${curStu.name}」密碼重置為 <b>0000</b>？</div>`,
     [{label:'確認重置',cls:'del',fn:async()=>{ await dbUpd(`students/${curStu.id}`,{password:'0000'}); toast('密碼已重置為 0000','ok'); openDetail(curStu); return true; }},{label:'取消',fn:()=>true}]);
 }
+
+function resetClassPasswordsDlg() {
+  if (!curCls) { toast('請先選擇班級','err'); return; }
+  if (!canManageStudentClass(curCls)) { toast('你沒有這個班級的管理權限','err'); return; }
+  const students = byCls(curCls);
+  if (!students.length) { toast('本班沒有學生','err'); return; }
+  openDlg(`🔑 重設 ${curCls} 密碼`,
+    `<div class="dlg-msg">將 <b>${students.length}</b> 位學生的登入密碼統一重設為 <b>0000</b>。<br>學生下次登入時會被要求修改密碼。</div>
+     <div class="dlg-label" style="margin-top:12px">輸入「${curCls}」確認</div>
+     <input class="dlg-input" id="resetClassPasswordConfirm" placeholder="${curCls}">`,
+    [{label:'確認重設',cls:'del',fn:async()=>{
+      if (document.getElementById('resetClassPasswordConfirm')?.value.trim() !== curCls) {
+        toast('確認文字不符','err'); return false;
+      }
+      const updates = {};
+      students.forEach(student => { updates[`${ROOT}/students/${student.id}/password`] = '0000'; });
+      await db.ref('/').update(updates);
+      toast(`${curCls} ${students.length} 位學生密碼已重設為 0000`,'ok');
+      return true;
+    }},{label:'取消',fn:()=>true}]);
+}
 async function resetClsDlg() {
   if (!curCls) { toast('請先選班級','err'); return; }
   openDlg(`⚠️ 重置 ${curCls}`,
