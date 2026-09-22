@@ -2907,26 +2907,32 @@ function openEditStudent(stuId) {
   const clsOpts = allowedClasses.map(c=>`<option value="${c}"${c===stu.cls?' selected':''}>${c}</option>`).join('');
   openDlg(`✏️ 編輯學生「${stu.name}」`,
     `<div class="dlg-label">姓名</div>
-     <input class="dlg-input" type="text" id="eStuName" value="${stu.name}" ${stu._fbKey?'':'readonly style="opacity:.5"'}>
+     <input class="dlg-input" type="text" id="eStuName" value="${escapeHtml(stu.name)}" placeholder="學生姓名">
      <div class="dlg-label">學號</div>
-     <input class="dlg-input" type="text" id="eStuId" value="${stu.id}" readonly style="opacity:.5">
+     <input class="dlg-input" type="text" id="eStuId" value="${escapeHtml(stu.id)}" readonly style="opacity:.5">
      <div class="dlg-label">班級${stu._fbKey?'':' （內建學生班級不可修改）'}</div>
      <select class="dlg-input" id="eStuCls" style="width:100%;margin-bottom:12px" ${stu._fbKey?'':'disabled'}>${clsOpts}</select>
      <div class="dlg-label" style="margin-top:4px">重置密碼（留空不變）</div>
      <input class="dlg-input" type="text" id="eStuPw" placeholder="留空=不修改">`,
     [{label:'儲存',cls:'ok',fn:async()=>{
       const pw = document.getElementById('eStuPw').value.trim();
+      const newName = document.getElementById('eStuName').value.trim();
+      if (!newName) { toast('姓名不能為空','err'); return false; }
+      const newCls = stu._fbKey ? document.getElementById('eStuCls').value : stu.cls;
+      if (!canManageStudentClass(newCls)) { toast('你不能把學生移到這個班級','err'); return false; }
+      const sameName = STUDENTS.find(other => other.id !== stu.id && other.cls === newCls && other.name === newName);
+      if (sameName && !confirm(`「${newCls}」已有同名學生「${newName}」（${sameName.id}）。仍要儲存嗎？`)) return false;
       const upd = {};
       if (stu._fbKey) {
-        const newName = document.getElementById('eStuName').value.trim();
-        const newCls  = document.getElementById('eStuCls').value;
-        if (!canManageStudentClass(newCls)) { toast('你不能把學生移到這個班級','err'); return false; }
-        if (!newName) { toast('姓名不能為空','err'); return false; }
         upd[`${ROOT}/customStudents/${stu._fbKey}/name`] = newName;
         upd[`${ROOT}/customStudents/${stu._fbKey}/cls`]  = newCls;
-        await db.ref('/').update(upd);
       }
-      if (pw) await dbUpd(`students/${stu.id}`, {password:pw});
+      // Firebase students is the canonical directory, including imported rosters.
+      // This lets teachers correct a typo without changing the student's cards or history.
+      upd[`${ROOT}/students/${stu.id}/name`] = newName;
+      upd[`${ROOT}/students/${stu.id}/updatedAt`] = now();
+      if (pw) upd[`${ROOT}/students/${stu.id}/password`] = pw;
+      await db.ref('/').update(upd);
       toast('學生資料已更新','ok');
       await loadDynamicData();
       renderStudentMgmt();
